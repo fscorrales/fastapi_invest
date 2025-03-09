@@ -1,14 +1,14 @@
-# from fastapi import APIRouter
+from fastapi import APIRouter
 
-# from ..models import Rf602ValidationOutput
-# from ..services import Rf602ServiceDependency
+from ..models import EstadoCuentaValidationOutput
+from ..services import MiCuentaServiceDependency
 
-# rf602_router = APIRouter(prefix="/rf602", tags=["SIIF - rf602"])
+mi_cuenta_router = APIRouter(prefix="/mi_cuenta", tags=["IOL - MiCuenta"])
 
 
-# @rf602_router.post("/download_and_update/")
-# async def siif_download(
-#     ejercicio: str,
-#     service: Rf602ServiceDependency,
-# ) -> Rf602ValidationOutput:
-#     return await service.download_and_update(ejercicio=ejercicio)
+@mi_cuenta_router.get("/estado_cuenta", response_model=EstadoCuentaValidationOutput)
+async def siif_download(
+    ejercicio: str,
+    service: MiCuentaServiceDependency,
+) -> EstadoCuentaValidationOutput:
+    return await service.download_and_update()

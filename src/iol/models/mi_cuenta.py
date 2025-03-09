@@ -5,7 +5,7 @@ from typing import List
 
 from pydantic import BaseModel, NonNegativeFloat
 
-# from ...utils import ErrorsWithDocId
+from ...utils import ErrorsWithDocId
 
 
 class TipoCuenta(str, Enum):
@@ -73,3 +73,8 @@ class SaldoCuenta(BaseModel):
 class EstadoCuenta(BaseModel):
     cuentas: List[Cuenta]
     saldos: List[SaldoCuenta]
+
+
+class EstadoCuentaValidationOutput(BaseModel):
+    errors: List[ErrorsWithDocId]
+    validated: List[SaldoCuenta]
