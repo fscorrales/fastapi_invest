@@ -1,4 +1,4 @@
-__all__ = ["Cuenta", "SaldoCuenta", "EstadoCuenta"]
+__all__ = ["Cuenta", "SaldoCuenta", "EstadoCuenta", "EstadoCuentaValidationOutput"]
 
 from enum import Enum
 from typing import List

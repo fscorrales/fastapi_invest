@@ -1,14 +1,13 @@
 from fastapi import APIRouter
 
-from ..models import EstadoCuentaValidationOutput
+from ..models import EstadoCuenta
 from ..services import MiCuentaServiceDependency
 
 mi_cuenta_router = APIRouter(prefix="/mi_cuenta", tags=["IOL - MiCuenta"])
 
 
-@mi_cuenta_router.get("/estado_cuenta", response_model=EstadoCuentaValidationOutput)
-async def siif_download(
-    ejercicio: str,
+@mi_cuenta_router.get("/estado_cuenta", response_model=EstadoCuenta)
+async def iol_estado_cuenta(
     service: MiCuentaServiceDependency,
-) -> EstadoCuentaValidationOutput:
-    return await service.download_and_update()
+):
+    return await service.get_mi_cuenta_estado()
