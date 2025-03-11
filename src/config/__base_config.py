@@ -4,6 +4,7 @@ __all__ = [
     "MONGODB_URI",
     "MONGO_DB_NAME",
     "logger",
+    "JWT_SECRET",
 ]
 
 import logging
@@ -23,7 +24,7 @@ MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://127.0.0.1:27017/invest")
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "invest")
 
 
-# JWT_SECRET = os.getenv("JWT_SECRET", "super_secret_key")
+JWT_SECRET = os.getenv("JWT_SECRET", "super_secret_key")
 
 # HOST_URL = os.getenv("HOST_URL", "localhost")
 
