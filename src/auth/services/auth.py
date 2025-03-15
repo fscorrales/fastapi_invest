@@ -4,40 +4,14 @@ __all__ = [
     "AuthorizationDependency",
 ]
 
-
-from datetime import datetime
-from enum import Enum
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Response, Security, status
 from fastapi_jwt import JwtAccessBearer, JwtAuthorizationCredentials
 from passlib.context import CryptContext
-from pydantic import AliasChoices, BaseModel, EmailStr, Field
-from pydantic_mongo import PydanticObjectId
 
 from ..config import JWT_SECRET, token_expiration_time
-
-
-class Role(str, Enum):
-    admin = "admin"
-    user = "user"
-
-
-class BaseUser(BaseModel):
-    username: str
-    email: EmailStr
-
-
-class LoginUser(BaseModel):
-    username: str
-    password: str
-
-
-class PublicStoredUser(BaseUser):
-    role: Role
-    deactivated_at: datetime | None = Field(default=None)
-    id: PydanticObjectId = Field(validation_alias=AliasChoices("_id", "id"))
-
+from .models import LoginUser, PublicStoredUser
 
 access_security = JwtAccessBearer(
     secret_key=JWT_SECRET,
