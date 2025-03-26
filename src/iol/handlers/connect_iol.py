@@ -18,7 +18,7 @@ from datetime import datetime
 
 from httpx import AsyncClient
 
-from ..models import ConnectIOL
+from ..schemas import ConnectIOL
 
 API_URL = "https://api.invertironline.com"
 

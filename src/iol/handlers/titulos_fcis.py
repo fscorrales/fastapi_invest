@@ -13,7 +13,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..models import FCI, ConnectIOL
+from ..schemas import FCI, ConnectIOL
 from .connect_iol import API_URL, get_token
 
 

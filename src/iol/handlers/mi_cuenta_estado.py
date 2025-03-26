@@ -13,7 +13,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..models import ConnectIOL, Cuenta, EstadoCuenta, SaldoCuenta
+from ..schemas import ConnectIOL, Cuenta, EstadoCuenta, SaldoCuenta
 from .connect_iol import API_URL, get_token
 
 

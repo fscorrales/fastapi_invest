@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from ..models import EstadoCuenta
+from ..schemas import EstadoCuenta
 from ..services import MiCuentaServiceDependency
 
 mi_cuenta_router = APIRouter(prefix="/mi_cuenta", tags=["IOL - MiCuenta"])
