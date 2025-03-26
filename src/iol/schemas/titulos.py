@@ -1,3 +1,5 @@
+__all__ = ["FCI"]
+
 
 from pydantic import BaseModel, NonNegativeFloat
 from typing import Optional
@@ -110,6 +112,5 @@ class FCI(BaseModel):
     descripcion: Optional[str] = None
     pais: Optional[Pais] = None
     mercado: Optional[Mercado] = None
-    tipo (string, optional) = ['oPCIONES', 'cEDEARS', 'titulosPublicos', 'aCCIONES', 'cUPONESPRIVADOS', 'fONDOSDEINVERSION', 'aDR', 'iNDICES', 'bOCON', 'bONEX', 'cERTIFICADOSPAR', 'oBLIGACIONESNEGOCIABLES', 'oBLIGACIONESPYME', 'cUPONESOBL', 'lETRASDEPRECADO', 'lETES', 'tITULOSDEUDA', 'cUPONESEXTRANJEROS', 'cUPONESTPI', 'bONOS', 'dIVISAS', 'fONDOSCOTIZANTES', 'cAUCIONESPESOS', 'cAUCIONESDOLARES', 'cERTIFICADOSCREDITOFISCAL', 'cEDRO', 'bODEN', 'fONDOSRENTAFIJA', 'fideicomiso', 'rENTAFIJA', 'cHEQUEPAGODIFERIDO', 'componenteDEEtf', 'componenteDEEtf_Viejo', 'futuros', 'soja', 'maiz', 'trigo', 'oro', 'petroleo', 'fideicomisoFinanciero', 'obligacionesNegociables', 'letraNota', 'fondoComundeInversion', 'titulosPublicosSuscribibles', 'accionesSuscribibles', 'incrementoCapital', 'letesSuscribibles', 'letras', 'fondosMutuosUSA'],
-    plazo: Optional[PlazoLiquidacion] = None
+    tipo: Optional[TipoInstrumento] = None
     moneda: Optional[Moneda] = None

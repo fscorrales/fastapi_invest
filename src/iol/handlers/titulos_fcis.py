@@ -80,42 +80,36 @@ async def get_fcis(
     if r.status_code == 200:
         data = r.json()
         # Extraer datos de cuentas y saldos
-        cuentas_data: List[Cuenta] = []
-        saldos_data: List[SaldoCuenta] = []
+        fcis: List[FCI] = []
 
-        for cuenta in data["cuentas"]:
-            cuenta_base = Cuenta(
-                numero=cuenta["numero"],
-                tipo=cuenta["tipo"],
-                moneda=cuenta["moneda"],
-                disponible=cuenta["disponible"],
-                comprometido=cuenta["comprometido"],
-                saldo=cuenta["saldo"],
-                titulosValorizados=cuenta["titulosValorizados"],
-                total=cuenta["total"],
-                margenDescubierto=cuenta["margenDescubierto"],
-                estado=cuenta["estado"],
+        for fci in data:
+            fci_base = FCI(
+                variacion=fci["variacion"],
+                ultimoOperado=fci["ultimoOperado"],
+                horizonteInversion=fci["horizonteInversion"],
+                rescate=fci["rescate"],
+                invierte=fci["invierte"],
+                tipoFondo=fci["tipoFondo"],
+                avisoHorarioEjecucion=fci["avisoHorarioEjecucion"],
+                tipoAdministradoraTituloFCI=fci["tipoAdministradoraTituloFCI"],
+                fechaCorte=fci["fechaCorte"],
+                codigoBloomberg=fci["codigoBloomberg"],
+                perfilInversor=fci["perfilInversor"],
+                informeMensual=fci["informeMensual"],
+                reglamentoGestion=fci["reglamentoGestion"],
+                variacionMensual=fci["variacionMensual"],
+                variacionAnual=fci["variacionAnual"],
+                montoMinimo=fci["montoMinimo"],
+                simbolo=fci["simbolo"],
+                descripcion=fci["descripcion"],
+                pais=fci["pais"],
+                mercado=fci["mercado"],
+                tipo=fci["tipo"],
+                moneda=fci["moneda"],
             )
-            cuentas_data.append(cuenta_base)
+            fcis.append(fci_base)
 
-            for saldo in cuenta["saldos"]:
-                saldos_data.append(
-                    SaldoCuenta(
-                        numero=cuenta_base.numero,
-                        tipo=cuenta_base.tipo,
-                        moneda=cuenta_base.moneda,
-                        liquidacion=saldo["liquidacion"],
-                        saldo=saldo["saldo"],
-                        comprometido=saldo["comprometido"],
-                        disponible=saldo["disponible"],
-                        disponibleOperar=saldo["disponibleOperar"],
-                    )
-                )
-
-        return EstadoCuenta(
-            cuentas=cuentas_data,
-            saldos=saldos_data,
-        )
+        return fcis
 
 
 # --------------------------------------------------
@@ -127,8 +121,8 @@ async def main():
     async with AsyncClient() as c:
         connect_iol = await get_token(args.username, args.password, httpxAsyncClient=c)
         try:
-            estado_cuenta = await get_estado_cuenta(iol=connect_iol, httpxAsyncClient=c)
-            print(estado_cuenta)
+            fcis = await get_fcis(iol=connect_iol, httpxAsyncClient=c)
+            print(fcis)
         except Exception as e:
             print(f"Error al obtener estado de cuenta: {e}")
 
@@ -138,4 +132,4 @@ if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
 
-    # python -m src.iol.handlers.mi_cuenta_estado
+    # python -m src.iol.handlers.titulos_fcis
