@@ -6,6 +6,7 @@ from typing import List
 from pydantic import BaseModel, NonNegativeFloat
 
 from ...utils import ErrorsWithDocId
+from . Moneda
 
 
 class TipoCuenta(str, Enum):
@@ -17,19 +18,6 @@ class TipoCuenta(str, Enum):
     adm_eeuu_dolares = "administrada_Estados_Unidos_Dolares"
 
 
-class MonedaCuenta(str, Enum):
-    peso_argentino = "peso_Argentino"
-    dolar_estadounidense = "dolar_Estadounidense"
-    real = "real"
-    peso_mexicano = "peso_Mexicano"
-    peso_chileno = "peso_Chileno"
-    yen = "yen"
-    libra = "libra"
-    euro = "euro"
-    peso_peruano = "peso_Peruano"
-    peso_colombiano = "peso_Colombiano"
-    peso_uruguayo = "peso_Uruguayo"
-
 
 class EstadoCuenta(str, Enum):
     operable = "operable"
@@ -40,7 +28,7 @@ class EstadoCuenta(str, Enum):
 class Cuenta(BaseModel):
     numero: str
     tipo: TipoCuenta
-    moneda: MonedaCuenta
+    moneda: Moneda
     disponible: NonNegativeFloat
     comprometido: NonNegativeFloat
     saldo: NonNegativeFloat
@@ -62,7 +50,7 @@ class LiquidacionSaldo(str, Enum):
 class SaldoCuenta(BaseModel):
     numero: str
     tipo: TipoCuenta
-    moneda: MonedaCuenta
+    moneda: Moneda
     liquidacion: LiquidacionSaldo
     saldo: NonNegativeFloat
     comprometido: NonNegativeFloat
