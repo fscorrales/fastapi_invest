@@ -17,7 +17,6 @@ import asyncio
 from datetime import datetime
 
 from httpx import AsyncClient
-from pydantic import BaseModel
 
 from ..models import ConnectIOL
 

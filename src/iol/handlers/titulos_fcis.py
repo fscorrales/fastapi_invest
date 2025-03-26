@@ -13,7 +13,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..models import ConnectIOL, Cuenta, EstadoCuenta, SaldoCuenta
+from ..models import FCI, ConnectIOL
 from .connect_iol import API_URL, get_token
 
 
@@ -60,7 +60,7 @@ def get_args():
 # --------------------------------------------------
 async def get_fcis(
     iol: ConnectIOL, url: str = None, httpxAsyncClient: AsyncClient = None
-) -> EstadoCuenta:
+) -> FCI:
     """Get response from IOL"""
     # self.iol.update_token()
     if url is None:
