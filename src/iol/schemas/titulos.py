@@ -21,8 +21,8 @@ class TipoFCI(str, Enum):
 
 
 class AdministradoraFCI(str, Enum):
-    convexity = "cONVEXITY"
-    supervielle = "sUPERVIELLE"
+    convexity = "convexity"  # En la doc IOL es "cONVEXITY"
+    supervielle = "supervielle"  # En la doc IOL es "sUPERVIELLE"
     allaria = "aLLARIA"
     alliance_bernstein = "aLLIANCE_BERNSTEIN"
     dracma = "dRACMA"
@@ -34,7 +34,7 @@ class Pais(str, Enum):
 
 
 class Mercado(str, Enum):
-    bcba = "bCBA"
+    bcba = "bcba"  # En la doc IOL es "bCBA"
     nyse = "nYSE"
     nasdaq = "nASDAQ"
     amex = "aMEX"
@@ -85,7 +85,9 @@ class TipoInstrumento(str, Enum):
     fideicomiso_financiero = "fideicomisoFinanciero"
     obligaciones_negociables_dos = "obligacionesNegociables"
     letra_nota = "letraNota"
-    fondo_comun_de_inversion = "fondoComundeInversion"
+    fondo_comun_de_inversion = (
+        "FondoComundeInversion"  # En la doc IOL es "fondoComunDeInversion"
+    )
     titulos_publicos_suscribibles = "titulosPublicosSuscribibles"
     acciones_suscribibles = "accionesSuscribibles"
     incremento_capital = "incrementoCapital"
@@ -94,10 +96,16 @@ class TipoInstrumento(str, Enum):
     fondos_mutuos_usa = "fondosMutuosUSA"
 
 
+class HorizonteInversion(str, Enum):
+    corto_plazo = "corto_plazo"
+    mediano_plazo = "mediano_plazo"
+    largo_plazo = "largo_plazo"
+
+
 class FCI(BaseModel):
     variacion: Optional[float] = None
     ultimoOperado: Optional[float] = None
-    horizonteInversion: Optional[str] = None
+    horizonteInversion: Optional[HorizonteInversion] = None
     rescate: Optional[PlazoLiquidacion] = None
     invierte: Optional[str] = None
     tipoFondo: Optional[TipoFCI] = None
@@ -116,4 +124,5 @@ class FCI(BaseModel):
     pais: Optional[Pais] = None
     mercado: Optional[Mercado] = None
     tipo: Optional[TipoInstrumento] = None
+    plazo: Optional[PlazoLiquidacion] = None
     moneda: Optional[Moneda] = None

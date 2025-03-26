@@ -83,29 +83,13 @@ async def get_fcis(
         fcis: List[FCI] = []
 
         for fci in data:
+            fci["horizonteInversion"] = (
+                fci.get("horizonteInversion", None).replace(" ", "_").lower()
+                if fci.get("horizonteInversion") is not None
+                else None
+            )
             fci_base = FCI(
-                variacion=fci["variacion"],
-                ultimoOperado=fci["ultimoOperado"],
-                horizonteInversion=fci["horizonteInversion"],
-                rescate=fci["rescate"],
-                invierte=fci["invierte"],
-                tipoFondo=fci["tipoFondo"],
-                avisoHorarioEjecucion=fci["avisoHorarioEjecucion"],
-                tipoAdministradoraTituloFCI=fci["tipoAdministradoraTituloFCI"],
-                fechaCorte=fci["fechaCorte"],
-                codigoBloomberg=fci["codigoBloomberg"],
-                perfilInversor=fci["perfilInversor"],
-                informeMensual=fci["informeMensual"],
-                reglamentoGestion=fci["reglamentoGestion"],
-                variacionMensual=fci["variacionMensual"],
-                variacionAnual=fci["variacionAnual"],
-                montoMinimo=fci["montoMinimo"],
-                simbolo=fci["simbolo"],
-                descripcion=fci["descripcion"],
-                pais=fci["pais"],
-                mercado=fci["mercado"],
-                tipo=fci["tipo"],
-                moneda=fci["moneda"],
+                **{key: fci[key] for key in FCI.model_fields.keys() if key in fci}
             )
             fcis.append(fci_base)
 
