@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
 Author : Fernando Corrales <fscpython@gamail.com>
-Date   : 08-mar-2025
-Purpose: GET estado de cuenta IOL
+Date   : 26-mar-2025
+Purpose: GET FCIs info from IOL
 """
 
-__all__ = ["get_estado_cuenta"]
+__all__ = ["get_fcis"]
 
 import argparse
 import asyncio
@@ -13,7 +13,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..schemas import ConnectIOL, Cuenta, EstadoCuenta, SaldoCuenta
+from ..schemas import FCI, ConnectIOL
 from .connect_iol import API_URL, get_token
 
 
@@ -22,14 +22,14 @@ def get_args():
     """Get command-line arguments"""
 
     parser = argparse.ArgumentParser(
-        description="Read, process and write SIIF's rf602",
+        description="Get FCI's info from IOL",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     parser.add_argument(
         "-u",
         "--username",
-        help="Username for SIIF access",
+        help="Username for IOL's API access",
         metavar="username",
         type=str,
         default=None,
@@ -38,7 +38,7 @@ def get_args():
     parser.add_argument(
         "-p",
         "--password",
-        help="Password for SIIF access",
+        help="Password for IOL's API access",
         metavar="password",
         type=str,
         default=None,
@@ -58,13 +58,13 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_estado_cuenta(
+async def get_fcis(
     iol: ConnectIOL, url: str = None, httpxAsyncClient: AsyncClient = None
-) -> EstadoCuenta:
+) -> FCI:
     """Get response from IOL"""
     # self.iol.update_token()
     if url is None:
-        url = API_URL + "/api/v2/estadocuenta"
+        url = API_URL + "/api/v2/Titulos/FCI"
 
     h = {"Authorization": "Bearer " + iol.access_token}
 
@@ -80,42 +80,20 @@ async def get_estado_cuenta(
     if r.status_code == 200:
         data = r.json()
         # Extraer datos de cuentas y saldos
-        cuentas_data: List[Cuenta] = []
-        saldos_data: List[SaldoCuenta] = []
+        fcis: List[FCI] = []
 
-        for cuenta in data["cuentas"]:
-            cuenta_base = Cuenta(
-                numero=cuenta["numero"],
-                tipo=cuenta["tipo"],
-                moneda=cuenta["moneda"],
-                disponible=cuenta["disponible"],
-                comprometido=cuenta["comprometido"],
-                saldo=cuenta["saldo"],
-                titulosValorizados=cuenta["titulosValorizados"],
-                total=cuenta["total"],
-                margenDescubierto=cuenta["margenDescubierto"],
-                estado=cuenta["estado"],
+        for fci in data:
+            fci["horizonteInversion"] = (
+                fci.get("horizonteInversion", None).replace(" ", "_").lower()
+                if fci.get("horizonteInversion") is not None
+                else None
             )
-            cuentas_data.append(cuenta_base)
+            fci_base = FCI(
+                **{key: fci[key] for key in FCI.model_fields.keys() if key in fci}
+            )
+            fcis.append(fci_base)
 
-            for saldo in cuenta["saldos"]:
-                saldos_data.append(
-                    SaldoCuenta(
-                        numero=cuenta_base.numero,
-                        tipo=cuenta_base.tipo,
-                        moneda=cuenta_base.moneda,
-                        liquidacion=saldo["liquidacion"],
-                        saldo=saldo["saldo"],
-                        comprometido=saldo["comprometido"],
-                        disponible=saldo["disponible"],
-                        disponibleOperar=saldo["disponibleOperar"],
-                    )
-                )
-
-        return EstadoCuenta(
-            cuentas=cuentas_data,
-            saldos=saldos_data,
-        )
+        return fcis
 
 
 # --------------------------------------------------
@@ -127,8 +105,8 @@ async def main():
     async with AsyncClient() as c:
         connect_iol = await get_token(args.username, args.password, httpxAsyncClient=c)
         try:
-            estado_cuenta = await get_estado_cuenta(iol=connect_iol, httpxAsyncClient=c)
-            print(estado_cuenta)
+            fcis = await get_fcis(iol=connect_iol, httpxAsyncClient=c)
+            print(fcis)
         except Exception as e:
             print(f"Error al obtener estado de cuenta: {e}")
 
@@ -138,4 +116,4 @@ if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
 
-    # python -m src.iol.handlers.mi_cuenta_estado
+    # python -m src.iol.handlers.titulos_fcis

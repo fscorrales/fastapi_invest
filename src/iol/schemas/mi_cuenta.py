@@ -1,11 +1,12 @@
 __all__ = ["Cuenta", "SaldoCuenta", "EstadoCuenta", "EstadoCuentaValidationOutput"]
 
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, NonNegativeFloat
 
 from ...utils import ErrorsWithDocId
+from . import Moneda
 
 
 class TipoCuenta(str, Enum):
@@ -17,20 +18,6 @@ class TipoCuenta(str, Enum):
     adm_eeuu_dolares = "administrada_Estados_Unidos_Dolares"
 
 
-class MonedaCuenta(str, Enum):
-    peso_argentino = "peso_Argentino"
-    dolar_estadounidense = "dolar_Estadounidense"
-    real = "real"
-    peso_mexicano = "peso_Mexicano"
-    peso_chileno = "peso_Chileno"
-    yen = "yen"
-    libra = "libra"
-    euro = "euro"
-    peso_peruano = "peso_Peruano"
-    peso_colombiano = "peso_Colombiano"
-    peso_uruguayo = "peso_Uruguayo"
-
-
 class EstadoCuenta(str, Enum):
     operable = "operable"
     cerrada = "cerrada"
@@ -38,16 +25,16 @@ class EstadoCuenta(str, Enum):
 
 
 class Cuenta(BaseModel):
-    numero: str
-    tipo: TipoCuenta
-    moneda: MonedaCuenta
-    disponible: NonNegativeFloat
-    comprometido: NonNegativeFloat
-    saldo: NonNegativeFloat
-    titulosValorizados: NonNegativeFloat
-    total: NonNegativeFloat
-    margenDescubierto: NonNegativeFloat
-    estado: EstadoCuenta
+    numero: Optional[str] = None
+    tipo: Optional[TipoCuenta] = None
+    moneda: Optional[Moneda] = None
+    disponible: Optional[NonNegativeFloat] = None
+    comprometido: Optional[NonNegativeFloat] = None
+    saldo: Optional[NonNegativeFloat] = None
+    titulosValorizados: Optional[NonNegativeFloat] = None
+    total: Optional[NonNegativeFloat] = None
+    margenDescubierto: Optional[NonNegativeFloat] = None
+    estado: Optional[EstadoCuenta] = None
 
 
 class LiquidacionSaldo(str, Enum):
@@ -60,14 +47,14 @@ class LiquidacionSaldo(str, Enum):
 
 
 class SaldoCuenta(BaseModel):
-    numero: str
-    tipo: TipoCuenta
-    moneda: MonedaCuenta
-    liquidacion: LiquidacionSaldo
-    saldo: NonNegativeFloat
-    comprometido: NonNegativeFloat
-    disponible: NonNegativeFloat
-    disponibleOperar: NonNegativeFloat
+    numero: Optional[str] = None
+    tipo: Optional[TipoCuenta] = None
+    moneda: Optional[Moneda] = None
+    liquidacion: Optional[LiquidacionSaldo] = None
+    saldo: Optional[NonNegativeFloat] = None
+    comprometido: Optional[NonNegativeFloat] = None
+    disponible: Optional[NonNegativeFloat] = None
+    disponibleOperar: Optional[NonNegativeFloat] = None
 
 
 class EstadoCuenta(BaseModel):
