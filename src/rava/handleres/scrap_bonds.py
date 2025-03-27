@@ -2,16 +2,28 @@
 """
 Author : Fernando Corrales <fscpython@gamail.com>
 Date   : 27-mar-2025
-Purpose: Scrapt Bonds from RAVA
+Purpose: Scrap Bonds from RAVA
 """
 
-__all__ = ["scrapt_bonds", "get_rendered_html"]
+__all__ = ["scrap_bonds", "get_rendered_html"]
 
 import argparse
 import asyncio
+from typing import List, Optional
 
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
+
+from ..schemas import ScrapBond
+
+
+# --------------------------------------------------
+def safe_float(value: str) -> Optional[float]:
+    """Convert a string to float, or return None if conversion fails."""
+    try:
+        return float(value.replace(",", "").strip())  # Remove commas if present
+    except (ValueError, AttributeError):
+        return None
 
 
 # --------------------------------------------------
@@ -19,7 +31,7 @@ def get_args():
     """Get command-line arguments"""
 
     parser = argparse.ArgumentParser(
-        description="Scrapt Bonds from RAVA",
+        description="Scrap Bonds from RAVA",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
@@ -29,7 +41,8 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_rendered_html(url: str = None):
+async def get_rendered_html(url: str = None) -> str:
+    """Get the rendered HTML of the RAVA bonds page using Playwright"""
     if url is None:
         url = "https://www.rava.com/cotizaciones/bonos"
 
@@ -51,7 +64,7 @@ async def get_rendered_html(url: str = None):
 
 
 # --------------------------------------------------
-def scrapt_bonds(html):
+def scrap_bonds(html) -> List[ScrapBond]:
     """Extract the bonds table from the rendered HTML"""
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table")
@@ -73,21 +86,21 @@ def scrapt_bonds(html):
         symbol = symbol_tag.text.strip() if symbol_tag else cells[0].text.strip()
         href = symbol_tag["href"] if symbol_tag else ""
 
-        bond = {
-            "symbol": symbol,
-            "link": href,
-            "close": cells[1].text.strip(),
-            "var_day": cells[2].text.strip(),
-            "var_month": cells[3].text.strip(),
-            "var_year": cells[4].text.strip(),
-            "previous_close": cells[5].text.strip(),
-            "open": cells[6].text.strip(),
-            "low": cells[7].text.strip(),
-            "high": cells[8].text.strip(),
-            "time": cells[9].text.strip(),
-            "nominal_volume": cells[10].text.strip(),
-            "effective_volume": cells[11].text.strip(),
-        }
+        bond = ScrapBond(
+            symbol=symbol,
+            link=href,
+            close=safe_float(cells[1].text),
+            var_day=safe_float(cells[2].text),
+            var_month=safe_float(cells[3].text),
+            var_year=safe_float(cells[4].text),
+            previous_close=safe_float(cells[5].text),
+            open=safe_float(cells[6].text),
+            low=safe_float(cells[7].text),
+            high=safe_float(cells[8].text),
+            time=cells[9].text,
+            nominal_volume=safe_float(cells[10].text),
+            effective_volume=safe_float(cells[11].text),
+        )
         bonds.append(bond)
 
     return bonds
@@ -98,7 +111,7 @@ async def main():
     """Make a jazz noise here"""
 
     html = await get_rendered_html()
-    bonds = scrapt_bonds(html)
+    bonds = scrap_bonds(html)
 
     for bond in bonds[:5]:  # Show only the first 5 bonds
         print(bond)
@@ -119,7 +132,7 @@ if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
 
-    # python -m src.rava.handleres.extract_bonds
+    # python -m src.rava.handleres.scrap_bonds
 
     # ╔════════════════════════════════════════════════════════════╗
     # ║ WARNING: Playwright browsers not found.                    ║
