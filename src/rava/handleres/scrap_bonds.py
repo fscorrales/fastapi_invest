@@ -14,7 +14,7 @@ from typing import List, Optional
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
-from ..schemas import ScrapBond
+from ..schemas import RavaBond
 
 
 # --------------------------------------------------
@@ -54,7 +54,7 @@ async def get_rendered_html(url: str = None) -> str:
         await page.goto(url)
 
         # Wait for the bonds table to appear (adjust selector if necessary)
-        await page.wait_for_selector("table")
+        await page.wait_for_selector("table", timeout=10000)  # Wait 10 seconds
 
         # Get the rendered HTML
         rendered_html = await page.content()
@@ -64,7 +64,7 @@ async def get_rendered_html(url: str = None) -> str:
 
 
 # --------------------------------------------------
-def scrap_bonds(html) -> List[ScrapBond]:
+def scrap_bonds(html) -> List[RavaBond]:
     """Extract the bonds table from the rendered HTML"""
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table")
@@ -86,9 +86,9 @@ def scrap_bonds(html) -> List[ScrapBond]:
         symbol = symbol_tag.text.strip() if symbol_tag else cells[0].text.strip()
         href = symbol_tag["href"] if symbol_tag else ""
 
-        bond = ScrapBond(
+        bond = RavaBond(
             symbol=symbol,
-            link=href,
+            link="https://www.rava.com" + href,
             close=safe_float(cells[1].text),
             var_day=safe_float(cells[2].text),
             var_month=safe_float(cells[3].text),

@@ -1,12 +1,13 @@
-__all__ = ["ScrapBond"]
+__all__ = ["RavaBond"]
 
+from datetime import time
 from typing import Optional
 
 from pydantic import BaseModel, NonNegativeFloat
 
 
-class ScrapBond(BaseModel):
-    """Bond schema from scraping RAVA"""
+class RavaBond(BaseModel):
+    """Schema for bonds scraped from RAVA"""
 
     symbol: str
     link: str
@@ -18,6 +19,6 @@ class ScrapBond(BaseModel):
     open: Optional[NonNegativeFloat] = None
     low: Optional[NonNegativeFloat] = None
     high: Optional[NonNegativeFloat] = None
-    time: str
+    time: time
     nominal_volume: Optional[NonNegativeFloat] = None
     effective_volume: Optional[NonNegativeFloat] = None
