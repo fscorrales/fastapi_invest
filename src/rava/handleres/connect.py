@@ -5,7 +5,7 @@ Date   : 29-mar-2025
 Purpose: Go to RAVA´s page (homepage by default)
 """
 
-__all__ = ["ConnectRava", "connect"]
+__all__ = ["RavaConnection", "connect_rava"]
 
 import argparse
 import asyncio
@@ -40,18 +40,19 @@ def get_args():
 
 # --------------------------------------------------
 @dataclass
-class ConnectRava:
+class RavaConnection:
     browser: Browser = None
     context: BrowserContext = None
     page: Page = None
+    url: str = None
 
 
 # --------------------------------------------------
-async def connect(
+async def connect_rava(
     playwright: Playwright = None,
     headless: bool = False,
     url: str = "https://rava.com/",
-) -> ConnectRava:
+) -> RavaConnection:
     if playwright is None:
         playwright = await async_playwright().start()
 
@@ -69,7 +70,7 @@ async def connect(
     except Exception as e:
         print(f"Ocurrio un error: {e}")
 
-    return ConnectRava(browser=browser, context=context, page=page)
+    return RavaConnection(browser=browser, context=context, page=page, url=url)
 
 
 # --------------------------------------------------
@@ -80,11 +81,11 @@ async def main():
     url = args.url
 
     async with async_playwright() as playwright:
-        connect_rava = await connect(playwright=playwright, headless=False, url=url)
-        # connect_rava = await connect(playwright=playwright, headless=True)
+        rava = await connect_rava(playwright=playwright, headless=False, url=url)
+        # rava = await connect(playwright=playwright, headless=True)
 
         # Do something with the connection
-        # Example: await connect_rava.page.screenshot(path="screenshot.png")
+        # Example: await rava.page.screenshot(path="screenshot.png")
 
 
 # --------------------------------------------------
