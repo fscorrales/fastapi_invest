@@ -5,7 +5,7 @@ Date   : 27-mar-2025
 Purpose: Scrap Bonds from RAVA
 """
 
-__all__ = ["RavaBonds"]
+__all__ = ["ScrapRavaBonds"]
 
 import argparse
 import asyncio
@@ -45,7 +45,7 @@ def get_args():
 
 # --------------------------------------------------
 @dataclass
-class RavaBonds:
+class ScrapRavaBonds:
     rava: RavaConnection
     rendered_html: str = None
 
@@ -122,7 +122,7 @@ async def main():
     async with async_playwright() as p:
         rava = await connect_rava(playwright=p, headless=False, url=url)
         try:
-            rava_bonds = RavaBonds(rava=rava)
+            rava_bonds = ScrapRavaBonds(rava=rava)
             await rava_bonds.get_rendered_html()
             # # Guardar el HTML renderizado en un archivo para inspeccionarlo
             # with open("html_renderizado.html", "w", encoding="utf-8") as f:
