@@ -69,17 +69,17 @@ class ScrapRavaBonds(RavaManager):
         return self.rendered_html
 
     # --------------------------------------------------
-    def scrap_bonds(self) -> List[RavaBond]:
+    async def scrap_bonds(self) -> List[RavaBond]:
         """Extract the bonds table from the rendered HTML"""
-        table = self.soup.find("table")
+        table = await asyncio.to_thread(self.soup.find, "table")
 
         if not table:
             print("❌ Table not found.")
             return []
 
         bonds = []
-        rows = table.find_all("tr")[1:]  # Skip the header row
-
+        rows = await asyncio.to_thread(table.find_all, "tr")
+        rows = rows[1:]  # Skip header row
         for row in rows:
             cells = row.find_all("td")
             if len(cells) < 11:  # Ensure there are enough columns
@@ -129,7 +129,7 @@ async def main():
             # print(
             #     "✅ HTML renderizado guardado en 'html_renderizado.html'. Ábrelo en el navegador para inspeccionarlo."
             # )
-            bonds = rava_bonds.scrap_bonds()
+            bonds = await rava_bonds.scrap_bonds()
             for bond in bonds[:5]:  # Show only the first 5 bonds
                 print(bond)
         except Exception as e:

@@ -71,13 +71,14 @@ class ScrapRavaBondInfo(RavaManager):
         return self.rendered_html
 
     # --------------------------------------------------
-    def fetch_cash_flow_table(self) -> List[RavaBondCashFlow]:
+    async def fetch_cash_flow_table(self) -> List[RavaBondCashFlow]:
         # Process HTML with BeautifulSoup
-        table = self.soup.select_one("#scroll-flujo table")
+        table = await asyncio.to_thread(self.soup.select_one, "#scroll-flujo table")
 
         # Extract rows
         data = []
-        rows = table.find_all("tr")[1:]  # Skip header row
+        rows = await asyncio.to_thread(table.find_all, "tr")
+        rows = rows[1:]  # Skip header row
         for row in rows:
             cols = [td.text.strip() for td in row.find_all("td")]
             data.append(
@@ -93,36 +94,52 @@ class ScrapRavaBondInfo(RavaManager):
         return data
 
     # --------------------------------------------------
-    def scrape_bond_data(self) -> RavaBondProfile:
-        pass  # Parse with BeautifulSoup
-
-        tir = self.extract_text(
-            "p:-soup-contains('Tasa interna de retorno (TIR)') span"
+    async def scrape_bond_data(self) -> RavaBondProfile:
+        """Extract bond data from the rendered HTML"""
+        # Extraer valores de forma asincrónica
+        tir = await asyncio.to_thread(
+            self.extract_text, "p:-soup-contains('Tasa interna de retorno (TIR)') span"
         )
-        dm = self.extract_text("p:-soup-contains('Duration modificada (DM)') span")
+        dm = await asyncio.to_thread(
+            self.extract_text, "p:-soup-contains('Duration modificada (DM)') span"
+        )
 
         bond_data = {
-            "symbol": self.extract_sibling_text("Símbolo"),
-            "denomination": self.extract_sibling_text("Denominación"),
-            "issuer": self.extract_sibling_text("Emisor"),
-            "law": self.extract_sibling_text("Ley"),
-            "currency": self.extract_sibling_text("Moneda de emisión"),
+            "symbol": await asyncio.to_thread(self.extract_sibling_text, "Símbolo"),
+            "denomination": await asyncio.to_thread(
+                self.extract_sibling_text, "Denominación"
+            ),
+            "issuer": await asyncio.to_thread(self.extract_sibling_text, "Emisor"),
+            "law": await asyncio.to_thread(self.extract_sibling_text, "Ley"),
+            "currency": await asyncio.to_thread(
+                self.extract_sibling_text, "Moneda de emisión"
+            ),
             "issue_date": parse_date(
-                self.extract_sibling_text("Fecha de Emisión"), "%d/%m/%Y"
+                await asyncio.to_thread(self.extract_sibling_text, "Fecha de Emisión"),
+                "%d/%m/%Y",
             ),
             "maturity_date": parse_date(
-                self.extract_sibling_text("Fecha Vencimiento"), "%d/%m/%Y"
+                await asyncio.to_thread(self.extract_sibling_text, "Fecha Vencimiento"),
+                "%d/%m/%Y",
             ),
             "nominal_amount": to_float(
-                self.extract_sibling_text("Monto nominal vigente")
+                await asyncio.to_thread(
+                    self.extract_sibling_text, "Monto nominal vigente"
+                )
             ),
-            "residual_amount": to_float(self.extract_sibling_text("Monto residual")),
-            "interest_description": self.extract_sibling_text("Interés"),
-            "amortization_description": self.extract_sibling_text(
-                "Forma de amortización"
+            "residual_amount": to_float(
+                await asyncio.to_thread(self.extract_sibling_text, "Monto residual")
+            ),
+            "interest_description": await asyncio.to_thread(
+                self.extract_sibling_text, "Interés"
+            ),
+            "amortization_description": await asyncio.to_thread(
+                self.extract_sibling_text, "Forma de amortización"
             ),
             "minimum_denomination": to_float(
-                self.extract_sibling_text("Denominación mínima")
+                await asyncio.to_thread(
+                    self.extract_sibling_text, "Denominación mínima"
+                )
             ),
             "tir": to_float(tir.replace("%", "")),
             "dm": to_float(dm),
@@ -151,9 +168,9 @@ async def main():
             # print(
             #     "✅ HTML renderizado guardado en 'html_renderizado.html'. Ábrelo en el navegador para inspeccionarlo."
             # )
-            bond_data = rava_bond_info.scrape_bond_data()
+            bond_data = await rava_bond_info.scrape_bond_data()
             print(bond_data)
-            bonds = rava_bond_info.fetch_cash_flow_table()
+            bonds = await rava_bond_info.fetch_cash_flow_table()
             for bond in bonds[:5]:  # Show only the first 5 bonds
                 print(bond)
         except Exception as e:
