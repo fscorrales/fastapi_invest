@@ -9,21 +9,13 @@ __all__ = ["scrap_bonds", "get_rendered_html"]
 
 import argparse
 import asyncio
-from typing import List, Optional
+from typing import List
 
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
+from ...utils import to_float
 from ..schemas import RavaBond
-
-
-# --------------------------------------------------
-def safe_float(value: str) -> Optional[float]:
-    """Convert a string to float, or return None if conversion fails."""
-    try:
-        return float(value.replace(",", "").strip())  # Remove commas if present
-    except (ValueError, AttributeError):
-        return None
 
 
 # --------------------------------------------------
@@ -51,10 +43,10 @@ async def get_rendered_html(url: str = None) -> str:
             headless=True
         )  # Change to False if you want to see the browser
         page = await browser.new_page()
-        await page.goto(url)
+        await page.goto(url, timeout=30000)
 
         # Wait for the bonds table to appear (adjust selector if necessary)
-        await page.wait_for_selector("table", timeout=10000)  # Wait 10 seconds
+        await page.wait_for_selector("table", timeout=15000)  # Wait 15 seconds
 
         # Get the rendered HTML
         rendered_html = await page.content()
@@ -89,17 +81,17 @@ def scrap_bonds(html) -> List[RavaBond]:
         bond = RavaBond(
             symbol=symbol,
             link="https://www.rava.com" + href,
-            close=safe_float(cells[1].text),
-            var_day=safe_float(cells[2].text),
-            var_month=safe_float(cells[3].text),
-            var_year=safe_float(cells[4].text),
-            previous_close=safe_float(cells[5].text),
-            open=safe_float(cells[6].text),
-            low=safe_float(cells[7].text),
-            high=safe_float(cells[8].text),
+            close=to_float(cells[1].text),
+            var_day=to_float(cells[2].text),
+            var_month=to_float(cells[3].text),
+            var_year=to_float(cells[4].text),
+            previous_close=to_float(cells[5].text),
+            open=to_float(cells[6].text),
+            low=to_float(cells[7].text),
+            high=to_float(cells[8].text),
             time=cells[9].text,
-            nominal_volume=safe_float(cells[10].text),
-            effective_volume=safe_float(cells[11].text),
+            nominal_volume=to_float(cells[10].text),
+            effective_volume=to_float(cells[11].text),
         )
         bonds.append(bond)
 

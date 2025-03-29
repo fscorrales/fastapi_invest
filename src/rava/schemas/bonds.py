@@ -1,6 +1,6 @@
-__all__ = ["RavaBond"]
+__all__ = ["RavaBond", "RavaBondProfile", "RavaBondCashFlow"]
 
-from datetime import time
+from datetime import date, time
 from typing import Optional
 
 from pydantic import BaseModel, NonNegativeFloat
@@ -22,3 +22,29 @@ class RavaBond(BaseModel):
     time: time
     nominal_volume: Optional[NonNegativeFloat] = None
     effective_volume: Optional[NonNegativeFloat] = None
+
+
+class RavaBondProfile(BaseModel):
+    # Profile details
+    symbol: str
+    denomination: str
+    issuer: str
+    law: str
+    currency: str
+    issue_date: Optional[date] = None
+    maturity_date: Optional[date] = None
+    nominal_amount: Optional[float] = None
+    residual_amount: Optional[float] = None
+    interest_description: str
+    amortization_description: str
+    minimum_denomination: Optional[float] = None
+    tir: Optional[float] = None
+    dm: Optional[float] = None
+
+
+class RavaBondCashFlow(BaseModel):
+    symbol: str
+    date: date
+    interest: float
+    amortization: float
+    coupon: float
