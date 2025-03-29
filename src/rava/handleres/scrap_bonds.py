@@ -124,21 +124,18 @@ async def main():
         try:
             rava_bonds = RavaBonds(rava=rava)
             await rava_bonds.get_rendered_html()
+            # # Guardar el HTML renderizado en un archivo para inspeccionarlo
+            # with open("html_renderizado.html", "w", encoding="utf-8") as f:
+            #     f.write(rava_bonds.rendered_html)
+
+            # print(
+            #     "✅ HTML renderizado guardado en 'html_renderizado.html'. Ábrelo en el navegador para inspeccionarlo."
+            # )
             bonds = rava_bonds.scrap_bonds()
             for bond in bonds[:5]:  # Show only the first 5 bonds
                 print(bond)
         except Exception as e:
             print(f"❌ Error: {e}")
-
-    # html = await obtener_html_renderizado()
-
-    # # Guardar el HTML renderizado en un archivo para inspeccionarlo
-    # with open("html_renderizado.html", "w", encoding="utf-8") as f:
-    #     f.write(html)
-
-    # print(
-    #     "✅ HTML renderizado guardado en 'html_renderizado.html'. Ábrelo en el navegador para inspeccionarlo."
-    # )
 
 
 # --------------------------------------------------
