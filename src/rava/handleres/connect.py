@@ -55,7 +55,7 @@ class RavaConnection:
 async def connect_rava(
     playwright: Playwright = None,
     headless: bool = False,
-    url: str = "https://rava.com/",
+    url: str = None,
 ) -> RavaConnection:
     if playwright is None:
         playwright = await async_playwright().start()
@@ -66,13 +66,14 @@ async def connect_rava(
     context = await browser.new_context(no_viewport=True)
     page = await context.new_page()
 
-    try:
-        "Open Rava's page (homepage by default)"
-        # url = "https://rava.com/"
-        await page.goto(url)
-        await page.wait_for_load_state("networkidle")
-    except Exception as e:
-        print(f"Ocurrio un error: {e}")
+    if url is not None:
+        try:
+            "Open Rava's page (homepage by default)"
+            # url = "https://rava.com/"
+            await page.goto(url)
+            await page.wait_for_load_state("networkidle")
+        except Exception as e:
+            print(f"Ocurrio un error: {e}")
 
     return RavaConnection(browser=browser, context=context, page=page, url=url)
 
@@ -85,11 +86,24 @@ class RavaManager(ABC):
     soup: BeautifulSoup = None
 
     # --------------------------------------------------
+    async def connect(
+        self,
+        playwright: Playwright,
+        headless: bool = False,
+        url: str = None,
+    ) -> RavaConnection:
+        self.rava = await connect_rava(
+            playwright=playwright, headless=headless, url=url
+        )
+        return self.rava
+
+    # --------------------------------------------------
     @abstractmethod
     async def get_rendered_html(self) -> None:
         """Go to specific report"""
         pass
 
+    # --------------------------------------------------
     def extract_text(self, selector: str) -> str:
         """Extract text from the HTML using a CSS selector."""
         if self.rendered_html is None:
@@ -97,6 +111,7 @@ class RavaManager(ABC):
 
         return extract_text(selector, soup=self.soup)
 
+    # --------------------------------------------------
     def extract_sibling_text(self, label: str, tag_name: str = "b") -> str:
         """Extract text from the HTML using a CSS selector."""
         if self.rendered_html is None:
