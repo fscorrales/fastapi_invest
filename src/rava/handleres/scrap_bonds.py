@@ -17,7 +17,7 @@ from playwright.async_api import async_playwright
 
 from ...utils import to_float
 from ..schemas import RavaBond
-from .connect import RavaConnection, connect_rava
+from .connect import RavaManager, connect_rava
 
 
 # --------------------------------------------------
@@ -45,10 +45,7 @@ def get_args():
 
 # --------------------------------------------------
 @dataclass
-class ScrapRavaBonds:
-    rava: RavaConnection
-    rendered_html: str = None
-
+class ScrapRavaBonds(RavaManager):
     # --------------------------------------------------
     async def get_rendered_html(self, url: str = None) -> str:
         """Get the rendered HTML of the RAVA bonds page using Playwright"""
@@ -67,13 +64,14 @@ class ScrapRavaBonds:
 
         # Get the rendered HTML
         self.rendered_html = await self.rava.page.content()
+        self.soup = BeautifulSoup(self.rendered_html, "html.parser")
+
         return self.rendered_html
 
     # --------------------------------------------------
     def scrap_bonds(self) -> List[RavaBond]:
         """Extract the bonds table from the rendered HTML"""
-        soup = BeautifulSoup(self.rendered_html, "html.parser")
-        table = soup.find("table")
+        table = self.soup.find("table")
 
         if not table:
             print("❌ Table not found.")

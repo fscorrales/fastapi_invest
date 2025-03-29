@@ -15,9 +15,9 @@ from typing import List
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
-from ...utils import extract_sibling_text, extract_text, parse_date, to_float
+from ...utils import parse_date, to_float
 from ..schemas import RavaBondCashFlow, RavaBondProfile
-from .connect import RavaConnection, connect_rava
+from .connect import RavaManager, connect_rava
 
 
 # --------------------------------------------------
@@ -45,10 +45,7 @@ def get_args():
 
 # --------------------------------------------------
 @dataclass
-class ScrapRavaBondInfo:
-    rava: RavaConnection
-    rendered_html: str = None
-
+class ScrapRavaBondInfo(RavaManager):
     # --------------------------------------------------
     async def get_rendered_html(self, symbol: str = None, url: str = None) -> str:
         """Get the rendered HTML of the RAVA bonds page using Playwright"""
@@ -69,14 +66,14 @@ class ScrapRavaBondInfo:
 
         # Get the rendered HTML
         self.rendered_html = await self.rava.page.content()
+        self.soup = BeautifulSoup(self.rendered_html, "html.parser")
 
         return self.rendered_html
 
     # --------------------------------------------------
     def fetch_cash_flow_table(self) -> List[RavaBondCashFlow]:
         # Process HTML with BeautifulSoup
-        soup = BeautifulSoup(self.rendered_html, "html.parser")
-        table = soup.select_one("#scroll-flujo table")
+        table = self.soup.select_one("#scroll-flujo table")
 
         # Extract rows
         data = []
@@ -85,7 +82,7 @@ class ScrapRavaBondInfo:
             cols = [td.text.strip() for td in row.find_all("td")]
             data.append(
                 RavaBondCashFlow(
-                    symbol=extract_sibling_text("Símbolo", soup),
+                    symbol=self.extract_sibling_text("Símbolo"),
                     date=parse_date(cols[0]),
                     interest=to_float(cols[1], 0),
                     amortization=to_float(cols[2], 0),
@@ -98,35 +95,34 @@ class ScrapRavaBondInfo:
     # --------------------------------------------------
     def scrape_bond_data(self) -> RavaBondProfile:
         pass  # Parse with BeautifulSoup
-        soup = BeautifulSoup(self.rendered_html, "html.parser")
 
-        tir = extract_text(
-            "p:-soup-contains('Tasa interna de retorno (TIR)') span", soup
+        tir = self.extract_text(
+            "p:-soup-contains('Tasa interna de retorno (TIR)') span"
         )
-        dm = extract_text("p:-soup-contains('Duration modificada (DM)') span", soup)
+        dm = self.extract_text("p:-soup-contains('Duration modificada (DM)') span")
 
         bond_data = {
-            "symbol": extract_sibling_text("Símbolo", soup),
-            "denomination": extract_sibling_text("Denominación", soup),
-            "issuer": extract_sibling_text("Emisor", soup),
-            "law": extract_sibling_text("Ley", soup),
-            "currency": extract_sibling_text("Moneda de emisión", soup),
+            "symbol": self.extract_sibling_text("Símbolo"),
+            "denomination": self.extract_sibling_text("Denominación"),
+            "issuer": self.extract_sibling_text("Emisor"),
+            "law": self.extract_sibling_text("Ley"),
+            "currency": self.extract_sibling_text("Moneda de emisión"),
             "issue_date": parse_date(
-                extract_sibling_text("Fecha de Emisión", soup), "%d/%m/%Y"
+                self.extract_sibling_text("Fecha de Emisión"), "%d/%m/%Y"
             ),
             "maturity_date": parse_date(
-                extract_sibling_text("Fecha Vencimiento", soup), "%d/%m/%Y"
+                self.extract_sibling_text("Fecha Vencimiento"), "%d/%m/%Y"
             ),
             "nominal_amount": to_float(
-                extract_sibling_text("Monto nominal vigente", soup)
+                self.extract_sibling_text("Monto nominal vigente")
             ),
-            "residual_amount": to_float(extract_sibling_text("Monto residual", soup)),
-            "interest_description": extract_sibling_text("Interés", soup),
-            "amortization_description": extract_sibling_text(
-                "Forma de amortización", soup
+            "residual_amount": to_float(self.extract_sibling_text("Monto residual")),
+            "interest_description": self.extract_sibling_text("Interés"),
+            "amortization_description": self.extract_sibling_text(
+                "Forma de amortización"
             ),
             "minimum_denomination": to_float(
-                extract_sibling_text("Denominación mínima", soup)
+                self.extract_sibling_text("Denominación mínima")
             ),
             "tir": to_float(tir.replace("%", "")),
             "dm": to_float(dm),

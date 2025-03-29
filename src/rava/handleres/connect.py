@@ -5,14 +5,18 @@ Date   : 29-mar-2025
 Purpose: Go to RAVA´s page (homepage by default)
 """
 
-__all__ = ["RavaConnection", "connect_rava"]
+__all__ = ["RavaConnection", "connect_rava", "RavaManager"]
 
 import argparse
 import asyncio
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from bs4 import BeautifulSoup
 from playwright._impl._browser import Browser, BrowserContext, Page
 from playwright.async_api import Playwright, async_playwright
+
+from ...utils import extract_sibling_text, extract_text
 
 
 # --------------------------------------------------
@@ -71,6 +75,34 @@ async def connect_rava(
         print(f"Ocurrio un error: {e}")
 
     return RavaConnection(browser=browser, context=context, page=page, url=url)
+
+
+# --------------------------------------------------
+@dataclass
+class RavaManager(ABC):
+    rava: RavaConnection = None
+    rendered_html: str = None
+    soup: BeautifulSoup = None
+
+    # --------------------------------------------------
+    @abstractmethod
+    async def get_rendered_html(self) -> None:
+        """Go to specific report"""
+        pass
+
+    def extract_text(self, selector: str) -> str:
+        """Extract text from the HTML using a CSS selector."""
+        if self.rendered_html is None:
+            raise ValueError("Rendered HTML is not available.")
+
+        return extract_text(selector, soup=self.soup)
+
+    def extract_sibling_text(self, label: str, tag_name: str = "b") -> str:
+        """Extract text from the HTML using a CSS selector."""
+        if self.rendered_html is None:
+            raise ValueError("Rendered HTML is not available.")
+
+        return extract_sibling_text(label, soup=self.soup, tag_name=tag_name)
 
 
 # --------------------------------------------------
