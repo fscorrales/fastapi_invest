@@ -24,6 +24,15 @@ FastAPI ...
    ```bash
    poetry install
    ```
+1. Install Playwright browsers (if not already installed):
+    ```bash
+    playwright install
+    ```
+    Or:
+    ```bash
+    poetry run playwright install
+    ```
+
 1. Open the project directory in VSCode.
 
 1. In VSCode, select the appropriate interpreter:
@@ -41,16 +50,30 @@ FastAPI ...
    ```
 1. As the console should say, visit [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
+## Important: Playwright Browsers Installation
+
+If you are using Playwright for the first time or after updating it, you need to install the required browsers. Otherwise, you may encounter the following warning:
+
+>WARNING: Playwright browsers not found. Looks like Playwright was just installed or updated. Please run the following command to download new browsers: playwright install
+
+To resolve this, run the following command in your terminal:
+```bash
+playwright install
+```
+
+Or, using poetry, do the following:
+```bash
+poetry run playwright install
+```
+
 ## Running Scripts in the `handlers` Folder
 
 Inside the `handlers` folder, you can execute the scripts that have been created using `argparse`. To run a script, simply use the following command, with activated venv:
-
 ```bash
 python -m src.{module_name}.handlers.{script_name} {args if necessary}
 ```
 
 Or, using poetry, do the following:
-
 ```bash
 poetry run python -m src.{module_name}.handlers.{script_name} {args if necessary}
 ```
