@@ -5,7 +5,7 @@ Date   : 27-mar-2025
 Purpose: Scrap Bonds from RAVA
 """
 
-__all__ = ["scrap_bonds", "get_rendered_html"]
+__all__ = ["scrap_bonds", "get_bonds_rendered_html"]
 
 import argparse
 import asyncio
@@ -33,7 +33,7 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_rendered_html(url: str = None) -> str:
+async def get_bonds_rendered_html(url: str = None) -> str:
     """Get the rendered HTML of the RAVA bonds page using Playwright"""
     if url is None:
         url = "https://www.rava.com/cotizaciones/bonos"
@@ -102,7 +102,7 @@ def scrap_bonds(html) -> List[RavaBond]:
 async def main():
     """Make a jazz noise here"""
 
-    html = await get_rendered_html()
+    html = await get_bonds_rendered_html()
     bonds = scrap_bonds(html)
 
     for bond in bonds[:5]:  # Show only the first 5 bonds

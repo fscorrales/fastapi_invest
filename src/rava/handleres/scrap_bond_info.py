@@ -5,7 +5,7 @@ Date   : 27-mar-2025
 Purpose: Scrap Bonds from RAVA
 """
 
-__all__ = ["fetch_cash_flow_table", "get_rendered_html"]
+__all__ = ["fetch_cash_flow_table", "get_bond_info_rendered_html", "scrape_bond_data"]
 
 import argparse
 import asyncio
@@ -37,7 +37,7 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_rendered_html(symbol: str = None, url: str = None) -> str:
+async def get_bond_info_rendered_html(symbol: str = None, url: str = None) -> str:
     """Get the rendered HTML of the RAVA bonds page using Playwright"""
     if symbol is not None:
         url = f"https://www.rava.com/perfil/{symbol}"
@@ -126,7 +126,7 @@ async def main():
     args = get_args()
     symbol = args.symbol
 
-    html = await get_rendered_html(symbol=symbol)
+    html = await get_bond_info_rendered_html(symbol=symbol)
 
     bond_data = scrape_bond_data(html)
     print(bond_data)
