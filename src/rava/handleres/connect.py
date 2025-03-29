@@ -127,12 +127,3 @@ if __name__ == "__main__":
 
     # python -m src.rava.handleres.connect
     # poetry run python -m src.rava.handleres.connect
-
-    # ╔════════════════════════════════════════════════════════════╗
-    # ║ WARNING: Playwright browsers not found.                    ║
-    # ║ Looks like Playwright was just installed or updated.       ║
-    # ║ Please run the following command to download new browsers: ║
-    # ║                                                            ║
-    # ║     playwright install                                     ║
-    # ║                                                            ║
-    # ║ <3 Playwright Team
