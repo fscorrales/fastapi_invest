@@ -25,7 +25,7 @@ class BondInfoService:
                 await self.bond_info.get_rendered_html(symbol=symbol)
                 return await self.bond_info.scrape_bond_data()
             except Exception as e:
-                logger(f"❌ Error: {e}")
+                logger.error(f"❌ Error: {e}")
 
     async def get_bond_cash_flow(
         self, symbol: str = "AL30", headless: bool = False
@@ -36,7 +36,7 @@ class BondInfoService:
                 await self.bond_info.get_rendered_html(symbol=symbol)
                 return await self.bond_info.fetch_cash_flow_table()
             except Exception as e:
-                logger(f"❌ Error: {e}")
+                logger.error(f"❌ Error: {e}")
 
 
 BondInfoServiceDependency = Annotated[BondInfoService, Depends()]
