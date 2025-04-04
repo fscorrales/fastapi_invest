@@ -1,4 +1,4 @@
-__all__ = ["LoginUser", "PublicStoredUser"]
+__all__ = ["LoginUser", "PublicStoredUser", "PrivateStoredUser"]
 
 from datetime import datetime
 from enum import Enum
@@ -13,12 +13,10 @@ class Role(str, Enum):
 
 
 class BaseUser(BaseModel):
-    username: str
     email: EmailStr
 
 
-class LoginUser(BaseModel):
-    username: str
+class LoginUser(BaseUser):
     password: str
 
 
@@ -26,3 +24,6 @@ class PublicStoredUser(BaseUser):
     role: Role
     deactivated_at: datetime | None = Field(default=None)
     id: PydanticObjectId = Field(validation_alias=AliasChoices("_id", "id"))
+
+class PrivateStoredUser(PublicStoredUser):
+    hash_password: str
