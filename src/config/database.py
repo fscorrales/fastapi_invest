@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from .__base_config import MONGODB_URI, logger
 
 MONGO_DB_NAME = "invest"
-COLLECTIONS = ["iol_mi_cuenta_estado"]
+COLLECTIONS = ["iol_mi_cuenta_estado", "users"]
 
 # Inicializar la conexión con MongoDB
 client = AsyncIOMotorClient(MONGODB_URI)

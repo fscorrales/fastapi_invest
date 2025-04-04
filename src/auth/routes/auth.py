@@ -6,7 +6,7 @@ from typing import Annotated
 
 from ..models import LoginUser
 from ..services import (
-    # UsersServiceDependency,
+    UsersServiceDependency,
     AuthenticationDependency,
     AuthorizationDependency,
 )
