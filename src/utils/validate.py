@@ -1,4 +1,4 @@
-__all__ = ["validate_and_extract_data_from_df", "ErrorsWithDocId", "PyObjectId"]
+__all__ = ["validate_and_extract_data_from_df", "ErrorsWithDocId", "validate_not_empty","PyObjectId"]
 
 from typing import List, Any
 
@@ -62,6 +62,10 @@ def validate_and_extract_data_from_df(
             errors_list.append(ErrorsWithDocId(doc_id=doc_id, details=error_details))
     return ValidationResultSchema(errors=errors_list, validated=validated_list)
 
+def validate_not_empty(field: str) -> str:
+    if not field:
+        raise ValueError("Field cannot be empty or zero")
+    return field
 
 class PyObjectId(ObjectId):
     @classmethod

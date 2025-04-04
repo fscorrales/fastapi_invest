@@ -1,10 +1,14 @@
-__all__ = ["LoginUser", "PublicStoredUser", "PrivateStoredUser"]
+__all__ = ["CreateUser", "LoginUser", "PublicStoredUser", "PrivateStoredUser"]
 
 from datetime import datetime
 from enum import Enum
 
-from pydantic import AliasChoices, BaseModel, EmailStr, Field
-from ...utils import PyObjectId
+from pydantic import AliasChoices, BaseModel, EmailStr, Field, field_validator
+from ...utils import PyObjectId, validate_not_empty
+
+
+class RegisterRole(str, Enum):
+    user = "user"
 
 
 class Role(str, Enum):
@@ -15,6 +19,20 @@ class Role(str, Enum):
 class BaseUser(BaseModel):
     email: EmailStr
 
+
+class RegisterUser(BaseUser):
+    role: RegisterRole = RegisterRole.user
+    password: str
+    _not_empty = field_validator("email", "password", mode="after")(
+        validate_not_empty
+    )
+
+
+class CreateUser(RegisterUser):
+    role: Role = Role.user
+    _not_empty = field_validator("email", "password", mode="after")(
+        validate_not_empty
+    )
 
 class LoginUser(BaseUser):
     password: str

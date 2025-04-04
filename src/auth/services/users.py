@@ -12,7 +12,7 @@ from typing import Annotated
 from ..models import (
     PublicStoredUser,
     PrivateStoredUser,
-    # CreateUser,
+    CreateUser,
     # UpdateUser,
     # FilterParamsUser,
 )
@@ -25,30 +25,23 @@ class UsersService:
     assert (collection_name := "users") in COLLECTIONS
     collection = db[collection_name]
 
-    # @classmethod
-    # def create_one(cls, user: CreateUser) -> PublicStoredUser:
-    #     """Create a new user"""
-    #     existing_user = cls.collection.find_one(
-    #         {
-    #             "$or": [
-    #                 {"username": user.username},
-    #                 {"email": user.email},
-    #             ]
-    #         }
-    #     )
-    #     if existing_user is not None:
-    #         raise HTTPException(
-    #             status_code=status.HTTP_409_CONFLICT, detail="User already exists"
-    #         )
+    @classmethod
+    def create_one(cls, user: CreateUser) -> PublicStoredUser:
+        """Create a new user"""
+        existing_user = cls.collection.find_one({"email": user.email})
+        if existing_user is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="User already exists"
+            )
 
-    #     hash_password = Authentication.get_password_hash(user.password)
-    #     insert_user = user.model_dump(exclude={"password"}, exclude_unset=False)
-    #     insert_user.update(hash_password=hash_password)
+        hash_password = Authentication.get_password_hash(user.password)
+        insert_user = user.model_dump(exclude={"password"}, exclude_unset=False)
+        insert_user.update(hash_password=hash_password)
 
-    #     new_user = cls.collection.insert_one(insert_user)
-    #     return PublicStoredUser.model_validate(
-    #         cls.collection.find_one(new_user.inserted_id)
-    #     )
+        new_user = cls.collection.insert_one(insert_user)
+        return PublicStoredUser.model_validate(
+            cls.collection.find_one(new_user.inserted_id)
+        )
 
     @classmethod
     def get_one(
