@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 
 from pydantic import AliasChoices, BaseModel, EmailStr, Field
-from pydantic_mongo import PydanticObjectId
+from ...utils import PyObjectId
 
 
 class Role(str, Enum):
@@ -23,7 +23,7 @@ class LoginUser(BaseUser):
 class PublicStoredUser(BaseUser):
     role: Role
     deactivated_at: datetime | None = Field(default=None)
-    id: PydanticObjectId = Field(validation_alias=AliasChoices("_id", "id"))
+    id: PyObjectId = Field(validation_alias=AliasChoices("_id", "id"))
 
 class PrivateStoredUser(PublicStoredUser):
     hash_password: str

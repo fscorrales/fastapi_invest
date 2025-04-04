@@ -1,9 +1,11 @@
-__all__ = ["validate_and_extract_data_from_df", "ErrorsWithDocId"]
+__all__ = ["validate_and_extract_data_from_df", "ErrorsWithDocId", "PyObjectId"]
 
-from typing import List
+from typing import List, Any
 
 import pandas as pd
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, GetCoreSchemaHandler
+from pydantic_core import core_schema
+from bson import ObjectId
 
 
 class ErrorsDetails(BaseModel):
@@ -59,3 +61,21 @@ def validate_and_extract_data_from_df(
             ]
             errors_list.append(ErrorsWithDocId(doc_id=doc_id, details=error_details))
     return ValidationResultSchema(errors=errors_list, validated=validated_list)
+
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+        return core_schema.json_or_python_schema(
+            python_schema=core_schema.with_info_plain_validator_function(cls.validate),
+            json_schema=core_schema.with_info_plain_validator_function(cls.validate),
+            serialization=core_schema.plain_serializer_function_ser_schema(str),
+        )
+
+    @classmethod
+    def validate(cls, v, _info):
+        if isinstance(v, ObjectId):
+            return v
+        if ObjectId.is_valid(v):
+            return ObjectId(v)
+        raise ValueError("Invalid ObjectId")

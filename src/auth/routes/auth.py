@@ -1,10 +1,12 @@
+__all__ = ["auth_router"]
+
 from fastapi import APIRouter, Response, Form
 
 from typing import Annotated
 
 from ..models import LoginUser
 from ..services import (
-    UsersServiceDependency,
+    # UsersServiceDependency,
     AuthenticationDependency,
     AuthorizationDependency,
 )
@@ -27,15 +29,10 @@ def login_with_cookie(
     )
 
 
-@auth_router.get("/authenticated_user")
-def read_current_user(security: AuthorizationDependency):
-    return UsersServiceDependency.get_one(id=ObjectId(security.auth_user_id))
-    # return dict(
-    #     id=security.auth_user_id,
-    #     username=security.auth_user_name,
-    #     email=security.auth_user_email,
-    #     role=security.auth_user_role,
-    # )
+# @auth_router.get("/authenticated_user")
+# def read_current_user(security: AuthorizationDependency, auth: AuthenticationDependency,):
+#     return auth.get_current_user(id=ObjectId(security.auth_user_id))
+
 
 
 @auth_router.post("/logout", include_in_schema=False)

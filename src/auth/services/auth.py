@@ -51,35 +51,35 @@ class Authentication:
 
         return {"access_token": access_token}
 
-    def get_current_user(
-        sekf,
-        *,
-        id: PydanticObjectId | None = None,
-        email: str | None = None,
-        with_password: bool = False,
-    ):
-        if all(q is None for q in (id, email)):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No id or email provided",
-            )
-        filter = {
-            "$or": [
-                {"_id": id},
-                {"email": email},
-            ]
-        }
+    # def get_current_user(
+    #     self,
+    #     *,
+    #     id: PydanticObjectId | None = None,
+    #     email: str | None = None,
+    #     with_password: bool = False,
+    # ):
+    #     if all(q is None for q in (id, email)):
+    #         raise HTTPException(
+    #             status_code=status.HTTP_400_BAD_REQUEST,
+    #             detail="No id or email provided",
+    #         )
+    #     filter = {
+    #         "$or": [
+    #             {"_id": id},
+    #             {"email": email},
+    #         ]
+    #     }
 
-        if db_user := cls.collection.find_one(filter):
-            return (
-                PrivateStoredUser.model_validate(db_user).model_dump()
-                if with_password
-                else PublicStoredUser.model_validate(db_user).model_dump()
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-            )
+    #     if db_user := cls.collection.find_one(filter):
+    #         return (
+    #             PrivateStoredUser.model_validate(db_user).model_dump()
+    #             if with_password
+    #             else PublicStoredUser.model_validate(db_user).model_dump()
+    #         )
+    #     else:
+    #         raise HTTPException(
+    #             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+    #         )
 
 
 class Authorization:
