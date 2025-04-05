@@ -3,28 +3,58 @@ This script requires the file ADMIN_USER_CONF to be in the same directory as the
 script. Or you can set the username, email and password environment variables.
 """
 
+import asyncio
 import os
+
+from fastapi import HTTPException
 
 from src.auth.models import CreateUser
 from src.auth.services import UsersService
+from src.config.database import Database
 
-try:
-    with open("scripts/ADMIN_USER_CONF", "r") as f:
-        print("Reading the config file...")
-        lines = f.read().splitlines()
-        data = dict(line.split("=") for line in lines)
-except FileNotFoundError:
-    data = dict(
-        email=os.environ.get("ADMIN_EMAIL"),
-        password=os.environ.get("ADMIN_PASSWORD"),
-    )
 
-# Assign role admin to user data
-data["role"] = "admin"
+async def main():
+    Database.initialize()
+    try:
+        await Database.client.admin.command("ping")
+        print("Connected to MongoDB")
+    except Exception as e:
+        print("Error connecting to MongoDB:", e)
+        return
 
-insertion_user = CreateUser.model_validate(data)
+    try:
+        with open("scripts/ADMIN_USER_CONF", "r") as f:
+            print("Reading the config file...")
+            lines = f.read().splitlines()
+            data = dict(line.split("=") for line in lines)
+    except FileNotFoundError:
+        data = dict(
+            email=os.environ.get("ADMIN_EMAIL"),
+            password=os.environ.get("ADMIN_PASSWORD"),
+        )
 
-print("Creating super user...")
-result = UsersService.create_one(insertion_user)
+    # Assign role admin to user data
+    try:
+        data["role"] = "admin"
 
-print(f"Super user: {data['username']} created with id: {result}")
+        insertion_user = CreateUser.model_validate(data)
+
+        print("Creating super user...")
+        result = await UsersService.create_one(insertion_user)
+
+        print(f"Super user with email: {data['email']} created with id: {result.id}")
+    except HTTPException as e:
+        if e.status_code == 409:
+            print("Super user already exists. Skipping creation.")
+        else:
+            raise
+
+
+if __name__ == "__main__":
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(main())

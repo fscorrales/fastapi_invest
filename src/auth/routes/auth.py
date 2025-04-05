@@ -15,13 +15,13 @@ auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @auth_router.post("/login")
-def login_with_cookie(
+async def login_with_cookie(
     user: Annotated[LoginUser, Form()],
     response: Response,
     users: UsersServiceDependency,
     auth: AuthenticationDependency,
 ):
-    db_user = users.get_one(username=user.username, with_password=True)
+    db_user = await users.get_one(username=user.username, with_password=True)
     return auth.login_and_set_access_token(
         user=user, db_user=db_user, response=response
     )

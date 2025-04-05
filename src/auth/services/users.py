@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 
-from ...config import COLLECTIONS, db
+from ...config import COLLECTIONS, Database
 
 # from pydantic_mongo import PydanticObjectId
 from ...utils import PyObjectId
@@ -21,13 +21,19 @@ from .auth import Authentication
 
 
 class UsersService:
-    assert (collection_name := "users") in COLLECTIONS
-    collection = db[collection_name]
+    collection_name = "users"
+    collection = None
 
     @classmethod
-    def create_one(cls, user: CreateUser) -> PublicStoredUser:
+    def init_collection(cls):
+        assert cls.collection_name in COLLECTIONS
+        cls.collection = Database.db[cls.collection_name]
+
+    @classmethod
+    async def create_one(cls, user: CreateUser) -> PublicStoredUser:
+        cls.init_collection()
         """Create a new user"""
-        existing_user = cls.collection.find_one({"email": user.email})
+        existing_user = await cls.collection.find_one({"email": user.email})
         if existing_user is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="User already exists"
@@ -37,9 +43,9 @@ class UsersService:
         insert_user = user.model_dump(exclude={"password"}, exclude_unset=False)
         insert_user.update(hash_password=hash_password)
 
-        new_user = cls.collection.insert_one(insert_user)
+        new_user = await cls.collection.insert_one(insert_user)
         return PublicStoredUser.model_validate(
-            cls.collection.find_one(new_user.inserted_id)
+            await cls.collection.find_one(new_user.inserted_id)
         )
 
     @classmethod
