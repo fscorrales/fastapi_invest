@@ -1,17 +1,15 @@
 __all__ = ["auth_router"]
 
-from fastapi import APIRouter, Response, Form
-
 from typing import Annotated
+
+from fastapi import APIRouter, Form, Response
 
 from ..models import LoginUser
 from ..services import (
-    UsersServiceDependency,
     AuthenticationDependency,
-    AuthorizationDependency,
+    # AuthorizationDependency,
+    UsersServiceDependency,
 )
-
-from bson import ObjectId
 
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -32,7 +30,6 @@ def login_with_cookie(
 # @auth_router.get("/authenticated_user")
 # def read_current_user(security: AuthorizationDependency, auth: AuthenticationDependency,):
 #     return auth.get_current_user(id=ObjectId(security.auth_user_id))
-
 
 
 @auth_router.post("/logout", include_in_schema=False)

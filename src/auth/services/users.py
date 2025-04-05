@@ -1,24 +1,23 @@
 __all__ = ["UsersService", "UsersServiceDependency"]
 
-from datetime import datetime
-
-from ...config import db, COLLECTIONS
-# from ..utils import validate_and_extract_data
-from .auth import Authentication
-
-from fastapi import Depends, HTTPException, status
 from typing import Annotated
 
+from fastapi import Depends, HTTPException, status
+
+from ...config import COLLECTIONS, db
+
+# from pydantic_mongo import PydanticObjectId
+from ...utils import PyObjectId
 from ..models import (
-    PublicStoredUser,
-    PrivateStoredUser,
     CreateUser,
     # UpdateUser,
     # FilterParamsUser,
+    PrivateStoredUser,
+    PublicStoredUser,
 )
-# from pydantic_mongo import PydanticObjectId
-from ...utils import PyObjectId
-from pydantic import ValidationError
+
+# from ..utils import validate_and_extract_data
+from .auth import Authentication
 
 
 class UsersService:

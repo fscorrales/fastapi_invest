@@ -1,5 +1,5 @@
 """
-This script requires the file ADMIN_USER_CONF to be in the same directory as the 
+This script requires the file ADMIN_USER_CONF to be in the same directory as the
 script. Or you can set the username, email and password environment variables.
 """
 
@@ -27,4 +27,4 @@ insertion_user = CreateUser.model_validate(data)
 print("Creating super user...")
 result = UsersService.create_one(insertion_user)
 
-print(f"Super user: {data["username"]} created with id: {result}")
+print(f"Super user: {data['username']} created with id: {result}")
