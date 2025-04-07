@@ -6,21 +6,27 @@ from fastapi import Depends
 from httpx import AsyncClient
 from pydantic import ValidationError
 
-from ...config import COLLECTIONS, IOL_PASSWORD, IOL_USERNAME, db, logger
+from ...config import COLLECTIONS, Database, logger
 from ...utils import validate_and_extract_data_from_df
 from ..handlers import get_estado_cuenta, get_token
 from ..schemas import EstadoCuentaValidationOutput, SaldoCuenta
 
 
 class MiCuentaService:
-    assert (collection_name := "iol_mi_cuenta_estado") in COLLECTIONS
-    collection = db[collection_name]
+    collection_name = "users"
+    collection = None
 
     @classmethod
-    async def get_mi_cuenta_estado(cls) -> EstadoCuentaValidationOutput:
+    def init_collection(cls):
+        assert cls.collection_name in COLLECTIONS
+        cls.collection = Database.db[cls.collection_name]
+
+    @classmethod
+    async def get_mi_cuenta_estado(cls, username:str, password:str) -> EstadoCuentaValidationOutput:
+        cls.init_collection()
         async with AsyncClient() as c:
             connect_iol = await get_token(
-                IOL_USERNAME, IOL_PASSWORD, httpxAsyncClient=c
+                username, password, httpxAsyncClient=c
             )
             try:
                 estado_cuenta = await get_estado_cuenta(
