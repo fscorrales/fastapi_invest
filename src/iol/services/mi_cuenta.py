@@ -22,12 +22,12 @@ class MiCuentaService:
         cls.collection = Database.db[cls.collection_name]
 
     @classmethod
-    async def get_mi_cuenta_estado(cls, username:str, password:str) -> EstadoCuentaValidationOutput:
+    async def get_mi_cuenta_estado(
+        cls, username: str, password: str
+    ) -> EstadoCuentaValidationOutput:
         cls.init_collection()
         async with AsyncClient() as c:
-            connect_iol = await get_token(
-                username, password, httpxAsyncClient=c
-            )
+            connect_iol = await get_token(username, password, httpxAsyncClient=c)
             try:
                 estado_cuenta = await get_estado_cuenta(
                     iol=connect_iol, httpxAsyncClient=c

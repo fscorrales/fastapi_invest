@@ -49,15 +49,15 @@ class UsersService:
         )
 
     @classmethod
-    def get_one(
+    async def get_one(
         cls,
         *,
         id: PyObjectId | None = None,
-        username: str | None = None,
         email: str | None = None,
         with_password: bool = False,
     ):
-        if all(q is None for q in (id, username, email)):
+        cls.init_collection()
+        if all(q is None for q in (id, email)):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No id, username or email provided",
@@ -65,12 +65,11 @@ class UsersService:
         filter = {
             "$or": [
                 {"_id": id},
-                {"username": username},
                 {"email": email},
             ]
         }
 
-        if db_user := cls.collection.find_one(filter):
+        if db_user := await cls.collection.find_one(filter):
             return (
                 PrivateStoredUser.model_validate(db_user).model_dump()
                 if with_password
