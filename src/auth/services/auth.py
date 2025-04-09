@@ -2,9 +2,10 @@ __all__ = [
     "Authentication",
     "AuthenticationDependency",
     "AuthorizationDependency",
+    "OptionalAuthorizationDependency",
 ]
 
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import Depends, HTTPException, Response, Security, status
 from fastapi_jwt import JwtAccessBearer, JwtAuthorizationCredentials
@@ -13,12 +14,17 @@ from passlib.context import CryptContext
 from ...config import JWT_SECRET, token_expiration_time
 from ..models import LoginUser, PublicStoredUser
 
+# Seguridad obligatoria (con candado 🔒)
 access_security = JwtAccessBearer(
     secret_key=JWT_SECRET,
     auto_error=True,
 )
 
-AuthCredentials = Annotated[JwtAuthorizationCredentials, Security(access_security)]
+# Seguridad opcional (no lanza error si no hay token)
+access_security_optional = JwtAccessBearer(
+    secret_key=JWT_SECRET,
+    auto_error=False,
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -51,27 +57,63 @@ class Authentication:
 
         return {"access_token": access_token}
 
+AuthenticationDependency = Annotated[
+    Authentication,
+    Depends(),
+]
 
 class Authorization:
-    def __init__(self, credentials: AuthCredentials):
-        self.auth_user_id = credentials.subject.get("id")
-        self.auth_user_name = credentials.subject.get("username")
-        self.auth_user_role = credentials.subject.get("role")
+    def __init__(self, credentials: Optional[JwtAuthorizationCredentials] = None):
+        self.auth_user_id = None
+        self.auth_user_name = None
+        self.auth_user_role = None
+
+        if credentials:
+            self.auth_user_id = credentials.subject.get("id")
+            self.auth_user_name = credentials.subject.get("username")
+            self.auth_user_role = credentials.subject.get("role")
 
     @property
-    def is_admin(self):
+    def is_admin(self) -> bool:
         return self.auth_user_role == "admin"
 
     @property
-    def is_user(self):
+    def is_user(self) -> bool:
         return self.auth_user_role == "user"
 
     def is_admin_or_raise(self):
-        if self.auth_user_role != "admin":
+        if not self.is_admin:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User does not have admin role",
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin access required",
             )
 
-AuthenticationDependency = Annotated[Authentication, Depends()]
-AuthorizationDependency = Annotated[Authorization, Depends()]
+# ------------ DEPENDENCIAS ------------
+
+# 🔒 Token obligatorio
+AuthCredentials = Annotated[
+    JwtAuthorizationCredentials,
+    Security(access_security)
+]
+
+def get_authorization(credentials: AuthCredentials) -> Authorization:
+    return Authorization(credentials)
+
+AuthorizationDependency = Annotated[
+    Authorization,
+    Depends(get_authorization)
+]
+
+# 🟢 Token opcional
+OptionalAuthCredentials = Annotated[
+    Optional[JwtAuthorizationCredentials],
+    Security(access_security_optional)
+]
+
+def get_optional_authorization(credentials: OptionalAuthCredentials) -> Authorization:
+    return Authorization(credentials)
+
+OptionalAuthorizationDependency = Annotated[
+    Authorization,
+    Depends(get_optional_authorization)
+]

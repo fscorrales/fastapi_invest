@@ -13,7 +13,7 @@ from ..schemas import EstadoCuentaValidationOutput, SaldoCuenta
 
 
 class MiCuentaService:
-    collection_name = "users"
+    collection_name = "iol_mi_cuenta_estado"
     collection = None
 
     @classmethod
@@ -25,14 +25,12 @@ class MiCuentaService:
     async def get_mi_cuenta_estado(
         cls, username: str, password: str
     ) -> EstadoCuentaValidationOutput:
-        cls.init_collection()
         async with AsyncClient() as c:
             connect_iol = await get_token(username, password, httpxAsyncClient=c)
             try:
                 estado_cuenta = await get_estado_cuenta(
                     iol=connect_iol, httpxAsyncClient=c
                 )
-                return estado_cuenta
                 # return validate_and_extract_data_from_df(
                 #     estado_cuenta.saldos, SaldoCuenta
                 # )
@@ -40,6 +38,8 @@ class MiCuentaService:
                 logger.error(f"Validation Error: {e}")
             except Exception as e:
                 logger.error(f"Error during report processing: {e}")
+            finally:
+                return estado_cuenta
 
 
 MiCuentaServiceDependency = Annotated[MiCuentaService, Depends()]
