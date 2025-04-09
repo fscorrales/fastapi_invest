@@ -57,10 +57,12 @@ class Authentication:
 
         return {"access_token": access_token}
 
+
 AuthenticationDependency = Annotated[
     Authentication,
     Depends(),
 ]
+
 
 class Authorization:
     def __init__(self, credentials: Optional[JwtAuthorizationCredentials] = None):
@@ -88,32 +90,29 @@ class Authorization:
                 detail="Admin access required",
             )
 
+
 # ------------ DEPENDENCIAS ------------
 
 # 🔒 Token obligatorio
-AuthCredentials = Annotated[
-    JwtAuthorizationCredentials,
-    Security(access_security)
-]
+AuthCredentials = Annotated[JwtAuthorizationCredentials, Security(access_security)]
+
 
 def get_authorization(credentials: AuthCredentials) -> Authorization:
     return Authorization(credentials)
 
-AuthorizationDependency = Annotated[
-    Authorization,
-    Depends(get_authorization)
-]
+
+AuthorizationDependency = Annotated[Authorization, Depends(get_authorization)]
 
 # 🟢 Token opcional
 OptionalAuthCredentials = Annotated[
-    Optional[JwtAuthorizationCredentials],
-    Security(access_security_optional)
+    Optional[JwtAuthorizationCredentials], Security(access_security_optional)
 ]
+
 
 def get_optional_authorization(credentials: OptionalAuthCredentials) -> Authorization:
     return Authorization(credentials)
 
+
 OptionalAuthorizationDependency = Annotated[
-    Authorization,
-    Depends(get_optional_authorization)
+    Authorization, Depends(get_optional_authorization)
 ]

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from ...auth.services import OptionalAuthorizationDependency
-from ...config import IOL_PASSWORD, IOL_USERNAME, logger
+from ...config import IOL_PASSWORD, IOL_USERNAME
 from ..schemas import EstadoCuenta
 from ..services import MiCuentaServiceDependency
 

@@ -2,7 +2,7 @@ __all__ = ["Database", "COLLECTIONS"]
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from .__base_config import MONGODB_URI, logger
+from .__base_config import MONGODB_URI
 
 MONGO_DB_NAME = "invest"
 COLLECTIONS = ["iol_mi_cuenta_estado", "users"]

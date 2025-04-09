@@ -7,7 +7,6 @@ from httpx import AsyncClient
 from pydantic import ValidationError
 
 from ...config import COLLECTIONS, Database, logger
-from ...utils import validate_and_extract_data_from_df
 from ..handlers import get_estado_cuenta, get_token
 from ..schemas import EstadoCuenta
 
@@ -22,9 +21,7 @@ class MiCuentaService:
         cls.collection = Database.db[cls.collection_name]
 
     @classmethod
-    async def get_mi_cuenta_estado(
-        cls, username: str, password: str
-    ) -> EstadoCuenta:
+    async def get_mi_cuenta_estado(cls, username: str, password: str) -> EstadoCuenta:
         async with AsyncClient() as c:
             connect_iol = await get_token(username, password, httpxAsyncClient=c)
             try:
