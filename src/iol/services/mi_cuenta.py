@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from ...config import COLLECTIONS, Database, logger
 from ...utils import validate_and_extract_data_from_df
 from ..handlers import get_estado_cuenta, get_token
-from ..schemas import EstadoCuentaValidationOutput, SaldoCuenta
+from ..schemas import EstadoCuenta
 
 
 class MiCuentaService:
@@ -24,16 +24,13 @@ class MiCuentaService:
     @classmethod
     async def get_mi_cuenta_estado(
         cls, username: str, password: str
-    ) -> EstadoCuentaValidationOutput:
+    ) -> EstadoCuenta:
         async with AsyncClient() as c:
             connect_iol = await get_token(username, password, httpxAsyncClient=c)
             try:
                 estado_cuenta = await get_estado_cuenta(
                     iol=connect_iol, httpxAsyncClient=c
                 )
-                # return validate_and_extract_data_from_df(
-                #     estado_cuenta.saldos, SaldoCuenta
-                # )
             except ValidationError as e:
                 logger.error(f"Validation Error: {e}")
             except Exception as e:
