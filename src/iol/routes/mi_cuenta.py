@@ -18,6 +18,5 @@ async def iol_estado_cuenta(
     if auth.is_admin:
         username = IOL_USERNAME
         password = IOL_PASSWORD
-    print(f"username: {username}, password: {password}")
 
     return await service.get_mi_cuenta_estado(username=username, password=password)
