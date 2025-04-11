@@ -2,7 +2,7 @@ __all__ = ["Database", "COLLECTIONS", "BaseRepository"]
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from .__base_config import MONGODB_URI
+from .__base_config import settings
 
 from typing import Generic, List, Optional, Type, TypeVar
 
@@ -20,7 +20,7 @@ class Database:
 
     @classmethod
     def initialize(cls):
-        cls.client = AsyncIOMotorClient(MONGODB_URI)
+        cls.client = AsyncIOMotorClient(settings.MONGODB_URI)
         cls.db = cls.client[MONGO_DB_NAME]
 
 class BaseRepository(Generic[ModelType]):

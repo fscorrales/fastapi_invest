@@ -11,18 +11,18 @@ from fastapi import Depends, HTTPException, Response, Security, status
 from fastapi_jwt import JwtAccessBearer, JwtAuthorizationCredentials
 from passlib.context import CryptContext
 
-from ...config import JWT_SECRET, token_expiration_time
+from ...config import token_expiration_time, settings
 from ..models import LoginUser, PublicStoredUser
 
 # Seguridad obligatoria (con candado 🔒)
 access_security = JwtAccessBearer(
-    secret_key=JWT_SECRET,
+    secret_key=settings.JWT_SECRET,
     auto_error=True,
 )
 
 # Seguridad opcional (no lanza error si no hay token)
 access_security_optional = JwtAccessBearer(
-    secret_key=JWT_SECRET,
+    secret_key=settings.JWT_SECRET,
     auto_error=False,
 )
 

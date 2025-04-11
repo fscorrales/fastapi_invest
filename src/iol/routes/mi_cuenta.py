@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from ...auth.services import OptionalAuthorizationDependency
-from ...config import IOL_PASSWORD, IOL_USERNAME
+from ...config import settings
 from ..schemas import MiCuentaEstado
 from ..services import MiCuentaServiceDependency
 
@@ -16,7 +16,7 @@ async def iol_estado_cuenta(
     password: str = None,
 ):
     if auth.is_admin:
-        username = IOL_USERNAME
-        password = IOL_PASSWORD
+        username = settings.IOL_USERNAME
+        password = settings.IOL_PASSWORD
 
     return await service.get_mi_cuenta_estado(username=username, password=password)

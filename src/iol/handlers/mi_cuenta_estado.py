@@ -47,10 +47,10 @@ def get_args():
     args = parser.parse_args()
 
     if args.username is None or args.password is None:
-        from ...config import IOL_PASSWORD, IOL_USERNAME
+        from ...config import settings
 
-        args.username = IOL_USERNAME
-        args.password = IOL_PASSWORD
+        args.username = settings.IOL_USERNAME
+        args.password = settings.IOL_PASSWORD
         if args.username is None or args.password is None:
             parser.error("Both --username and --password are required.")
 
