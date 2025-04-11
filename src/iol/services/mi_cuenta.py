@@ -6,18 +6,30 @@ from fastapi import Depends, HTTPException
 from httpx import AsyncClient
 from pydantic import ValidationError
 
-from ...config import COLLECTIONS, Database, logger
+from ...config import logger
 from ..handlers import get_estado_cuenta, get_token
-from ..schemas import MiCuentaEstado, Cuenta, SaldoCuenta
-from ..repositories import MiCuentaCuentasRepositoryDependency, MiCuentaSaldosRepositoryDependency
+from ..repositories import (
+    MiCuentaCuentasRepositoryDependency,
+    MiCuentaSaldosRepositoryDependency,
+)
+from ..schemas import Cuenta, MiCuentaEstado, SaldoCuenta
 
 
+# -------------------------------------------------
 class MiCuentaService:
-    def __init__(self, cuentas: MiCuentaCuentasRepositoryDependency, saldos: MiCuentaSaldosRepositoryDependency):
+    # -------------------------------------------------
+    def __init__(
+        self,
+        cuentas: MiCuentaCuentasRepositoryDependency,
+        saldos: MiCuentaSaldosRepositoryDependency,
+    ):
         self.cuentas = cuentas
         self.saldos = saldos
 
-    async def get_mi_cuenta_estado(self, username: str, password: str) -> MiCuentaEstado:
+    # -------------------------------------------------
+    async def get_mi_cuenta_estado(
+        self, username: str, password: str
+    ) -> MiCuentaEstado:
         async with AsyncClient() as c:
             try:
                 # Intentar obtener el token
@@ -27,8 +39,12 @@ class MiCuentaService:
                     iol=connect_iol, httpxAsyncClient=c
                 )
 
-                cuentas_to_store = [Cuenta(**cuenta.dict()) for cuenta in estado_cuenta.cuentas]
-                saldos_to_store = [SaldoCuenta(**saldo.dict()) for saldo in estado_cuenta.saldos]
+                cuentas_to_store = [
+                    Cuenta(**cuenta.dict()) for cuenta in estado_cuenta.cuentas
+                ]
+                saldos_to_store = [
+                    SaldoCuenta(**saldo.dict()) for saldo in estado_cuenta.saldos
+                ]
                 await self.cuentas.delete_all()
                 await self.saldos.delete_all()
                 await self.cuentas.save_all(cuentas_to_store)

@@ -20,15 +20,18 @@ from ..models import (
 from .auth import Authentication
 
 
+# -------------------------------------------------
 class UsersService:
     collection_name = "users"
     collection = None
 
+    # -------------------------------------------------
     @classmethod
     def init_collection(cls):
         assert cls.collection_name in COLLECTIONS
         cls.collection = Database.db[cls.collection_name]
 
+    # -------------------------------------------------
     @classmethod
     async def create_one(cls, user: CreateUser) -> PublicStoredUser:
         cls.init_collection()
@@ -48,6 +51,7 @@ class UsersService:
             await cls.collection.find_one(new_user.inserted_id)
         )
 
+    # -------------------------------------------------
     @classmethod
     async def get_one(
         cls,

@@ -13,6 +13,7 @@ from src.auth.services import UsersService
 from src.config.database import Database
 
 
+# -------------------------------------------------
 async def main():
     Database.initialize()
     try:
@@ -50,6 +51,7 @@ async def main():
             raise
 
 
+# -------------------------------------------------
 if __name__ == "__main__":
     try:
         loop = asyncio.get_running_loop()

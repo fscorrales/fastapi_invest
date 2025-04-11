@@ -2,6 +2,7 @@ __all__ = ["PlazoLiquidacion", "Moneda"]
 
 from enum import Enum
 
+
 class PlazoLiquidacion(str, Enum):
     t0 = "t0"
     t1 = "t1"

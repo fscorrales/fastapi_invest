@@ -9,6 +9,7 @@ from ...utils import ErrorsWithDocId
 from . import Moneda
 
 
+# -------------------------------------------------
 class TipoCuenta(str, Enum):
     inv_arg_pesos = "inversion_Argentina_Pesos"
     inv_arg_dolares = "inversion_Argentina_Dolares"
@@ -18,12 +19,14 @@ class TipoCuenta(str, Enum):
     adm_eeuu_dolares = "administrada_Estados_Unidos_Dolares"
 
 
+# -------------------------------------------------
 class EstadoCuenta(str, Enum):
     operable = "operable"
     cerrada = "cerrada"
     bloqueada = "bloqueada"
 
 
+# -------------------------------------------------
 class Cuenta(BaseModel):
     numero: Optional[str] = None
     tipo: Optional[TipoCuenta] = None
@@ -37,6 +40,7 @@ class Cuenta(BaseModel):
     estado: Optional[EstadoCuenta] = None
 
 
+# -------------------------------------------------
 class LiquidacionSaldo(str, Enum):
     inmediato = "inmediato"
     hrs24 = "hrs24"
@@ -46,6 +50,7 @@ class LiquidacionSaldo(str, Enum):
     masHrs72 = "masHrs72"
 
 
+# -------------------------------------------------
 class SaldoCuenta(BaseModel):
     numero: Optional[str] = None
     tipo: Optional[TipoCuenta] = None
@@ -57,11 +62,13 @@ class SaldoCuenta(BaseModel):
     disponibleOperar: Optional[NonNegativeFloat] = None
 
 
+# -------------------------------------------------
 class MiCuentaEstado(BaseModel):
     cuentas: List[Cuenta]
     saldos: List[SaldoCuenta]
 
 
+# -------------------------------------------------
 class MiCuentaEstadoValidationOutput(BaseModel):
     errors: List[ErrorsWithDocId]
     validated: List[SaldoCuenta]

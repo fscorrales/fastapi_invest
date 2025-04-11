@@ -14,6 +14,7 @@ from ..services import (
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
+# -------------------------------------------------
 @auth_router.post("/login")
 async def login_with_cookie(
     user: Annotated[LoginUser, Form()],
@@ -32,6 +33,7 @@ async def login_with_cookie(
 #     return auth.get_current_user(id=ObjectId(security.auth_user_id))
 
 
+# -------------------------------------------------
 @auth_router.post("/logout", include_in_schema=False)
 def logout():
     pass

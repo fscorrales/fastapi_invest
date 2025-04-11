@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from . import Moneda, PlazoLiquidacion
 
 
+# -------------------------------------------------
 class TipoFCI(str, Enum):
     plazo_fijo_pesos = "plazo_fijo_pesos"
     plazo_fijo_dolares = "plazo_fijo_dolares"
@@ -20,6 +21,7 @@ class TipoFCI(str, Enum):
     renta_variable_dolares = "renta_variable_dolares"
 
 
+# -------------------------------------------------
 class AdministradoraFCI(str, Enum):
     convexity = "convexity"  # En la doc IOL es "cONVEXITY"
     supervielle = "supervielle"  # En la doc IOL es "sUPERVIELLE"
@@ -28,11 +30,13 @@ class AdministradoraFCI(str, Enum):
     dracma = "dRACMA"
 
 
+# -------------------------------------------------
 class Pais(str, Enum):
     estados_unidos = "estados_Unidos"
     argentina = "argentina"
 
 
+# -------------------------------------------------
 class Mercado(str, Enum):
     bcba = "bcba"  # En la doc IOL es "bCBA"
     nyse = "nYSE"
@@ -42,6 +46,7 @@ class Mercado(str, Enum):
     rofx = "rOFX"
 
 
+# -------------------------------------------------
 class TipoInstrumento(str, Enum):
     opciones = "oPCIONES"
     cedears = "cEDEARS"
@@ -96,12 +101,14 @@ class TipoInstrumento(str, Enum):
     fondos_mutuos_usa = "fondosMutuosUSA"
 
 
+# -------------------------------------------------
 class HorizonteInversion(str, Enum):
     corto_plazo = "corto_plazo"
     mediano_plazo = "mediano_plazo"
     largo_plazo = "largo_plazo"
 
 
+# -------------------------------------------------
 class FCI(BaseModel):
     variacion: Optional[float] = None
     ultimoOperado: Optional[float] = None
