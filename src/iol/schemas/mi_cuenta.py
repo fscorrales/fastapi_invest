@@ -1,4 +1,4 @@
-__all__ = ["Cuenta", "SaldoCuenta", "EstadoCuenta", "EstadoCuentaValidationOutput"]
+__all__ = ["Cuenta", "SaldoCuenta", "MiCuentaEstado"]
 
 from enum import Enum
 from typing import List, Optional
@@ -57,11 +57,11 @@ class SaldoCuenta(BaseModel):
     disponibleOperar: Optional[NonNegativeFloat] = None
 
 
-class EstadoCuenta(BaseModel):
+class MiCuentaEstado(BaseModel):
     cuentas: List[Cuenta]
     saldos: List[SaldoCuenta]
 
 
-class EstadoCuentaValidationOutput(BaseModel):
+class MiCuentaEstadoValidationOutput(BaseModel):
     errors: List[ErrorsWithDocId]
     validated: List[SaldoCuenta]

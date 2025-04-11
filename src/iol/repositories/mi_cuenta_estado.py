@@ -1,7 +1,9 @@
-__all__ = ["MiCuentaCuentasRepository", "MiCuentaSaldosRepository"]
+__all__ = ["MiCuentaCuentasRepositoryDependency", "MiCuentaSaldosRepositoryDependency"]
 
-from .base_repository import BaseRepository
+from ...config import BaseRepository
 from ..schemas import Cuenta, SaldoCuenta
+from typing import Annotated
+from fastapi import Depends
 
 class MiCuentaCuentasRepository(BaseRepository[Cuenta]):
     collection_name = "iol_mi_cuenta_cuentas"
@@ -10,3 +12,6 @@ class MiCuentaCuentasRepository(BaseRepository[Cuenta]):
 class MiCuentaSaldosRepository(BaseRepository[SaldoCuenta]):
     collection_name = "iol_mi_cuenta_saldos"
     model = SaldoCuenta
+
+MiCuentaCuentasRepositoryDependency = Annotated[MiCuentaCuentasRepository, Depends()]
+MiCuentaSaldosRepositoryDependency = Annotated[MiCuentaSaldosRepository, Depends()]

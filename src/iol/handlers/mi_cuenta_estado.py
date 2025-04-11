@@ -13,7 +13,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..schemas import ConnectIOL, Cuenta, EstadoCuenta, SaldoCuenta
+from ..schemas import ConnectIOL, Cuenta, MiCuentaEstado, SaldoCuenta
 from .connect_iol import API_URL, get_token
 
 
@@ -60,7 +60,7 @@ def get_args():
 # --------------------------------------------------
 async def get_estado_cuenta(
     iol: ConnectIOL, url: str = None, httpxAsyncClient: AsyncClient = None
-) -> EstadoCuenta:
+) -> MiCuentaEstado:
     """Get response from IOL"""
     # self.iol.update_token()
     if url is None:
@@ -112,7 +112,7 @@ async def get_estado_cuenta(
                     )
                 )
 
-        return EstadoCuenta(
+        return MiCuentaEstado(
             cuentas=cuentas_data,
             saldos=saldos_data,
         )

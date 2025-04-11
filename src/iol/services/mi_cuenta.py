@@ -8,20 +8,16 @@ from pydantic import ValidationError
 
 from ...config import COLLECTIONS, Database, logger
 from ..handlers import get_estado_cuenta, get_token
-from ..schemas import EstadoCuenta
+from ..schemas import MiCuentaEstado, Cuenta, SaldoCuenta
+from ..repositories import MiCuentaCuentasRepositoryDependency, MiCuentaSaldosRepositoryDependency
 
 
 class MiCuentaService:
-    collection_name = "iol_mi_cuenta_estado"
-    collection = None
+    def __init__(self, cuentas: MiCuentaCuentasRepositoryDependency, saldos: MiCuentaSaldosRepositoryDependency):
+        self.cuentas = cuentas
+        self.saldos = saldos
 
-    @classmethod
-    def init_collection(cls):
-        assert cls.collection_name in COLLECTIONS
-        cls.collection = Database.db[cls.collection_name]
-
-    @classmethod
-    async def get_mi_cuenta_estado(cls, username: str, password: str) -> EstadoCuenta:
+    async def get_mi_cuenta_estado(self, username: str, password: str) -> MiCuentaEstado:
         async with AsyncClient() as c:
             try:
                 # Intentar obtener el token
@@ -30,6 +26,14 @@ class MiCuentaService:
                 estado_cuenta = await get_estado_cuenta(
                     iol=connect_iol, httpxAsyncClient=c
                 )
+
+                cuentas_to_store = [Cuenta(**cuenta.dict()) for cuenta in estado_cuenta.cuentas]
+                saldos_to_store = [SaldoCuenta(**saldo.dict()) for saldo in estado_cuenta.saldos]
+                await self.cuentas.delete_all()
+                await self.saldos.delete_all()
+                await self.cuentas.save_all(cuentas_to_store)
+                await self.saldos.save_all(saldos_to_store)
+
                 return estado_cuenta
             except ValidationError as e:
                 logger.error(f"Validation Error: {e}")
