@@ -50,12 +50,11 @@ class TitulosService:
     # -------------------------------------------------
     async def get_fcis_from_db(self) -> List[FCI]:
         try:
-            fcis = await self.fcis.get_all()
-            return fcis
+            return await self.fcis.get_all()
         except Exception as e:
-            logger.error(f"Error retrieving FCIs from database: {e}")
+            logger.error(f"Error retrieving IOL's FCIs from database: {e}")
             raise HTTPException(
-                status_code=500, detail="Error retrieving FCIs from the database"
+                status_code=500, detail="Error retrieving IOL's FCIs from the database"
             )
 
 

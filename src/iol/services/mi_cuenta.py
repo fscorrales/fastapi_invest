@@ -1,7 +1,7 @@
 __all__ = ["MiCuentaServiceDependency"]
 
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, List
 
 from fastapi import Depends, HTTPException
 from httpx import AsyncClient
@@ -58,6 +58,28 @@ class MiCuentaService:
                     status_code=401,
                     detail="Invalid credentials or unable to authenticate",
                 )
+
+    # -------------------------------------------------
+    async def get_cuentas_from_db(self) -> List[Cuenta]:
+        try:
+            return await self.cuentas.get_all()
+        except Exception as e:
+            logger.error(f"Error retrieving IOL'S Cuentas from database: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail="Error retrieving IOL'S Cuentas from the database",
+            )
+
+    # -------------------------------------------------
+    async def get_saldos_from_db(self) -> List[SaldoCuenta]:
+        try:
+            return await self.saldos.get_all()
+        except Exception as e:
+            logger.error(f"Error retrieving IOL'S Saldos from database: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail="Error retrieving IOL'S Saldos from the database",
+            )
 
 
 MiCuentaServiceDependency = Annotated[MiCuentaService, Depends()]
