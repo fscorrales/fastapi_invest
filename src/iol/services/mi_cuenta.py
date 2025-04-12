@@ -1,5 +1,6 @@
 __all__ = ["MiCuentaServiceDependency"]
 
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
@@ -16,15 +17,10 @@ from ..schemas import Cuenta, MiCuentaEstado, SaldoCuenta
 
 
 # -------------------------------------------------
+@dataclass
 class MiCuentaService:
-    # -------------------------------------------------
-    def __init__(
-        self,
-        cuentas: MiCuentaCuentasRepositoryDependency,
-        saldos: MiCuentaSaldosRepositoryDependency,
-    ):
-        self.cuentas = cuentas
-        self.saldos = saldos
+    cuentas: MiCuentaCuentasRepositoryDependency
+    saldos: MiCuentaSaldosRepositoryDependency
 
     # -------------------------------------------------
     async def sync_estado_de_cuenta_from_iol(

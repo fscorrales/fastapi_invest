@@ -1,5 +1,6 @@
 __all__ = ["TitulosServiceDependency"]
 
+from dataclasses import dataclass
 from typing import Annotated, List
 
 from fastapi import Depends, HTTPException
@@ -15,13 +16,9 @@ from ..schemas import FCI
 
 
 # -------------------------------------------------
+@dataclass
 class TitulosService:
-    # -------------------------------------------------
-    def __init__(
-        self,
-        fcis: TitulosFCIsRepositoryDependency,
-    ):
-        self.fcis = fcis
+    fcis: TitulosFCIsRepositoryDependency
 
     # -------------------------------------------------
     async def sync_fcis_from_iol(self, username: str, password: str) -> List[FCI]:
