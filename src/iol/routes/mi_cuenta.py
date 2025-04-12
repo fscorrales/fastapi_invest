@@ -8,7 +8,7 @@ from ..services import MiCuentaServiceDependency
 mi_cuenta_router = APIRouter(prefix="/mi_cuenta", tags=["IOL - Mi Cuenta"])
 
 
-@mi_cuenta_router.post("/sync_estado_de_cuenta", response_model=MiCuentaEstado)
+@mi_cuenta_router.post("/estado/sync_from_iol", response_model=MiCuentaEstado)
 async def iol_estado_de_cuenta(
     auth: OptionalAuthorizationDependency,
     service: MiCuentaServiceDependency,

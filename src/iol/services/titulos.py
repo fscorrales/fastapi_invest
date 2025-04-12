@@ -47,5 +47,16 @@ class TitulosService:
                     detail="Invalid credentials or unable to authenticate",
                 )
 
+    # -------------------------------------------------
+    async def get_fcis_from_db(self) -> List[FCI]:
+        try:
+            fcis = await self.fcis.get_all()
+            return fcis
+        except Exception as e:
+            logger.error(f"Error retrieving FCIs from database: {e}")
+            raise HTTPException(
+                status_code=500, detail="Error retrieving FCIs from the database"
+            )
+
 
 TitulosServiceDependency = Annotated[TitulosService, Depends()]

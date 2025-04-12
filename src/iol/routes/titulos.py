@@ -10,8 +10,8 @@ from ..services import TitulosServiceDependency
 titulos_router = APIRouter(prefix="/titulos", tags=["IOL - Títulos"])
 
 
-@titulos_router.post("/sync_fcis", response_model=List[FCI])
-async def iol_fcis(
+@titulos_router.post("/fci/sync_from_iol", response_model=List[FCI])
+async def sync_fcis_from_iol(
     auth: OptionalAuthorizationDependency,
     service: TitulosServiceDependency,
     username: str = None,
@@ -22,3 +22,10 @@ async def iol_fcis(
         password = settings.IOL_PASSWORD
 
     return await service.sync_fcis_from_iol(username=username, password=password)
+
+
+@titulos_router.get("/fci/get_from_db", response_model=List[FCI])
+async def get_fcis_from_db(
+    service: TitulosServiceDependency,
+):
+    return await service.get_fcis_from_db()
