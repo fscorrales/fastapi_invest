@@ -27,7 +27,7 @@ class MiCuentaService:
         self.saldos = saldos
 
     # -------------------------------------------------
-    async def get_mi_cuenta_estado(
+    async def sync_estado_de_cuenta_from_iol(
         self, username: str, password: str
     ) -> MiCuentaEstado:
         async with AsyncClient() as c:
@@ -40,10 +40,10 @@ class MiCuentaService:
                 )
 
                 cuentas_to_store = [
-                    Cuenta(**cuenta.dict()) for cuenta in estado_cuenta.cuentas
+                    Cuenta(**cuenta.model_dump()) for cuenta in estado_cuenta.cuentas
                 ]
                 saldos_to_store = [
-                    SaldoCuenta(**saldo.dict()) for saldo in estado_cuenta.saldos
+                    SaldoCuenta(**saldo.model_dump()) for saldo in estado_cuenta.saldos
                 ]
                 await self.cuentas.delete_all()
                 await self.saldos.delete_all()

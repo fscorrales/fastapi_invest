@@ -60,7 +60,7 @@ def get_args():
 # --------------------------------------------------
 async def get_fcis(
     iol: ConnectIOL, url: str = None, httpxAsyncClient: AsyncClient = None
-) -> FCI:
+) -> List[FCI]:
     """Get response from IOL"""
     # self.iol.update_token()
     if url is None:

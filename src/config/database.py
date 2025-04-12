@@ -11,7 +11,12 @@ from .__base_config import settings
 ModelType = TypeVar("ModelType", bound=BaseModel)
 
 MONGO_DB_NAME = "invest"
-COLLECTIONS = ["users", "iol_mi_cuenta_cuentas", "iol_mi_cuenta_saldos"]
+COLLECTIONS = [
+    "users",
+    "iol_mi_cuenta_cuentas",
+    "iol_mi_cuenta_saldos",
+    "iol_titulos_fcis",
+]
 
 
 # -------------------------------------------------

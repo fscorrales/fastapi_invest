@@ -5,11 +5,11 @@ from ...config import settings
 from ..schemas import MiCuentaEstado
 from ..services import MiCuentaServiceDependency
 
-mi_cuenta_router = APIRouter(prefix="/mi_cuenta", tags=["IOL - MiCuenta"])
+mi_cuenta_router = APIRouter(prefix="/mi_cuenta", tags=["IOL - Mi Cuenta"])
 
 
-@mi_cuenta_router.post("/estado_cuenta", response_model=MiCuentaEstado)
-async def iol_estado_cuenta(
+@mi_cuenta_router.post("/sync_estado_de_cuenta", response_model=MiCuentaEstado)
+async def iol_estado_de_cuenta(
     auth: OptionalAuthorizationDependency,
     service: MiCuentaServiceDependency,
     username: str = None,
@@ -19,4 +19,6 @@ async def iol_estado_cuenta(
         username = settings.IOL_USERNAME
         password = settings.IOL_PASSWORD
 
-    return await service.get_mi_cuenta_estado(username=username, password=password)
+    return await service.sync_estado_de_cuenta_from_iol(
+        username=username, password=password
+    )
