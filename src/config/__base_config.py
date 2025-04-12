@@ -20,7 +20,7 @@ class BaseAppSettings(BaseSettings):
     ADMIN_PASSWORD: str | None = None
     IOL_USERNAME: str | None = None
     IOL_PASSWORD: str | None = None
-    MONGODB_URI: str = "mongodb://127.0.0.1:27017/invest"
+    DB_URI: str = "mongodb://127.0.0.1:27017/invest"
     JWT_SECRET: str = "super_secret_key"
     # Otros valores opcionales...
     # HOST_URL: str = "localhost"

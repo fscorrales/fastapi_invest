@@ -26,7 +26,7 @@ class Database:
 
     @classmethod
     def initialize(cls):
-        cls.client = AsyncIOMotorClient(settings.MONGODB_URI)
+        cls.client = AsyncIOMotorClient(settings.DB_URI)
         cls.db = cls.client[MONGO_DB_NAME]
 
 
