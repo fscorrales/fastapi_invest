@@ -80,6 +80,44 @@ class BaseRepository(Generic[ModelType]):
         return self.model(**doc) if doc else None
 
     # -------------------------------------------------
+    async def get_by_fields(self, fields: dict) -> Optional[ModelType]:
+        """
+        Find a document by one or more fields.
+
+        Args:
+            fields (dict): A dictionary where keys are field names and values are the values to match.
+
+        Returns:
+            Optional[ModelType]: The document that matches the fields, or None if not found.
+        """
+        if not fields:
+            raise ValueError("Fields dictionary cannot be empty")
+
+        doc = await self.collection.find_one(fields)
+        return self.model(**doc) if doc else None
+
+    # -------------------------------------------------
+    async def get_by_fields_or(self, fields: dict) -> Optional[ModelType]:
+        """
+        Find a document by multiple fields using an $or filter.
+
+        Args:
+            fields (dict): A dictionary where keys are field names and values are the values to match.
+
+        Returns:
+            Optional[ModelType]: The document that matches the filter, or None if not found.
+        """
+        if not fields:
+            raise ValueError("Fields dictionary cannot be empty")
+
+        # Construir el filtro $or dinámicamente
+        filter = {"$or": [{key: value} for key, value in fields.items()]}
+
+        # Buscar el documento en la base de datos
+        doc = await self.collection.find_one(filter)
+        return self.model(**doc) if doc else None
+
+    # -------------------------------------------------
     async def delete_by_id(self, id: str) -> bool:
         result = await self.collection.delete_one({"_id": id})
         return result.deleted_count == 1
