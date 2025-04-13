@@ -1,16 +1,16 @@
-__all__ = ["UsersRepositoryDependency"]
+__all__ = ["UsersRepository", "UsersRepositoryDependency"]
 
 from typing import Annotated
 
 from fastapi import Depends
 
 from ...config import BaseRepository
-from ..schemas import PrivateStoredUser
+from ..schemas import CreateUser
 
 
-class UsersRepository(BaseRepository[PrivateStoredUser]):
+class UsersRepository(BaseRepository[CreateUser]):
     collection_name = "users"
-    model = PrivateStoredUser
+    model = CreateUser
 
 
 UsersRepositoryDependency = Annotated[UsersRepository, Depends()]

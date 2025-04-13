@@ -12,7 +12,7 @@ from fastapi_jwt import JwtAccessBearer, JwtAuthorizationCredentials
 from passlib.context import CryptContext
 
 from ...config import settings, token_expiration_time
-from ..models import LoginUser, PublicStoredUser
+from ..schemas import LoginUser, PublicStoredUser
 
 # Seguridad obligatoria (con candado 🔒)
 access_security = JwtAccessBearer(

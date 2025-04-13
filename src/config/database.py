@@ -58,8 +58,7 @@ class BaseRepository(Generic[ModelType]):
                     f"Duplicate entry for field '{self.unique_field}': {doc[self.unique_field]}"
                 )
 
-        await self.collection.insert_one(doc)
-        return data
+        return await self.collection.insert_one(doc)
 
     # -------------------------------------------------
     async def save_all(self, data: List[ModelType]) -> List[ModelType]:
@@ -77,7 +76,7 @@ class BaseRepository(Generic[ModelType]):
     # -------------------------------------------------
     async def get_by_id(self, id: str) -> Optional[ModelType]:
         doc = await self.collection.find_one({"_id": id})
-        return self.model(**doc) if doc else None
+        return doc if doc else None
 
     # -------------------------------------------------
     async def get_by_fields(self, fields: dict) -> Optional[ModelType]:
@@ -94,7 +93,7 @@ class BaseRepository(Generic[ModelType]):
             raise ValueError("Fields dictionary cannot be empty")
 
         doc = await self.collection.find_one(fields)
-        return self.model(**doc) if doc else None
+        return doc if doc else None
 
     # -------------------------------------------------
     async def get_by_fields_or(self, fields: dict) -> Optional[ModelType]:
@@ -115,7 +114,7 @@ class BaseRepository(Generic[ModelType]):
 
         # Buscar el documento en la base de datos
         doc = await self.collection.find_one(filter)
-        return self.model(**doc) if doc else None
+        return doc if doc else None
 
     # -------------------------------------------------
     async def delete_by_id(self, id: str) -> bool:

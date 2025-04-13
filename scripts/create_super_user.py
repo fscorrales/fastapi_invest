@@ -4,13 +4,13 @@ script. Or you can set the username, email and password environment variables.
 """
 
 import asyncio
-import os
 
 from fastapi import HTTPException
 
-from src.auth.models import CreateUser
+from src.auth.repositories import UsersRepository
+from src.auth.schemas import CreateUser
 from src.auth.services import UsersService
-from src.config.database import Database
+from src.config import Database, settings
 
 
 # -------------------------------------------------
@@ -30,8 +30,8 @@ async def main():
             data = dict(line.split("=") for line in lines)
     except FileNotFoundError:
         data = dict(
-            email=os.environ.get("ADMIN_EMAIL"),
-            password=os.environ.get("ADMIN_PASSWORD"),
+            email=settings.ADMIN_EMAIL,
+            password=settings.ADMIN_PASSWORD,
         )
 
     # Assign role admin to user data
@@ -41,7 +41,8 @@ async def main():
         insertion_user = CreateUser.model_validate(data)
 
         print("Creating super user...")
-        result = await UsersService.create_one(insertion_user)
+        users_service = UsersService(users=UsersRepository())
+        result = await users_service.create_one(user=insertion_user)
 
         print(f"Super user with email: {data['email']} created with id: {result.id}")
     except HTTPException as e:

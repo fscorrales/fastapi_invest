@@ -1,14 +1,17 @@
 __all__ = ["UsersService", "UsersServiceDependency"]
 
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 
-from ...config import COLLECTIONS, Database
-
+# from ...config import COLLECTIONS, Database
 # from pydantic_mongo import PydanticObjectId
 from ...utils import PyObjectId
-from ..models import (
+from ..repositories import (
+    UsersRepositoryDependency,
+)
+from ..schemas import (
     CreateUser,
     # UpdateUser,
     # FilterParamsUser,
@@ -21,22 +24,14 @@ from .auth import Authentication
 
 
 # -------------------------------------------------
+@dataclass
 class UsersService:
-    collection_name = "users"
-    collection = None
+    users: UsersRepositoryDependency
 
     # -------------------------------------------------
-    @classmethod
-    def init_collection(cls):
-        assert cls.collection_name in COLLECTIONS
-        cls.collection = Database.db[cls.collection_name]
-
-    # -------------------------------------------------
-    @classmethod
-    async def create_one(cls, user: CreateUser) -> PublicStoredUser:
-        cls.init_collection()
+    async def create_one(self, user: CreateUser) -> PublicStoredUser:
         """Create a new user"""
-        existing_user = await cls.collection.find_one({"email": user.email})
+        existing_user = await self.users.get_by_fields({"email": user.email})
         if existing_user is not None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="User already exists"
@@ -46,34 +41,35 @@ class UsersService:
         insert_user = user.model_dump(exclude={"password"}, exclude_unset=False)
         insert_user.update(hash_password=hash_password)
 
-        new_user = await cls.collection.insert_one(insert_user)
+        new_user = await self.users.save(insert_user)
+        # return new_user
         return PublicStoredUser.model_validate(
-            await cls.collection.find_one(new_user.inserted_id)
+            await self.users.get_by_id(new_user.inserted_id)
         )
 
     # -------------------------------------------------
-    @classmethod
     async def get_one(
-        cls,
+        self,
         *,
         id: PyObjectId | None = None,
         email: str | None = None,
         with_password: bool = False,
     ):
-        cls.init_collection()
         if all(q is None for q in (id, email)):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No id, username or email provided",
             )
-        filter = {
-            "$or": [
-                {"_id": id},
-                {"email": email},
-            ]
-        }
+        # filter = {
+        #     "$or": [
+        #         {"_id": id},
+        #         {"email": email},
+        #     ]
+        # }
 
-        if db_user := await cls.collection.find_one(filter):
+        if db_user := await self.users.get_by_fields_or(
+            {"_id": id, "email": email},
+        ):
             return (
                 PrivateStoredUser.model_validate(db_user).model_dump()
                 if with_password
