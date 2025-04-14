@@ -17,6 +17,7 @@ pytest-playwright = "^0.7.0"
 fastapi-jwt = {extras = ["authlib"], version = "^0.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 pydantic-settings = "^2.8.1"
+pydantic-mongo = "^3.0.0"
 
 
 [tool.poetry.group.dev.dependencies]

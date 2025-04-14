@@ -70,8 +70,8 @@ class BaseRepository(Generic[ModelType]):
 
     # -------------------------------------------------
     async def get_all(self, limit: int = 100) -> List[ModelType]:
-        docs = await self.collection.find().to_list(length=limit)
-        return [self.model(**doc) for doc in docs]
+        return await self.collection.find().to_list(length=limit)
+        # return [self.model(**doc) for doc in docs]
 
     # -------------------------------------------------
     async def get_by_id(self, id: str) -> Optional[ModelType]:

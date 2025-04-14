@@ -1,10 +1,11 @@
-__all__ = ["FCI"]
+__all__ = ["FCI", "StoredFCI"]
 
 
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pydantic_mongo import PydanticObjectId
 
 from . import Moneda, PlazoLiquidacion
 
@@ -133,3 +134,11 @@ class FCI(BaseModel):
     tipo: Optional[TipoInstrumento] = None
     plazo: Optional[PlazoLiquidacion] = None
     moneda: Optional[Moneda] = None
+
+
+# -------------------------------------------------
+class StoredFCI(FCI):
+    id: PydanticObjectId = Field(alias="_id")
+
+    class Config:
+        allow_population_by_field_name = True

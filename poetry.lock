@@ -1369,6 +1369,22 @@ files = [
 typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
+name = "pydantic-mongo"
+version = "3.0.0"
+description = "Document object mapper for pydantic and pymongo"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "pydantic_mongo-3.0.0-py2.py3-none-any.whl", hash = "sha256:2a5b527e6ec4160a8981fc51b30a71e05b8121502db4d207527244b566cd6746"},
+    {file = "pydantic_mongo-3.0.0.tar.gz", hash = "sha256:caac6d9a0e1e91a50025e001167511ba5de855c9c290d88eef70fd7336742441"},
+]
+
+[package.dependencies]
+pydantic = ">=2.0.2,<3.0.0"
+pymongo = ">=4.9,<5.0"
+
+[[package]]
 name = "pydantic-settings"
 version = "2.8.1"
 description = "Settings management using Pydantic"
@@ -2163,4 +2179,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "362252980c95494cf9cc7a1cf6a795eb6dc6e077148a5d92ae2ba745e03fc52f"
+content-hash = "7e1e5c1c7f445a9eb050c1aaa7c5152943b7a1a770dd8bd48308615f65e2567c"

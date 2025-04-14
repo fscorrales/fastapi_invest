@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import settings
-from ..schemas import FCI
+from ..schemas import FCI, StoredFCI
 from ..services import TitulosServiceDependency
 
 titulos_router = APIRouter(prefix="/titulos", tags=["IOL - Títulos"])
@@ -24,7 +24,7 @@ async def sync_fcis_from_iol(
     return await service.sync_fcis_from_iol(username=username, password=password)
 
 
-@titulos_router.get("/fci/get_from_db", response_model=List[FCI])
+@titulos_router.get("/fci/get_from_db", response_model=List[StoredFCI])
 async def get_fcis_from_db(
     service: TitulosServiceDependency,
 ):

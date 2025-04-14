@@ -12,7 +12,7 @@ from ..handlers import get_fcis, get_token
 from ..repositories import (
     TitulosFCIsRepositoryDependency,
 )
-from ..schemas import FCI
+from ..schemas import FCI, StoredFCI
 
 
 # -------------------------------------------------
@@ -48,7 +48,7 @@ class TitulosService:
                 )
 
     # -------------------------------------------------
-    async def get_fcis_from_db(self) -> List[FCI]:
+    async def get_fcis_from_db(self) -> List[StoredFCI]:
         try:
             return await self.fcis.get_all()
         except Exception as e:
