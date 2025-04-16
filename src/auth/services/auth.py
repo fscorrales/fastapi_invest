@@ -5,14 +5,18 @@ __all__ = [
     "OptionalAuthorizationDependency",
 ]
 
+from datetime import timedelta
 from typing import Annotated, Optional
 
 from fastapi import Depends, HTTPException, Response, Security, status
 from fastapi_jwt import JwtAccessBearer, JwtAuthorizationCredentials
 from passlib.context import CryptContext
 
-from ...config import settings, token_expiration_time
+from ...config import settings
 from ..schemas import LoginUser, PublicStoredUser
+
+# Set token expiration time (1 day) locally
+token_expiration_time = timedelta(days=1)
 
 # Seguridad obligatoria (con candado 🔒)
 access_security = JwtAccessBearer(

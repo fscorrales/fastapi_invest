@@ -1,10 +1,10 @@
-__all__ = ["token_expiration_time"]
+# __all__ = ["token_expiration_time"]
 
-from datetime import timedelta
+# from datetime import timedelta
 
-# from .__base_config import FRONTEND_HOST, HOST_PORT, HOST_URL
+# # from .__base_config import FRONTEND_HOST, HOST_PORT, HOST_URL
 
-token_expiration_time = timedelta(days=1)
+# token_expiration_time = timedelta(days=1)
 
 # allowed_origins = [
 #     f"http://{HOST_URL}",
