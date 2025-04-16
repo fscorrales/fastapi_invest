@@ -7,8 +7,7 @@ from fastapi import Depends, HTTPException, status
 
 # from ...config import COLLECTIONS, Database
 # from pydantic_mongo import PydanticObjectId
-from pydantic_mongo import PydanticObjectId
-
+from ...utils import PyObjectId
 from ..repositories import (
     UsersRepositoryDependency,
 )
@@ -52,7 +51,7 @@ class UsersService:
     async def get_one(
         self,
         *,
-        id: PydanticObjectId | None = None,
+        id: PyObjectId | None = None,
         email: str | None = None,
         with_password: bool = False,
     ):
