@@ -4,8 +4,9 @@ from datetime import datetime
 from enum import Enum
 
 from pydantic import AliasChoices, BaseModel, EmailStr, Field, field_validator
+from pydantic_mongo import PydanticObjectId
 
-from ...utils import PyObjectId, validate_not_empty
+from ...utils import validate_not_empty
 
 
 # -------------------------------------------------
@@ -46,7 +47,7 @@ class LoginUser(BaseUser):
 class PublicStoredUser(BaseUser):
     role: Role
     deactivated_at: datetime | None = Field(default=None)
-    id: PyObjectId = Field(validation_alias=AliasChoices("_id", "id"))
+    id: PydanticObjectId = Field(validation_alias=AliasChoices("_id", "id"))
 
 
 # -------------------------------------------------
