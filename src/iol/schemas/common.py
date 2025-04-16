@@ -1,8 +1,17 @@
-__all__ = ["PlazoLiquidacion", "Moneda"]
+__all__ = ["LoginIOL", "PlazoLiquidacion", "Moneda"]
 
 from enum import Enum
 
+from pydantic import BaseModel
 
+
+# -------------------------------------------------
+class LoginIOL(BaseModel):
+    username: str
+    password: str
+
+
+# -------------------------------------------------
 class PlazoLiquidacion(str, Enum):
     t0 = "t0"
     t1 = "t1"
@@ -10,6 +19,7 @@ class PlazoLiquidacion(str, Enum):
     t3 = "t3"
 
 
+# -------------------------------------------------
 class Moneda(str, Enum):
     peso_argentino = "peso_Argentino"
     dolar_estadounidense = "dolar_Estadounidense"
