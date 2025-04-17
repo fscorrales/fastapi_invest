@@ -1,4 +1,4 @@
-__all__ = ["MiCuentaServiceDependency"]
+__all__ = ["MiCuentaEstadoServiceDependency"]
 
 from dataclasses import dataclass
 from typing import Annotated, List
@@ -18,7 +18,7 @@ from ..schemas import Cuenta, MiCuentaEstado, SaldoCuenta
 
 # -------------------------------------------------
 @dataclass
-class MiCuentaService:
+class MiCuentaEstadoService:
     cuentas: MiCuentaCuentasRepositoryDependency
     saldos: MiCuentaSaldosRepositoryDependency
 
@@ -82,4 +82,4 @@ class MiCuentaService:
             )
 
 
-MiCuentaServiceDependency = Annotated[MiCuentaService, Depends()]
+MiCuentaEstadoServiceDependency = Annotated[MiCuentaEstadoService, Depends()]

@@ -5,15 +5,17 @@ from fastapi import APIRouter
 from ...auth.services import AuthorizationDependency, OptionalAuthorizationDependency
 from ...config import settings
 from ..schemas import Cuenta, MiCuentaEstado, SaldoCuenta
-from ..services import MiCuentaServiceDependency
+from ..services import MiCuentaEstadoServiceDependency
 
-mi_cuenta_router = APIRouter(prefix="/mi_cuenta", tags=["IOL - Mi Cuenta"])
+mi_cuenta_estado_router = APIRouter(
+    prefix="/mi_cuenta/estado", tags=["IOL - Mi Cuenta"]
+)
 
 
-@mi_cuenta_router.post("/estado/sync_from_iol", response_model=MiCuentaEstado)
+@mi_cuenta_estado_router.post("/sync_from_iol", response_model=MiCuentaEstado)
 async def sync_estado_de_cuenta_from_iol(
     auth: OptionalAuthorizationDependency,
-    service: MiCuentaServiceDependency,
+    service: MiCuentaEstadoServiceDependency,
     username: str = None,
     password: str = None,
 ):
@@ -26,10 +28,10 @@ async def sync_estado_de_cuenta_from_iol(
     )
 
 
-@mi_cuenta_router.get("/estado/get_cuentas_from_db", response_model=List[Cuenta])
+@mi_cuenta_estado_router.get("/get_cuentas_from_db", response_model=List[Cuenta])
 async def get_cuentas_from_db(
     auth: AuthorizationDependency,
-    service: MiCuentaServiceDependency,
+    service: MiCuentaEstadoServiceDependency,
 ):
     if auth.is_admin:
         return await service.get_cuentas_from_db()
@@ -40,10 +42,10 @@ async def get_cuentas_from_db(
         # Aquí podrías agregar la lógica para filtrar las cuentas del usuario autenticado
 
 
-@mi_cuenta_router.get("/estado/get_saldos_from_db", response_model=List[SaldoCuenta])
+@mi_cuenta_estado_router.get("/get_saldos_from_db", response_model=List[SaldoCuenta])
 async def get_saldos_from_db(
     auth: AuthorizationDependency,
-    service: MiCuentaServiceDependency,
+    service: MiCuentaEstadoServiceDependency,
 ):
     if auth.is_admin:
         return await service.get_saldos_from_db()

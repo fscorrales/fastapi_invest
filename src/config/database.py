@@ -15,6 +15,7 @@ COLLECTIONS = [
     "users",
     "iol_mi_cuenta_cuentas",
     "iol_mi_cuenta_saldos",
+    "iol_mi_cuenta_portafolio",
     "iol_titulos_fcis",
 ]
 

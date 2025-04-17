@@ -1,8 +1,9 @@
-__all__ = ["PosicionPortafolio"]
+__all__ = ["PosicionPortafolio", "StoredPosicionPortafolio"]
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pydantic_mongo import PydanticObjectId
 
 from . import Mercado, Moneda, Pais, PlazoLiquidacion, TipoInstrumento
 
@@ -32,3 +33,8 @@ class PosicionPortafolio(BaseModel):
     valorizado: Optional[float]
     titulo: Optional[TituloEnCartera]
     parking: Optional[int] = None
+
+
+# -------------------------------------------------
+class StoredPosicionPortafolio(PosicionPortafolio):
+    id: PydanticObjectId = Field(alias="_id")
