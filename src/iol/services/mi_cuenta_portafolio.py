@@ -36,7 +36,9 @@ class MiCuentaPortafolioService:
                 # portafolio_to_store = [
                 #     PosicionPortafolio(**cuenta.model_dump()) for cuenta in portafolio
                 # ]
-                await self.portafolio.delete_all()
+                await self.portafolio.delete_by_fields(
+                    {"pais": pais}
+                )  # Eliminar el portafolio anterior
                 await self.portafolio.save_all(portafolio_to_store)
 
                 return portafolio_to_store

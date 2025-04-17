@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from ...auth.services import AuthorizationDependency, OptionalAuthorizationDependency
 from ...config import settings
-from ..schemas import Cuenta, MiCuentaEstado, SaldoCuenta, StoredCuentas, StoredSaldos
+from ..schemas import MiCuentaEstado, StoredCuentas, StoredSaldos
 from ..services import MiCuentaEstadoServiceDependency
 
 mi_cuenta_estado_router = APIRouter(

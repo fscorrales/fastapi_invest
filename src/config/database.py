@@ -123,6 +123,27 @@ class BaseRepository(Generic[ModelType]):
         return result.deleted_count == 1
 
     # -------------------------------------------------
+    async def delete_by_fields(self, fields: dict) -> int:
+        """
+        Delete documents based on multiple fields (AND logic).
+
+        Args:
+            fields (dict): A dictionary where keys are field names and values are the values to match.
+
+        Returns:
+            int: The number of documents deleted.
+        """
+        if not fields:
+            raise ValueError("Fields dictionary cannot be empty")
+
+        # Construir el filtro basado en los campos proporcionados
+        filter = {key: value for key, value in fields.items()}
+
+        # Eliminar los documentos que coincidan con el filtro
+        result = await self.collection.delete_many(filter)
+        return result.deleted_count
+
+    # -------------------------------------------------
     async def delete_all(self) -> int:
         result = await self.collection.delete_many({})
         return result.deleted_count
