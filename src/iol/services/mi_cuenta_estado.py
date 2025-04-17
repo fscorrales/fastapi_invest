@@ -13,7 +13,7 @@ from ..repositories import (
     MiCuentaCuentasRepositoryDependency,
     MiCuentaSaldosRepositoryDependency,
 )
-from ..schemas import Cuenta, MiCuentaEstado, SaldoCuenta
+from ..schemas import Cuenta, MiCuentaEstado, SaldoCuenta, StoredCuentas, StoredSaldos
 
 
 # -------------------------------------------------
@@ -60,7 +60,7 @@ class MiCuentaEstadoService:
                 )
 
     # -------------------------------------------------
-    async def get_cuentas_from_db(self) -> List[Cuenta]:
+    async def get_cuentas_from_db(self) -> List[StoredCuentas]:
         try:
             return await self.cuentas.get_all()
         except Exception as e:
@@ -71,7 +71,7 @@ class MiCuentaEstadoService:
             )
 
     # -------------------------------------------------
-    async def get_saldos_from_db(self) -> List[SaldoCuenta]:
+    async def get_saldos_from_db(self) -> List[StoredSaldos]:
         try:
             return await self.saldos.get_all()
         except Exception as e:

@@ -1,9 +1,10 @@
-__all__ = ["Cuenta", "SaldoCuenta", "MiCuentaEstado"]
+__all__ = ["Cuenta", "SaldoCuenta", "MiCuentaEstado", "StoredCuentas", "StoredSaldos"]
 
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, NonNegativeFloat
+from pydantic import BaseModel, Field, NonNegativeFloat
+from pydantic_mongo import PydanticObjectId
 
 from ...utils import ErrorsWithDocId
 from . import Moneda
@@ -66,6 +67,16 @@ class SaldoCuenta(BaseModel):
 class MiCuentaEstado(BaseModel):
     cuentas: List[Cuenta]
     saldos: List[SaldoCuenta]
+
+
+# -------------------------------------------------
+class StoredCuentas(Cuenta):
+    id: PydanticObjectId = Field(alias="_id")
+
+
+# -------------------------------------------------
+class StoredSaldos(SaldoCuenta):
+    id: PydanticObjectId = Field(alias="_id")
 
 
 # -------------------------------------------------

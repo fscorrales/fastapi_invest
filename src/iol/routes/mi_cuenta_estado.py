@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from ...auth.services import AuthorizationDependency, OptionalAuthorizationDependency
 from ...config import settings
-from ..schemas import Cuenta, MiCuentaEstado, SaldoCuenta
+from ..schemas import Cuenta, MiCuentaEstado, SaldoCuenta, StoredCuentas, StoredSaldos
 from ..services import MiCuentaEstadoServiceDependency
 
 mi_cuenta_estado_router = APIRouter(
@@ -28,7 +28,7 @@ async def sync_estado_de_cuenta_from_iol(
     )
 
 
-@mi_cuenta_estado_router.get("/get_cuentas_from_db", response_model=List[Cuenta])
+@mi_cuenta_estado_router.get("/get_cuentas_from_db", response_model=List[StoredCuentas])
 async def get_cuentas_from_db(
     auth: AuthorizationDependency,
     service: MiCuentaEstadoServiceDependency,
@@ -42,7 +42,7 @@ async def get_cuentas_from_db(
         # Aquí podrías agregar la lógica para filtrar las cuentas del usuario autenticado
 
 
-@mi_cuenta_estado_router.get("/get_saldos_from_db", response_model=List[SaldoCuenta])
+@mi_cuenta_estado_router.get("/get_saldos_from_db", response_model=List[StoredSaldos])
 async def get_saldos_from_db(
     auth: AuthorizationDependency,
     service: MiCuentaEstadoServiceDependency,
