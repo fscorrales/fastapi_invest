@@ -14,12 +14,19 @@ class BaseAppSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parent.parent / ".env",
         env_file_encoding="utf-8",
+        extra="allow",  # Permitir claves adicionales
     )
     APP_ENV: str = "dev"
     ADMIN_EMAIL: str | None = None
     ADMIN_PASSWORD: str | None = None
     IOL_USERNAME: str | None = None
     IOL_PASSWORD: str | None = None
+    PRIMARY_LIVE_USERNAME: str | None = None
+    PRIMARY_LIVE_PASSWORD: str | None = None
+    PRIMARY_LIVE_URL: str = "https://api.primary.com.ar/"
+    PRIMARY_LIVE_WS: str = "wss://api.primary.com.ar/"
+    PRIMARY_REMARKETS_USERNAME: str | None = None
+    PRIMARY_REMARKETS_PASSWORD: str | None = None
     DB_URI: str = "mongodb://127.0.0.1:27017/invest"
     JWT_SECRET: str = "super_secret_key"
     # Otros valores opcionales...

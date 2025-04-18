@@ -18,6 +18,7 @@ fastapi-jwt = {extras = ["authlib"], version = "^0.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 pydantic-settings = "^2.8.1"
 pydantic-mongo = "^3.0.0"
+tzlocal = "^5.3.1"
 
 
 [tool.poetry.group.dev.dependencies]
