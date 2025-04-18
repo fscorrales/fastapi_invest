@@ -88,7 +88,6 @@ async def get_portafolio(
 
     if r.status_code == 200:
         data = r.json()
-        # Extraer datos de cuentas y saldos
         pais = data["pais"]
         posicion_portofolio: List[PosicionPortafolio] = []
 
