@@ -64,7 +64,7 @@ def get_args():
         help="URL for Primary's API Rest access",
         metavar="rest_url",
         type=str,
-        default="https://api.remarkets.primary.com.ar/",
+        default="https://api.remarkets.primary.com.ar",
     )
 
     parser.add_argument(
@@ -73,7 +73,7 @@ def get_args():
         help="URL for Primary's API Websocket access",
         metavar="websocket_url",
         type=str,
-        default="wss://api.remarkets.primary.com.ar/",
+        default="wss://api.remarkets.primary.com.ar",
     )
 
     args = parser.parse_args()
@@ -109,7 +109,7 @@ async def get_token(
     ws: str = None,
     httpxAsyncClient: AsyncClient = None,
 ) -> ConnectPrimary:
-    token_url = url + "auth/getToken"
+    token_url = url + "/auth/getToken"
 
     h = {
         "Content-Type": "application/x-www-form-urlencoded",
