@@ -109,7 +109,7 @@ async def get_token(
     ws: str = None,
     httpxAsyncClient: AsyncClient = None,
 ) -> ConnectPrimary:
-    url = url + "auth/getToken"
+    token_url = url + "auth/getToken"
 
     h = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -118,11 +118,11 @@ async def get_token(
     }
 
     if httpxAsyncClient:
-        r = await httpxAsyncClient.post(url, headers=h)
+        r = await httpxAsyncClient.post(token_url, headers=h)
     else:
         httpxAsyncClient = AsyncClient()
         try:
-            r = await httpxAsyncClient.post(url, headers=h)
+            r = await httpxAsyncClient.post(token_url, headers=h)
         finally:
             httpxAsyncClient.aclose()
 
@@ -141,6 +141,7 @@ async def get_token(
         dt_local = dt_utc.astimezone(local_tz)
 
         return ConnectPrimary(
+            base_url=url,
             server=data.get("Server"),  # Usar get para evitar KeyError
             date=dt_local,
             content_length=data.get("Content-Length"),
@@ -176,7 +177,7 @@ async def main():
         response = await get_token(
             username=args.username,
             password=args.password,
-            url=args.rest_url,
+            token_url=args.rest_url,
             httpxAsyncClient=c,
         )
         print(response)
