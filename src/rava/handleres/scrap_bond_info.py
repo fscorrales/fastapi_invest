@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Author : Fernando Corrales <fscpython@gamail.com>
+Author : Fernando Corrales <fscpython@gmail.com>
 Date   : 27-mar-2025
 Purpose: Scrap Bonds from RAVA
 """

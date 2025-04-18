@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Author : Fernando Corrales <fscpython@gamail.com>
+Author : Fernando Corrales <fscpython@gmail.com>
 Date   : 26-mar-2025
 Purpose: GET FCIs info from IOL
 """

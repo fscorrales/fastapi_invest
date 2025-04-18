@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Author : Fernando Corrales <fscpython@gamail.com>
+Author : Fernando Corrales <fscpython@gmail.com>
 Date   : 29-mar-2025
 Purpose: Go to RAVA´s page (homepage by default)
 """
