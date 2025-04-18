@@ -177,7 +177,7 @@ async def main():
         response = await get_token(
             username=args.username,
             password=args.password,
-            token_url=args.rest_url,
+            url=args.rest_url,
             httpxAsyncClient=c,
         )
         print(response)
