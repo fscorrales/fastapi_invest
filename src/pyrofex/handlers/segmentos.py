@@ -122,7 +122,7 @@ async def get_segmentos(
 
     if r.status_code == 200:
         data = r.json()
-        enviroment = "remarkets" if "remarkets" in primary.base_url else "live"
+        enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
 
         segmentos = [
             Segmento(

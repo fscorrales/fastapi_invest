@@ -2,9 +2,11 @@ __all__ = ["Segmento"]
 
 from pydantic import BaseModel
 
+from .common import Enviroment, MarketID, MarketSegmentID
+
 
 # --------------------------------------------------
 class Segmento(BaseModel):
-    enviroment: str
-    marketSegmentId: str
-    marketId: str
+    enviroment: Enviroment
+    marketSegmentId: MarketSegmentID
+    marketId: MarketID

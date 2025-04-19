@@ -48,6 +48,18 @@ class MarketSegmentID(str, Enum):
     u_dda = "U-DDA"
     u_dual = "U-DUAL"
     merv = "MERV"
+    mae = "MAE"
+    matba = "MATBA"
+    mvr = "MVR"
+    mvc = "MVC"
+    mvm = "MVM"
+    u_ddf_s = "U-DDF-S"
+    u_fin = "U-FIN"
+    u_comm = "U-COMM"
+    u_stock = "U-STOCK"
+    tiva = "TIVA"
+    mfci = "MFCI"
+    test = "TEST"  # Segmento de pruebas de Primary
 
 
 # -------------------------------------------------
