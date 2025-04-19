@@ -1,4 +1,5 @@
 __all__ = [
+    "Enviroment",
     "CFICode",
     "MarketSegmentID",
     "MarketID",
@@ -11,6 +12,14 @@ __all__ = [
 ]
 
 from enum import Enum
+
+
+# -------------------------------------------------
+class Enviroment(str, Enum):
+    """Ambiente de conexión."""
+
+    live = "LIVE"
+    remarkets = "REMARKETS"  # Ambiente de pruebas de Primary
 
 
 # -------------------------------------------------
