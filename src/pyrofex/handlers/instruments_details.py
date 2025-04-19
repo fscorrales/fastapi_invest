@@ -18,7 +18,12 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..schemas import ConnectPrimary, InstrumentDetails, ParamsInstumentDetails
+from ..schemas import (
+    ConnectPrimary,
+    InstrumentDetails,
+    MarketID,
+    ParamsInstumentDetails,
+)
 from .connect_primary import get_token
 
 
@@ -65,6 +70,7 @@ def get_args():
         metavar="marketid",
         type=str,
         default=None,
+        choices=[None] + [c.value for c in MarketID],
     )
 
     parser.add_argument(
