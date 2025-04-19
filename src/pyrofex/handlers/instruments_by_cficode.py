@@ -19,6 +19,7 @@ from typing import List
 from httpx import AsyncClient
 
 from ..schemas import (
+    CFICode,
     ConnectPrimary,
     InstrumentByCFICode,
     ParamsInstumentsByCFICode,
@@ -39,6 +40,7 @@ def get_args():
         "cficode",
         metavar="cficode",
         help="Specify the cficode to look up (e.g., ESXXXX)",
+        choices=[c.value for c in CFICode],
     )
 
     parser.add_argument(

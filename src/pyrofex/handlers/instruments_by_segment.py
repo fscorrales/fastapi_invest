@@ -41,14 +41,14 @@ def get_args():
         "segment_id",
         metavar="segment_id",
         help="Specify the segment to look up (e.g., DDF, DDA, DUAL)",
-        choices=MarketSegmentID,
+        choices=[c.value for c in MarketSegmentID],
     )
 
     parser.add_argument(
         "market_id",
         metavar="market_id",
         help="Specify the market id to look up (e.g., ROFX, MERV)",
-        choices=MarketID,
+        choices=[c.value for c in MarketID],
     )
 
     parser.add_argument(
