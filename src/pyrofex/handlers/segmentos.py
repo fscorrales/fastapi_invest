@@ -121,16 +121,18 @@ async def get_segmentos(
 
     if r.status_code == 200:
         data = r.json()
-        enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
-
-        segmentos = [
-            Segmento(
-                enviroment=enviroment,
-                marketSegmentId=segmento["marketSegmentId"],
-                marketId=segmento["marketId"],
-            )
-            for segmento in data["segments"]
-        ]
+        if data["status"] == "OK":
+            enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
+            segmentos = [
+                Segmento(
+                    enviroment=enviroment,
+                    marketSegmentId=segmento["marketSegmentId"],
+                    marketId=segmento["marketId"],
+                )
+                for segmento in data["segments"]
+            ]
+        else:
+            raise ValueError(f"Primary API Error: {data.get('description')}")
 
         return segmentos
 

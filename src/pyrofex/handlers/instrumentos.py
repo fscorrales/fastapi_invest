@@ -121,16 +121,19 @@ async def get_instrumentos(
 
     if r.status_code == 200:
         data = r.json()
-        enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
-        instrumentos = [
-            Instrumento(
-                symbol=instrumento["instrumentId"]["symbol"],
-                marketId=instrumento["instrumentId"]["marketId"],
-                cficode=instrumento["cficode"],
-                enviroment=enviroment,
-            )
-            for instrumento in data["instruments"]
-        ]
+        if data["status"] == "OK":
+            enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
+            instrumentos = [
+                Instrumento(
+                    symbol=instrumento["instrumentId"]["symbol"],
+                    marketId=instrumento["instrumentId"]["marketId"],
+                    cficode=instrumento["cficode"],
+                    enviroment=enviroment,
+                )
+                for instrumento in data["instruments"]
+            ]
+        else:
+            raise ValueError(f"Primary API Error: {data.get('description')}")
 
         return instrumentos
 
