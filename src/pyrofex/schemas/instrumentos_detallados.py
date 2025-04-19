@@ -1,4 +1,4 @@
-__all__ = ["InstrumentoDetallado"]
+__all__ = ["InstrumentoDetallado", "ParamsInstumentoDetallado"]
 
 from typing import List
 
@@ -12,6 +12,12 @@ from .common import (
     OrderTimeInForce,
     OrderType,
 )
+
+
+# --------------------------------------------------
+class ParamsInstumentoDetallado(BaseModel):
+    marketId: MarketID
+    symbol: str
 
 
 # --------------------------------------------------

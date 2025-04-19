@@ -18,7 +18,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..schemas import ConnectPrimary, InstrumentoDetallado
+from ..schemas import ConnectPrimary, InstrumentoDetallado, ParamsInstumentoDetallado
 from .connect_primary import get_token
 
 
@@ -45,6 +45,24 @@ def get_args():
         "--password",
         help="Password for Primary's API access",
         metavar="password",
+        type=str,
+        default=None,
+    )
+
+    parser.add_argument(
+        "-s",
+        "--symbol",
+        help="Specify the symbol of the instrument to look up (e.g., AAPL, TSLA)",
+        metavar="symbol",
+        type=str,
+        default=None,
+    )
+
+    parser.add_argument(
+        "-m",
+        "--marketid",
+        help="Specify the MarketID of the instrument to look up (e.g., ROFX, MERV)",
+        metavar="marketid",
         type=str,
         default=None,
     )
@@ -102,61 +120,79 @@ def get_args():
 
 # --------------------------------------------------
 async def get_instrumentos_detallados(
-    primary: ConnectPrimary, url: str = None, httpxAsyncClient: AsyncClient = None
+    primary: ConnectPrimary,
+    url: str = None,
+    params: ParamsInstumentoDetallado = None,
+    httpxAsyncClient: AsyncClient = None,
 ) -> List[InstrumentoDetallado]:
     """Get response from Primary REST API"""
     if url is None:
-        url = primary.base_url + "/rest/instruments/details"
+        url = (
+            primary.base_url + "/rest/instruments/detail"
+            if params
+            else primary.base_url + "/rest/instruments/details"
+        )
 
     h = {"X-Auth-Token": primary.x_auth_token}
+    params_dict = params.model_dump(mode="json") if params else None
 
     if httpxAsyncClient:
-        r = await httpxAsyncClient.get(url, headers=h)
+        r = await httpxAsyncClient.get(url, headers=h, params=params_dict)
     else:
         httpxAsyncClient = AsyncClient()
         try:
-            r = await httpxAsyncClient.get(url, headers=h)
+            r = await httpxAsyncClient.get(url, headers=h, params=params_dict)
         finally:
             httpxAsyncClient.aclose()
 
     if r.status_code == 200:
         data = r.json()
         # instrumentos = data
-        enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
-        instrumentos = [
-            InstrumentoDetallado(
-                symbol=instrumento["instrumentId"]["symbol"],
-                marketId=instrumento["instrumentId"]["marketId"],
-                marketSegmentId=instrumento["segment"]["marketSegmentId"],
-                lowLimitPrice=instrumento["lowLimitPrice"],
-                highLimitPrice=instrumento["highLimitPrice"],
-                minPriceIncrement=instrumento["minPriceIncrement"],
-                minTradeVol=instrumento["minTradeVol"],
-                maxTradeVol=instrumento["maxTradeVol"],
-                tickSize=instrumento["tickSize"],
-                contractMultiplier=instrumento["contractMultiplier"],
-                roundLot=instrumento["roundLot"],
-                priceConvertionFactor=instrumento["priceConvertionFactor"],
-                maturityDate=instrumento["maturityDate"],
-                currency=instrumento["currency"],
-                orderTypes=instrumento["orderTypes"],
-                timesInForce=instrumento["timesInForce"],
-                securityType=instrumento["securityType"],
-                settlType=instrumento["settlType"],
-                instrumentPricePrecision=instrumento["instrumentPricePrecision"],
-                instrumentSizePrecision=instrumento["instrumentSizePrecision"],
-                securityId=instrumento["securityId"],
-                securityIdSource=instrumento["securityIdSource"],
-                securityDescription=instrumento["securityDescription"],
-                tickPriceRanges=instrumento["tickPriceRanges"],
-                strike=instrumento["strike"],
-                underlying=instrumento["underlying"],
-                cficode=instrumento["cficode"],
-                enviroment=enviroment,
-            )
-            for instrumento in data["instruments"]
-        ]
-
+        if data["status"] == "OK":
+            enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
+            data_field = "instrument" if params_dict else "instruments"
+            # Verificar si data[data_field] es un diccionario o una lista
+            if isinstance(data[data_field], dict):
+                # Si es un diccionario, conviértelo en una lista con un solo elemento
+                instrumentos_data = [data[data_field]]
+            else:
+                # Si es una lista, úsala directamente
+                instrumentos_data = data[data_field]
+            instrumentos = [
+                InstrumentoDetallado(
+                    symbol=instrumento["instrumentId"]["symbol"],
+                    marketId=instrumento["instrumentId"]["marketId"],
+                    marketSegmentId=instrumento["segment"]["marketSegmentId"],
+                    lowLimitPrice=instrumento["lowLimitPrice"],
+                    highLimitPrice=instrumento["highLimitPrice"],
+                    minPriceIncrement=instrumento["minPriceIncrement"],
+                    minTradeVol=instrumento["minTradeVol"],
+                    maxTradeVol=instrumento["maxTradeVol"],
+                    tickSize=instrumento["tickSize"],
+                    contractMultiplier=instrumento["contractMultiplier"],
+                    roundLot=instrumento["roundLot"],
+                    priceConvertionFactor=instrumento["priceConvertionFactor"],
+                    maturityDate=instrumento["maturityDate"],
+                    currency=instrumento["currency"],
+                    orderTypes=instrumento["orderTypes"],
+                    timesInForce=instrumento["timesInForce"],
+                    securityType=instrumento["securityType"],
+                    settlType=instrumento["settlType"],
+                    instrumentPricePrecision=instrumento["instrumentPricePrecision"],
+                    instrumentSizePrecision=instrumento["instrumentSizePrecision"],
+                    securityId=instrumento["securityId"],
+                    securityIdSource=instrumento["securityIdSource"],
+                    securityDescription=instrumento["securityDescription"],
+                    tickPriceRanges=instrumento["tickPriceRanges"],
+                    strike=instrumento["strike"],
+                    underlying=instrumento["underlying"],
+                    cficode=instrumento["cficode"],
+                    enviroment=enviroment,
+                )
+                for instrumento in instrumentos_data
+            ]
+        else:
+            raise ValueError(f"Primary API Error: {data.get('description')}")
         return instrumentos
 
 
@@ -165,6 +201,10 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
+    if args.symbol and args.marketid:
+        params = ParamsInstumentoDetallado(symbol=args.symbol, marketId=args.marketid)
+    else:
+        params = None
 
     async with AsyncClient() as c:
         connect_primary = await get_token(
@@ -175,7 +215,7 @@ async def main():
         )
         try:
             instrumentos = await get_instrumentos_detallados(
-                primary=connect_primary, httpxAsyncClient=c
+                primary=connect_primary, httpxAsyncClient=c, params=params
             )
             print(instrumentos)
         except Exception as e:
@@ -188,3 +228,4 @@ if __name__ == "__main__":
     # From /fastapi_invest
     # python -m src.pyrofex.handlers.instrumentos_detallados
     # poetry run python -m src.pyrofex.handlers.instrumentos_detallados -l
+    # poetry run python -m src.pyrofex.handlers.instrumentos_detallados -m 'ROFX' -s 'SOJ.ROS/MAY25 264 C'
