@@ -104,8 +104,7 @@ def get_args():
 async def get_segmentos(
     primary: ConnectPrimary, url: str = None, httpxAsyncClient: AsyncClient = None
 ) -> List[Segmento]:
-    """Get response from IOL"""
-    # self.iol.update_token()
+    """Get response from Primary REST API"""
     if url is None:
         url = primary.base_url + "/rest/segment/all"
 

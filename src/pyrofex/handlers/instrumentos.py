@@ -104,8 +104,7 @@ def get_args():
 async def get_instrumentos(
     primary: ConnectPrimary, url: str = None, httpxAsyncClient: AsyncClient = None
 ) -> List[Instrumento]:
-    """Get response from IOL"""
-    # self.iol.update_token()
+    """Get response from Primary REST API"""
     if url is None:
         url = primary.base_url + "/rest/instruments/all"
 
