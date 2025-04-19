@@ -2,6 +2,7 @@ __all__ = [
     "Enviroment",
     "CFICode",
     "MarketSegmentID",
+    "InstrumentID",
     "MarketID",
     "Entry",
     "Depth",
