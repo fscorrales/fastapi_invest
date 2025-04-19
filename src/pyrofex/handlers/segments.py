@@ -18,7 +18,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..schemas import ConnectPrimary, Segmento
+from ..schemas import ConnectPrimary, Segment
 from .connect_primary import get_token
 
 
@@ -101,9 +101,9 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_segmentos(
+async def get_segments(
     primary: ConnectPrimary, url: str = None, httpxAsyncClient: AsyncClient = None
-) -> List[Segmento]:
+) -> List[Segment]:
     """Get response from Primary REST API"""
     if url is None:
         url = primary.base_url + "/rest/segment/all"
@@ -124,7 +124,7 @@ async def get_segmentos(
         if data["status"] == "OK":
             enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
             segmentos = [
-                Segmento(
+                Segment(
                     enviroment=enviroment,
                     marketSegmentId=segmento["marketSegmentId"],
                     marketId=segmento["marketId"],
@@ -151,7 +151,7 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            segmentos = await get_segmentos(primary=connect_primary, httpxAsyncClient=c)
+            segmentos = await get_segments(primary=connect_primary, httpxAsyncClient=c)
             print(segmentos)
         except Exception as e:
             print(f"Error al obtener segmentos: {e}")
@@ -161,5 +161,5 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.segmentos
-    # poetry run python -m src.pyrofex.handlers.segmentos -l
+    # python -m src.pyrofex.handlers.segments
+    # poetry run python -m src.pyrofex.handlers.segments -l

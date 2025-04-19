@@ -1,4 +1,4 @@
-__all__ = ["Segmento"]
+__all__ = ["Segment"]
 
 from pydantic import BaseModel
 
@@ -6,7 +6,7 @@ from .common import Enviroment, MarketID, MarketSegmentID
 
 
 # --------------------------------------------------
-class Segmento(BaseModel):
+class Segment(BaseModel):
     enviroment: Enviroment
     marketSegmentId: MarketSegmentID
     marketId: MarketID

@@ -18,7 +18,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..schemas import ConnectPrimary, Instrumento
+from ..schemas import ConnectPrimary, Instrument
 from .connect_primary import get_token
 
 
@@ -101,9 +101,9 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_instrumentos(
+async def get_instruments(
     primary: ConnectPrimary, url: str = None, httpxAsyncClient: AsyncClient = None
-) -> List[Instrumento]:
+) -> List[Instrument]:
     """Get response from Primary REST API"""
     if url is None:
         url = primary.base_url + "/rest/instruments/all"
@@ -124,7 +124,7 @@ async def get_instrumentos(
         if data["status"] == "OK":
             enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
             instrumentos = [
-                Instrumento(
+                Instrument(
                     symbol=instrumento["instrumentId"]["symbol"],
                     marketId=instrumento["instrumentId"]["marketId"],
                     cficode=instrumento["cficode"],
@@ -152,7 +152,7 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            instrumentos = await get_instrumentos(
+            instrumentos = await get_instruments(
                 primary=connect_primary, httpxAsyncClient=c
             )
             print(instrumentos)
@@ -164,5 +164,5 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.instrumentos
-    # poetry run python -m src.pyrofex.handlers.instrumentos -l
+    # python -m src.pyrofex.handlers.instruments
+    # poetry run python -m src.pyrofex.handlers.instruments -l

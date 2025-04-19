@@ -1,4 +1,4 @@
-__all__ = ["Instrumento"]
+__all__ = ["Instrument"]
 
 from pydantic import BaseModel
 
@@ -6,7 +6,7 @@ from .common import CFICode, Enviroment, MarketID
 
 
 # --------------------------------------------------
-class Instrumento(BaseModel):
+class Instrument(BaseModel):
     symbol: str
     marketId: MarketID
     cficode: CFICode

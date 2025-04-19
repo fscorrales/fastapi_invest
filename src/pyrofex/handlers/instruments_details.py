@@ -18,7 +18,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..schemas import ConnectPrimary, InstrumentoDetallado, ParamsInstumentoDetallado
+from ..schemas import ConnectPrimary, InstrumentDetails, ParamsInstumentDetails
 from .connect_primary import get_token
 
 
@@ -119,12 +119,12 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_instrumentos_detallados(
+async def get_instruments_details(
     primary: ConnectPrimary,
     url: str = None,
-    params: ParamsInstumentoDetallado = None,
+    params: ParamsInstumentDetails = None,
     httpxAsyncClient: AsyncClient = None,
-) -> List[InstrumentoDetallado]:
+) -> List[InstrumentDetails]:
     """Get response from Primary REST API"""
     if url is None:
         url = (
@@ -159,7 +159,7 @@ async def get_instrumentos_detallados(
                 # Si es una lista, úsala directamente
                 instrumentos_data = data[data_field]
             instrumentos = [
-                InstrumentoDetallado(
+                InstrumentDetails(
                     symbol=instrumento["instrumentId"]["symbol"],
                     marketId=instrumento["instrumentId"]["marketId"],
                     marketSegmentId=instrumento["segment"]["marketSegmentId"],
@@ -202,7 +202,7 @@ async def main():
 
     args = get_args()
     if args.symbol and args.marketid:
-        params = ParamsInstumentoDetallado(symbol=args.symbol, marketId=args.marketid)
+        params = ParamsInstumentDetails(symbol=args.symbol, marketId=args.marketid)
     else:
         params = None
 
@@ -214,7 +214,7 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            instrumentos = await get_instrumentos_detallados(
+            instrumentos = await get_instruments_details(
                 primary=connect_primary, httpxAsyncClient=c, params=params
             )
             print(instrumentos)
@@ -226,6 +226,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.instrumentos_detallados
-    # poetry run python -m src.pyrofex.handlers.instrumentos_detallados -l
-    # poetry run python -m src.pyrofex.handlers.instrumentos_detallados -m 'ROFX' -s 'SOJ.ROS/MAY25 264 C'
+    # python -m src.pyrofex.handlers.instruments_details
+    # poetry run python -m src.pyrofex.handlers.instruments_details -l
+    # poetry run python -m src.pyrofex.handlers.instruments_details -m 'ROFX' -s 'SOJ.ROS/MAY25 264 C'

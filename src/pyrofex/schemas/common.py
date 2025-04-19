@@ -80,7 +80,7 @@ class MarketID(str, Enum):
 
 
 # --------------------------------------------------
-class InstrumentoID(BaseModel):
+class InstrumentID(BaseModel):
     marketId: MarketID
     symbol: str
 

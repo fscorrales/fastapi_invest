@@ -1,4 +1,4 @@
-__all__ = ["InstrumentoDetallado", "ParamsInstumentoDetallado"]
+__all__ = ["InstrumentDetails", "ParamsInstumentDetails"]
 
 from typing import List
 
@@ -15,7 +15,7 @@ from .common import (
 
 
 # --------------------------------------------------
-class ParamsInstumentoDetallado(BaseModel):
+class ParamsInstumentDetails(BaseModel):
     marketId: MarketID
     symbol: str
 
@@ -33,7 +33,7 @@ class TickPriceRanges(RootModel[dict[str, TickPriceRange]]):
 
 
 # --------------------------------------------------
-class InstrumentoDetallado(BaseModel):
+class InstrumentDetails(BaseModel):
     symbol: str
     marketId: MarketID
     marketSegmentId: MarketSegmentID
