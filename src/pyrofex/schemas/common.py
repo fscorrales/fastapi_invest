@@ -13,6 +13,8 @@ __all__ = [
 
 from enum import Enum
 
+from pydantic import BaseModel
+
 
 # -------------------------------------------------
 class Enviroment(str, Enum):
@@ -77,6 +79,12 @@ class MarketID(str, Enum):
     merval = "MERV"
 
 
+# --------------------------------------------------
+class InstrumentoID(BaseModel):
+    marketId: MarketID
+    symbol: str
+
+
 # -------------------------------------------------
 class Entry(str, Enum):
     """Datos de mercado ques son posibles consultar por medio de las API tanto REST como WebSocket."""
@@ -116,6 +124,9 @@ class OrderType(str, Enum):
     market = "MARKET"
     stop_limit = "STOP_LIMIT"
     stop_limit_merval = "STOP_LIMIT_MERVAL"
+    market_to_limit = "MARKET_TO_LIMIT"
+    previously_quoted = "PREVIOUSLY_QUOTED"
+    stop = "STOP"
 
 
 # -------------------------------------------------
@@ -148,3 +159,4 @@ class OrderTimeInForce(str, Enum):
     ioc = "IOC"  # Immediate or Cancel
     gtd = "GTD"  # Good Till Date
     fok = "FOK"  # Fill or Kill
+    gtc = "GTC"
