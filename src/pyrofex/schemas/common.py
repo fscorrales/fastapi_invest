@@ -35,19 +35,26 @@ class CFICode(str, Enum):
     call_futuro = "OCAFXS"
     cedear = "EMXXXX"
     on = "DBXXFR"
+    mrixxx = "MRIXXX"
+    lrstxh = "LRSTXH"
+    fxxxxx = "FXXXXX"
+    dyxtxr = "DYXTXR"
+    ocefxs = "OCEFXS"
+    rpxxxx = "RPXXXX"
+    mxxxxx = "MXXXXX"
 
 
 # -------------------------------------------------
 class MarketSegmentID(str, Enum):
     """Código que identifica el segmento de mercado al que pertenece el instrumento."""
 
-    ddf = "DDF"
-    dda = "DDA"
-    dual = "DUAL"
+    ddf = "DDF"  # Instumentos de la División Derivados Financieros
+    dda = "DDA"  # Instumentos de la División Derivados Agropecuarios
+    dual = "DUAL"  # Instrumentos listados en DDF y DDA
     u_ddf = "U-DDF"
     u_dda = "U-DDA"
     u_dual = "U-DUAL"
-    merv = "MERV"
+    merv = "MERV"  # Instrumentos de mercados externos a Matba Rofex (Merval?)
     mae = "MAE"
     matba = "MATBA"
     mvr = "MVR"
