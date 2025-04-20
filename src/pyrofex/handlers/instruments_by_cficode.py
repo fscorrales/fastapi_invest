@@ -37,8 +37,11 @@ def get_args():
     )
 
     parser.add_argument(
-        "cficode",
-        metavar="cficode",
+        "-c",
+        "--cficode",
+        metavar="CFICode",
+        type=str,
+        default="ESXXXX",
         help="Specify the cficode to look up (e.g., ESXXXX)",
         choices=[c.value for c in CFICode],
     )
@@ -187,5 +190,5 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.instruments_by_cficode ESXXXX
-    # poetry run python -m src.pyrofex.handlers.instruments_by_cficode ESXXXX -l
+    # python -m src.pyrofex.handlers.instruments_by_cficode -c ESXXXX
+    # poetry run python -m src.pyrofex.handlers.instruments_by_cficode -c ESXXXX -l
