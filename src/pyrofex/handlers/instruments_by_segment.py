@@ -38,16 +38,22 @@ def get_args():
     )
 
     parser.add_argument(
-        "segment_id",
-        metavar="segment_id",
+        "-s",
+        "--segment_id",
+        metavar="SegmentID",
         help="Specify the segment to look up (e.g., DDF, DDA, DUAL)",
+        default="DDF",
+        type=str,
         choices=[c.value for c in MarketSegmentID],
     )
 
     parser.add_argument(
-        "market_id",
-        metavar="market_id",
+        "-m",
+        "--market_id",
+        metavar="MarketID",
         help="Specify the market id to look up (e.g., ROFX, MERV)",
+        default="ROFX",
+        type=str,
         choices=[c.value for c in MarketID],
     )
 
@@ -176,6 +182,7 @@ async def main():
     params = ParamsInstumentsBySegment(
         MarketSegmentID=args.segment_id, MarketID=args.market_id
     )
+    print(f"Segment: {args.segment_id}, Market: {args.market_id}")
 
     async with AsyncClient() as c:
         connect_primary = await get_token(
@@ -198,4 +205,4 @@ if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
     # python -m src.pyrofex.handlers.instruments_by_segment DDF ROFX
-    # poetry run python -m src.pyrofex.handlers.instruments_by_segment DDF ROFX -l
+    # poetry run python -m src.pyrofex.handlers.instruments_by_segment -s DDF -m ROFX
