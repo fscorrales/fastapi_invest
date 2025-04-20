@@ -188,9 +188,8 @@ async def main():
     params = ParamsMarketHistData(
         marketId=args.market_id,
         symbol=args.symbol,
-        date=args.date,
-        dateTo=args.date,
-        dateFrom=args.date,
+        dateFrom=args.date + "T00:00:00",
+        dateTo=args.date + "T23:59:59",
         external=args.external,
         environment=args.environment,
     )
@@ -203,7 +202,7 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            print("params", params)
+            print("params", params.model_dump(mode="json"))
             data = await get_market_hist_data(
                 primary=connect_primary, httpxAsyncClient=c, params=params
             )
@@ -217,5 +216,5 @@ if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
     # python -m src.pyrofex.handlers.market_hist_data 'ROFX' 'DLR/DIC23'
-    # poetry run python -m src.pyrofex.handlers.market_hist_data 'ROFX' 'SOJ.ROS/NOV25 344 C' -d 2025-04-15
+    # poetry run python -m src.pyrofex.handlers.market_hist_data 'ROFX' 'MERV - XMEV - GGAL - 24hs' -d 2024-04-19
     # poetry run python -m src.pyrofex.handlers.market_hist_data 'ROFX' 'MERV - XMEV - GGAL - 24hs' -d 2025-04-15 -l
