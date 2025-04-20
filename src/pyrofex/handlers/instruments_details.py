@@ -65,12 +65,12 @@ def get_args():
 
     parser.add_argument(
         "-m",
-        "--marketid",
-        help="Specify the MarketID of the instrument to look up (e.g., ROFX, MERV)",
-        metavar="marketid",
+        "--market_id",
+        metavar="MarketID",
+        help="Specify the market id to look up (e.g., ROFX, MERV)",
+        default="ROFX",
         type=str,
-        default=None,
-        choices=[None] + [c.value for c in MarketID],
+        choices=[c.value for c in MarketID],
     )
 
     parser.add_argument(
@@ -207,8 +207,8 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    if args.symbol and args.marketid:
-        params = ParamsInstumentDetails(symbol=args.symbol, marketId=args.marketid)
+    if args.symbol and args.market_id:
+        params = ParamsInstumentDetails(symbol=args.symbol, marketId=args.market_id)
     else:
         params = None
 
