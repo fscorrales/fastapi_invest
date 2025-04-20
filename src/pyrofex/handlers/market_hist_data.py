@@ -37,18 +37,21 @@ def get_args():
     )
 
     parser.add_argument(
-        "market_id",
-        metavar="market_id",
-        help="Specify the market id to look up (e.g., ROFX, MERV)",
-        choices=[c.value for c in MarketID],
-    )
-
-    parser.add_argument(
         "symbol",
         help="Specify the symbol of the instrument to look up (e.g., GGAL, YPFD)",
         metavar="symbol",
         type=str,
         default=None,
+    )
+
+    parser.add_argument(
+        "-m",
+        "--market_id",
+        metavar="market_id",
+        help="Specify the market id to look up (e.g., ROFX, MERV)",
+        default="ROFX",
+        type=str,
+        choices=[c.value for c in MarketID],
     )
 
     parser.add_argument(
@@ -215,6 +218,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.market_hist_data 'ROFX' 'DLR/DIC23'
-    # poetry run python -m src.pyrofex.handlers.market_hist_data 'ROFX' 'MERV - XMEV - GGAL - 24hs' -d 2024-04-19
-    # poetry run python -m src.pyrofex.handlers.market_hist_data 'ROFX' 'MERV - XMEV - GGAL - 24hs' -d 2025-04-15 -l
+    # python -m src.pyrofex.handlers.market_hist_data 'DLR/DIC23'
+    # poetry run python -m src.pyrofex.handlers.market_hist_data 'MERV - XMEV - GGAL - 24hs' -d 2024-04-19
+    # poetry run python -m src.pyrofex.handlers.market_hist_data 'MERV - XMEV - GGAL - 24hs' -d 2025-04-15 -l
