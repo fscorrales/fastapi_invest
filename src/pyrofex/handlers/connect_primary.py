@@ -106,7 +106,7 @@ async def get_token(
     username: str,
     password: str,
     url: str,
-    ws: str = None,
+    websocket_url: str = None,
     httpxAsyncClient: AsyncClient = None,
 ) -> ConnectPrimary:
     token_url = url + "/auth/getToken"
@@ -142,6 +142,7 @@ async def get_token(
 
         return ConnectPrimary(
             base_url=url,
+            websocket_url=websocket_url,
             server=data.get("Server"),  # Usar get para evitar KeyError
             date=dt_local,
             content_length=data.get("Content-Length"),
@@ -178,6 +179,7 @@ async def main():
             username=args.username,
             password=args.password,
             url=args.rest_url,
+            websocket_url=args.websocket,
             httpxAsyncClient=c,
         )
         print(response)
