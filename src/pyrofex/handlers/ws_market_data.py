@@ -142,7 +142,7 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_market_data(
+async def get_market_hist_data(
     primary: ConnectPrimary,
     params: ParamsMarketData,
     url: str = None,
@@ -210,7 +210,7 @@ async def main():
         )
         try:
             print("params", params.model_dump(mode="json"))
-            data = await get_market_data(
+            data = await get_market_hist_data(
                 primary=connect_primary, httpxAsyncClient=c, params=params
             )
             print(data)
