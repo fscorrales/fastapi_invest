@@ -56,14 +56,14 @@ def get_args():
         metavar="entries",
         type=str,
         nargs="+",
-        default=["OP", "CL", "HI", "LO", "TV"],
+        default=["OP", "CL", "HI", "LO", "BI", "OF", "LA"],
         choices=[c.value for c in Entry],
     )
 
     parser.add_argument(
         "-d",
         "--depth",
-        help="Market depth (default: 1)",
+        help="Market depth (default: 1). Affects only to BI, OF entries.",
         metavar="depth",
         type=int,
         default=1,
@@ -224,4 +224,4 @@ if __name__ == "__main__":
     # From /fastapi_invest
     # python -m src.pyrofex.handlers.market_data 'DLR/DIC23'
     # poetry run python -m src.pyrofex.handlers.market_data 'MERV - XMEV - GGAL - 24hs'
-    # poetry run python -m src.pyrofex.handlers.market_data 'MERV - XMEV - GGAL - 24hs' -l
+    # poetry run python -m src.pyrofex.handlers.market_data 'MERV - XMEV - GGAL - 24hs' -l -d 2
