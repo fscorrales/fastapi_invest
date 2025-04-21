@@ -18,7 +18,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..schemas import ConnectPrimary, Entry, MarketData, MarketID, ParamsMarketData
+from ..schemas import ConnectPrimary, Entry, MarketData, MarketID, WSMessageSubscription
 from .connect_primary import get_token
 
 
@@ -142,51 +142,54 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_market_hist_data(
+async def stream_market_data(
     primary: ConnectPrimary,
-    params: ParamsMarketData,
-    url: str = None,
-    httpxAsyncClient: AsyncClient = None,
+    msg_subscription: WSMessageSubscription,
+    url: str = None
 ) -> List[MarketData]:
-    """Get response from Primary REST API"""
+    """Get response from Primary WS API"""
     if url is None:
-        url = primary.base_url + "/rest/marketdata/get"
+        url = primary.websocket_url
 
     h = {"X-Auth-Token": primary.x_auth_token}
-    params_dict = params.model_dump(mode="json")
+    msg_dict = msg_subscription.model_dump(mode="json")
 
-    if httpxAsyncClient:
-        r = await httpxAsyncClient.get(url, headers=h, params=params_dict)
-    else:
-        httpxAsyncClient = AsyncClient()
-        try:
-            r = await httpxAsyncClient.get(url, headers=h, params=params_dict)
-        finally:
-            httpxAsyncClient.aclose()
+    async with websockets.connect(url, extra_headers=h) as ws:
+        await ws.send(msg_dict)
+        # await ws.send(json.dumps(SUBSCRIPTION_MESSAGE))
+        print("📡 Suscripción enviada a Primary")
 
-    if r.status_code == 200:
-        data = r.json()
-        instrumentos = data
-        # if data["status"] == "OK":
-        #     enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
-        #     # Verificar si data[data_field] es un diccionario o una lista
-        #     if isinstance(data["instruments"], dict):
-        #         # Si es un diccionario, conviértelo en una lista con un solo elemento
-        #         instrumentos_data = [data["instruments"]]
-        #     else:
-        #         # Si es una lista, úsala directamente
-        #         instrumentos_data = data["instruments"]
-        #     instrumentos = [
-        #         MarketHistData(
-        #             symbol=instrumento["symbol"],
-        #             marketId=instrumento["marketId"],
-        #             enviroment=enviroment,
-        #         )
-        #         for instrumento in instrumentos_data
-        #     ]
-        # else:
-        #     raise ValueError(f"Primary API Error: {data.get('description')}")
-        return instrumentos
+        # Método 1
+        # async for message in ws:
+        #     await broadcast_message(message)
+
+        # Método 2
+        while True:
+            try:
+                message = await websocket.recv()
+                print("📥 Recibido:", message)
+                # await broadcast_message(message)
+            except websockets.exceptions.ConnectionClosed:
+                print("❌ Conexión cerrada por el servidor")
+                break
+
+
+# --------------------------------------------------
+def start_stream(primary: ConnectPrimary, msg_subscription: WSMessageSubscription, url: str = None):
+    global stream_task
+    if stream_task is None or stream_task.done():
+        stream_task = asyncio.create_task(stream_data(primary=primary, msg_subscription=msg_subscription))
+        return True
+    return False
+
+
+# --------------------------------------------------
+def stop_stream():
+    global stream_task
+    if stream_task and not stream_task.done():
+        stream_task.cancel()
+        return True
+    return False
 
 
 # --------------------------------------------------
@@ -194,11 +197,11 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    params = ParamsMarketData(
-        marketId=args.market_id,
+    msg_subscription = WSMessageSubscription(
         symbol=args.symbol,
-        depth=args.depth,
+        market_id=args.market_id,
         entries=args.entries,
+        depth=args.depth,
     )
 
     async with AsyncClient() as c:
@@ -209,11 +212,7 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            print("params", params.model_dump(mode="json"))
-            data = await get_market_hist_data(
-                primary=connect_primary, httpxAsyncClient=c, params=params
-            )
-            print(data)
+            start_stream(primary=connect_primary, msg_subscription=msg_subscription, url=args.websocket)
         except Exception as e:
             print(f"Error al obtener instrumentos: {e}")
 
@@ -222,6 +221,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.market_data 'DLR/DIC23'
-    # poetry run python -m src.pyrofex.handlers.market_data 'MERV - XMEV - GGAL - 24hs'
-    # poetry run python -m src.pyrofex.handlers.market_data 'MERV - XMEV - GGAL - 24hs' -l
+    # python -m src.pyrofex.handlers.ws_market_data
+    # poetry run python -m src.pyrofex.ws_handlers.market_data
+    # poetry run python -m src.pyrofex.ws_handlers.market_data
