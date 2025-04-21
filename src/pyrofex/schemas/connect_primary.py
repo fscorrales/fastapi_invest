@@ -9,7 +9,7 @@ from pydantic import BaseModel
 # --------------------------------------------------
 class ConnectPrimary(BaseModel):
     base_url: str
-    websocket_url: str
+    websocket_url: Optional[str] = None
     server: Optional[str] = None
     date: datetime
     content_length: str
