@@ -9,7 +9,8 @@ from .common import Depth, Entry, Enviroment, InstrumentID, MarketID
 
 class WSProductSubscription(BaseModel):
     symbol: str
-    marketId: MarketID = MarketID.ROFX
+    marketId: MarketID = MarketID.rofex
+
 
 class WSMessageSubscription(BaseModel):
     type: str = "smd"

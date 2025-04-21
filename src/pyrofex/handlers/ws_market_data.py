@@ -16,6 +16,7 @@ import argparse
 import asyncio
 from typing import List
 
+import websockets
 from httpx import AsyncClient
 
 from ..schemas import ConnectPrimary, Entry, MarketData, MarketID, WSMessageSubscription
@@ -143,9 +144,7 @@ def get_args():
 
 # --------------------------------------------------
 async def stream_market_data(
-    primary: ConnectPrimary,
-    msg_subscription: WSMessageSubscription,
-    url: str = None
+    primary: ConnectPrimary, msg_subscription: WSMessageSubscription, url: str = None
 ) -> List[MarketData]:
     """Get response from Primary WS API"""
     if url is None:
@@ -166,7 +165,7 @@ async def stream_market_data(
         # Método 2
         while True:
             try:
-                message = await websocket.recv()
+                message = await ws.recv()
                 print("📥 Recibido:", message)
                 # await broadcast_message(message)
             except websockets.exceptions.ConnectionClosed:
@@ -175,10 +174,14 @@ async def stream_market_data(
 
 
 # --------------------------------------------------
-def start_stream(primary: ConnectPrimary, msg_subscription: WSMessageSubscription, url: str = None):
+def start_stream(
+    primary: ConnectPrimary, msg_subscription: WSMessageSubscription, url: str = None
+):
     global stream_task
     if stream_task is None or stream_task.done():
-        stream_task = asyncio.create_task(stream_data(primary=primary, msg_subscription=msg_subscription))
+        stream_task = asyncio.create_task(
+            stream_market_data(primary=primary, msg_subscription=msg_subscription)
+        )
         return True
     return False
 
@@ -212,7 +215,11 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            start_stream(primary=connect_primary, msg_subscription=msg_subscription, url=args.websocket)
+            start_stream(
+                primary=connect_primary,
+                msg_subscription=msg_subscription,
+                url=args.websocket,
+            )
         except Exception as e:
             print(f"Error al obtener instrumentos: {e}")
 
