@@ -1,4 +1,4 @@
-__all__ = ["WSMessageSubscription", "WSMarketData"]
+__all__ = ["WSMessageSubscription", "WSMarketData", "WSProductSubscription"]
 
 from typing import List
 

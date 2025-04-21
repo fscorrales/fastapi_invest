@@ -14,13 +14,24 @@ __all__ = ["get_token"]
 
 import argparse
 import asyncio
+import json
 from typing import List
 
 import websockets
 from httpx import AsyncClient
 
-from ..schemas import ConnectPrimary, Entry, MarketData, MarketID, WSMessageSubscription
+from ..schemas import (
+    ConnectPrimary,
+    Entry,
+    MarketData,
+    MarketID,
+    WSMessageSubscription,
+    WSProductSubscription,
+)
 from .connect_primary import get_token
+
+# Estado global del stream
+stream_task = None
 
 
 # --------------------------------------------------
@@ -151,26 +162,35 @@ async def stream_market_data(
         url = primary.websocket_url
 
     h = {"X-Auth-Token": primary.x_auth_token}
+    # h = [("X-Auth-Token", primary.x_auth_token)]
     msg_dict = msg_subscription.model_dump(mode="json")
+    print(f"📡 Suscribiendo a {msg_dict}")
 
     async with websockets.connect(url, extra_headers=h) as ws:
-        await ws.send(msg_dict)
-        # await ws.send(json.dumps(SUBSCRIPTION_MESSAGE))
-        print("📡 Suscripción enviada a Primary")
+        try:
+            print("📡 Conectado a Primary API")
+            await ws.send(json.dumps(msg_dict))
+            # await ws.send(json.dumps(SUBSCRIPTION_MESSAGE))
+            print("📡 Suscripción enviada a Primary")
 
-        # Método 1
-        # async for message in ws:
-        #     await broadcast_message(message)
+            # Método 1
+            # async for message in ws:
+            #     await broadcast_message(message)
 
-        # Método 2
-        while True:
-            try:
-                message = await ws.recv()
-                print("📥 Recibido:", message)
-                # await broadcast_message(message)
-            except websockets.exceptions.ConnectionClosed:
-                print("❌ Conexión cerrada por el servidor")
-                break
+            # Método 2
+            while True:
+                try:
+                    message = await asyncio.wait_for(ws.recv(), timeout=10)
+                    print("📥 Recibido:", message)
+                except asyncio.TimeoutError:
+                    print("⏳ No se recibió respuesta del servidor en 10 segundos.")
+        except websockets.exceptions.ConnectionClosed:
+            print("❌ Conexión cerrada por el servidor")
+        except asyncio.CancelledError:
+            print("🛑 Stream cancelado")
+            raise
+        finally:
+            await ws.close()
 
 
 # --------------------------------------------------
@@ -201,17 +221,23 @@ async def main():
 
     args = get_args()
     msg_subscription = WSMessageSubscription(
-        symbol=args.symbol,
-        market_id=args.market_id,
         entries=args.entries,
-        depth=args.depth,
+        products=[
+            WSProductSubscription(
+                symbol="MERV - XMEV - GGAL - 24hs",
+                marketId="ROFX",
+            )
+        ],
     )
 
+    print(json.dumps(msg_subscription.model_dump(mode="json")))
+    print(f"Conectando a Primary API {args.websocket}")
     async with AsyncClient() as c:
         connect_primary = await get_token(
             username=args.username,
             password=args.password,
             url=args.rest_url,
+            websocket_url=args.websocket,
             httpxAsyncClient=c,
         )
         try:
@@ -229,5 +255,5 @@ if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
     # python -m src.pyrofex.handlers.ws_market_data
-    # poetry run python -m src.pyrofex.ws_handlers.market_data
-    # poetry run python -m src.pyrofex.ws_handlers.market_data
+    # poetry run python -m src.pyrofex.handlers.ws_market_data
+    # poetry run python -m src.pyrofex.handlers.ws_market_data "MERV - XMEV - GGAL - 24hs" -l
