@@ -11,9 +11,9 @@ from .common import Enviroment, InstrumentID, MarketID
 class ParamsMarketHistData(BaseModel):
     marketId: MarketID
     symbol: str
-    # date: Optional[str] = Field(None, description="Date in format YYYY-MM-DD")
-    dateFrom: Optional[str] = Field(None, description="Start date in format YYYY-MM-DD")
-    dateTo: Optional[str] = Field(None, description="End date in format YYYY-MM-DD")
+    date: Optional[str] = Field(None, description="Date in format YYYY-MM-DD")
+    # dateFrom: Optional[str] = Field(None, description="Start date in format YYYY-MM-DD")
+    # dateTo: Optional[str] = Field(None, description="End date in format YYYY-MM-DD")
     external: bool = False
     environment: Enviroment = Enviroment.remarkets
 

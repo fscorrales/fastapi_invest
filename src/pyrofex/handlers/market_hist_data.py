@@ -191,8 +191,9 @@ async def main():
     params = ParamsMarketHistData(
         marketId=args.market_id,
         symbol=args.symbol,
-        dateFrom=args.date + "T00:00:00",
-        dateTo=args.date + "T23:59:59",
+        date=args.date,
+        # dateFrom=args.date + "T00:00:00",
+        # dateTo=args.date + "T23:59:59",
         external=args.external,
         environment=args.environment,
     )
