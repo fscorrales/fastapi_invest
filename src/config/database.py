@@ -19,6 +19,7 @@ COLLECTIONS = [
     "iol_titulos_fcis",
     "primary_segments",
     "primary_instruments",
+    "primary_instruments_details",
 ]
 
 
