@@ -10,7 +10,7 @@ Purpose : Lista de Segmentos disponibles
 API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Segmentos
 """
 
-__all__ = ["get_token"]
+__all__ = ["get_segments"]
 
 import argparse
 import asyncio
@@ -63,7 +63,7 @@ def get_args():
         help="URL for Primary's API Rest access",
         metavar="rest_url",
         type=str,
-        default="https://api.remarkets.primary.com.ar/",
+        default="https://api.remarkets.primary.com.ar",
     )
 
     parser.add_argument(
@@ -72,7 +72,7 @@ def get_args():
         help="URL for Primary's API Websocket access",
         metavar="websocket_url",
         type=str,
-        default="wss://api.remarkets.primary.com.ar/",
+        default="wss://api.remarkets.primary.com.ar",
     )
 
     args = parser.parse_args()

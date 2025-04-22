@@ -27,6 +27,8 @@ class BaseAppSettings(BaseSettings):
     PRIMARY_LIVE_WS: str = "wss://api.primary.com.ar"
     PRIMARY_REMARKETS_USERNAME: str | None = None
     PRIMARY_REMARKETS_PASSWORD: str | None = None
+    PRIMARY_REMARKETS_URL: str = "https://api.remarkets.primary.com.ar"
+    PRIMARY_REMARKETS_WS: str = "wss://api.remarkets.primary.com.ar"
     DB_URI: str = "mongodb://127.0.0.1:27017/invest"
     JWT_SECRET: str = "super_secret_key"
     # Otros valores opcionales...
