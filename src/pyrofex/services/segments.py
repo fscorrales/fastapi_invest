@@ -21,15 +21,23 @@ class SegmentsService:
     segments: SegmentsRepositoryDependency
 
     # -------------------------------------------------
-    async def sync_segments_from_primary(self, username: str, password: str, url: str, enviroment: str = "REMARKETS") -> List[Segment]:
+    async def sync_segments_from_primary(
+        self, username: str, password: str, url: str, enviroment: str = "REMARKETS"
+    ) -> List[Segment]:
         async with AsyncClient() as c:
             try:
                 # Intentar obtener el token
-                connect_primary = await get_token(username, password, url, httpxAsyncClient=c)
+                connect_primary = await get_token(
+                    username, password, url, httpxAsyncClient=c
+                )
                 # Intentar obtener el estado de cuenta
-                segments = await get_segments(primary=connect_primary, httpxAsyncClient=c)
+                segments = await get_segments(
+                    primary=connect_primary, httpxAsyncClient=c
+                )
 
-                segments_to_store = [Segment(**segment.model_dump()) for segment in segments]
+                segments_to_store = [
+                    Segment(**segment.model_dump()) for segment in segments
+                ]
 
                 await self.segments.delete_by_fields(
                     {"enviroment": enviroment}
@@ -56,7 +64,8 @@ class SegmentsService:
         except Exception as e:
             logger.error(f"Error retrieving Primary's Segments from database: {e}")
             raise HTTPException(
-                status_code=500, detail="Error retrieving Primary's Segments from the database"
+                status_code=500,
+                detail="Error retrieving Primary's Segments from the database",
             )
 
 
