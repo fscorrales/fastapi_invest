@@ -68,7 +68,7 @@ def get_args():
         metavar="entries",
         type=str,
         nargs="+",
-        default=["OP", "CL", "HI", "LO", "TV"],
+        default=["OP", "CL", "HI", "LO", "BI", "OF"],
         choices=[c.value for c in Entry],
     )
 
@@ -155,7 +155,7 @@ def get_args():
 
 # --------------------------------------------------
 async def stream_market_data(
-    primary: ConnectPrimary, msg_subscription: WSMessageSubscription, url: str = None
+    primary: ConnectPrimary, msg_subscription: WSMessageSubscription, url: str = None, seconds_delay: int = 5
 ) -> List[MarketData]:
     """Get response from Primary WS API"""
     if url is None:
@@ -179,11 +179,14 @@ async def stream_market_data(
 
             # Método 2
             while True:
-                try:
-                    message = await asyncio.wait_for(ws.recv(), timeout=10)
-                    print("📥 Recibido:", message)
-                except asyncio.TimeoutError:
-                    print("⏳ No se recibió respuesta del servidor en 10 segundos.")
+                # try:
+                message = await ws.recv()
+                # message = await asyncio.wait_for(ws.recv(), timeout=10)
+                print("📥 Recibido:", message)
+                # except asyncio.TimeoutError:
+                #     print("⏳ No se recibió respuesta del servidor en 10 segundos.")
+                # ⏳ Delay artificial entre mensajes
+                await asyncio.sleep(seconds_delay)  # por ejemplo, 1 segundo
         except websockets.exceptions.ConnectionClosed:
             print("❌ Conexión cerrada por el servidor")
         except asyncio.CancelledError:
@@ -226,11 +229,15 @@ async def main():
             WSProductSubscription(
                 symbol="MERV - XMEV - GGAL - 24hs",
                 marketId="ROFX",
+            ),
+            WSProductSubscription(
+                symbol="MERV - XMEV - TXAR - 24hs",
+                marketId="ROFX",
             )
         ],
     )
 
-    print(json.dumps(msg_subscription.model_dump(mode="json")))
+    # print(json.dumps(msg_subscription.model_dump(mode="json")))
     print(f"Conectando a Primary API {args.websocket}")
     async with AsyncClient() as c:
         connect_primary = await get_token(
@@ -241,7 +248,7 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            start_stream(
+            await stream_market_data(
                 primary=connect_primary,
                 msg_subscription=msg_subscription,
                 url=args.websocket,
@@ -254,6 +261,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.ws_market_data
+    # python -m src.pyrofex.handlers.ws_market_data "MERV - XMEV - GGAL - 24hs" -l
     # poetry run python -m src.pyrofex.handlers.ws_market_data
     # poetry run python -m src.pyrofex.handlers.ws_market_data "MERV - XMEV - GGAL - 24hs" -l
