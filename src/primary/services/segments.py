@@ -31,20 +31,16 @@ class SegmentsService:
                     username, password, url, httpxAsyncClient=c
                 )
                 # Intentar obtener el estado de cuenta
-                segments = await get_segments(
-                    primary=connect_primary, httpxAsyncClient=c
-                )
+                fields = await get_segments(primary=connect_primary, httpxAsyncClient=c)
 
-                segments_to_store = [
-                    Segment(**segment.model_dump()) for segment in segments
-                ]
+                data_to_store = [Segment(**field.model_dump()) for field in fields]
 
                 await self.segments.delete_by_fields(
                     {"enviroment": enviroment}
                 )  # Eliminar el portafolio anterior
-                await self.segments.save_all(segments_to_store)
+                await self.segments.save_all(data_to_store)
 
-                return segments
+                return fields
             except ValidationError as e:
                 logger.error(f"Validation Error: {e}")
                 raise HTTPException(
