@@ -17,6 +17,7 @@ import asyncio
 import json
 from typing import List
 
+import orjson
 import websockets
 from httpx import AsyncClient
 
@@ -32,6 +33,8 @@ from .connect_primary import get_token
 
 # Estado global del stream
 stream_task = None
+# Cola compartida
+message_queue = asyncio.Queue()
 
 
 # --------------------------------------------------
@@ -154,6 +157,41 @@ def get_args():
 
 
 # --------------------------------------------------
+async def receive_messages(ws):
+    while True:
+        try:
+            raw = await asyncio.wait_for(ws.recv(), timeout=10)
+            print("📥 Mensaje recibido:", raw)
+            await message_queue.put(raw)
+        except asyncio.TimeoutError:
+            print("⏳ Timeout...")
+        except websockets.exceptions.ConnectionClosed:
+            print("❌ Conexión cerrada por el servidor")
+        except asyncio.CancelledError:
+            print("🛑 Stream cancelado")
+            raise
+
+
+# --------------------------------------------------
+async def process_messages():
+    while True:
+        raw = await message_queue.get()
+        try:
+            msg = orjson.loads(raw)
+            if msg.get("type") == "Md":
+                # Ejemplo: parseo manual y simple
+                instrument = msg["instrumentId"]["symbol"]
+                price = msg["marketData"].get("OP")
+                print(f"💰 {instrument}: {price}")
+                # Guardar en Mongo, convertir a DataFrame, etc.
+
+        except Exception as e:
+            print(f"⚠️ Error procesando mensaje: {e}")
+        finally:
+            message_queue.task_done()
+
+
+# --------------------------------------------------
 async def stream_market_data(
     primary: ConnectPrimary, msg_subscription: WSMessageSubscription, url: str = None
 ) -> List[MarketData]:
@@ -167,30 +205,41 @@ async def stream_market_data(
     print(f"📡 Suscribiendo a {msg_dict}")
 
     async with websockets.connect(url, extra_headers=h) as ws:
-        try:
-            print("📡 Conectado a Primary API")
-            await ws.send(json.dumps(msg_dict))
-            # await ws.send(json.dumps(SUBSCRIPTION_MESSAGE))
-            print("📡 Suscripción enviada a Primary")
+        # Método 2
+        # try:
+        #     print("📡 Conectado a Primary API")
+        #     await ws.send(json.dumps(msg_dict))
+        #     print("📡 Suscripción enviada a Primary")
 
-            # Método 1
-            # async for message in ws:
-            #     await broadcast_message(message)
+        #     # Método 1
+        #     # async for message in ws:
+        #     #     await broadcast_message(message)
 
-            # Método 2
-            while True:
-                try:
-                    message = await asyncio.wait_for(ws.recv(), timeout=10)
-                    print("📥 Recibido:", message)
-                except asyncio.TimeoutError:
-                    print("⏳ No se recibió respuesta del servidor en 10 segundos.")
-        except websockets.exceptions.ConnectionClosed:
-            print("❌ Conexión cerrada por el servidor")
-        except asyncio.CancelledError:
-            print("🛑 Stream cancelado")
-            raise
-        finally:
-            await ws.close()
+        #
+        #     while True:
+        #         try:
+        #             message = await asyncio.wait_for(ws.recv(), timeout=10)
+        #             print("📥 Recibido:", message)
+        #         except asyncio.TimeoutError:
+        #             print("⏳ No se recibió respuesta del servidor en 10 segundos.")
+
+        # except websockets.exceptions.ConnectionClosed:
+        #     print("❌ Conexión cerrada por el servidor")
+        # except asyncio.CancelledError:
+        #     print("🛑 Stream cancelado")
+        #     raise
+        # finally:
+        #     await ws.close()
+
+        # Método 3
+        print("📡 Conectado a Primary")
+        await ws.send(orjson.dumps(msg_dict).decode())
+
+        # Ejecutamos recepción y procesamiento en paralelo
+        consumer = asyncio.create_task(process_messages())
+        producer = asyncio.create_task(receive_messages(ws))
+
+        await asyncio.gather(producer, consumer)
 
 
 # --------------------------------------------------
