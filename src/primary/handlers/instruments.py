@@ -10,7 +10,7 @@ Purpose : Lista de Instrumentos disponibles
 API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Instrumentos-detail
 """
 
-__all__ = ["get_token"]
+__all__ = ["get_instruments"]
 
 import argparse
 import asyncio
