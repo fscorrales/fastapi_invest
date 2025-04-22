@@ -254,6 +254,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.ws_market_data
-    # poetry run python -m src.pyrofex.handlers.ws_market_data
-    # poetry run python -m src.pyrofex.handlers.ws_market_data "MERV - XMEV - GGAL - 24hs" -l
+    # python -m src.primary.handlers.ws_market_data
+    # poetry run python -m src.primary.handlers.ws_market_data
+    # poetry run python -m src.primary.handlers.ws_market_data "MERV - XMEV - GGAL - 24hs" -l

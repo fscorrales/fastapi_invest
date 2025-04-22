@@ -190,5 +190,5 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.connect_primary
-    # poetry run python -m src.pyrofex.handlers.connect_primary -l
+    # python -m src.primary.handlers.connect_primary
+    # poetry run python -m src.primary.handlers.connect_primary -l

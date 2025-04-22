@@ -219,6 +219,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.market_hist_data 'DLR/DIC23'
-    # poetry run python -m src.pyrofex.handlers.market_hist_data 'MERV - XMEV - GGAL - 24hs' -d 2024-04-19
-    # poetry run python -m src.pyrofex.handlers.market_hist_data 'MERV - XMEV - GGAL - 24hs' -d 2025-04-15 -l
+    # python -m src.primary.handlers.market_hist_data 'DLR/DIC23'
+    # poetry run python -m src.primary.handlers.market_hist_data 'MERV - XMEV - GGAL - 24hs' -d 2024-04-19
+    # poetry run python -m src.primary.handlers.market_hist_data 'MERV - XMEV - GGAL - 24hs' -d 2025-04-15 -l
