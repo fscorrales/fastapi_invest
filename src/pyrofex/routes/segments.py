@@ -11,7 +11,7 @@ segments_router = APIRouter(prefix="/segments", tags=["Primary - Segments"])
 
 
 @segments_router.post("/sync_from_primary", response_model=List[Segment])
-async def sync_fcis_from_iol(
+async def sync_segments_from_primary(
     auth: OptionalAuthorizationDependency,
     service: SegmentsServiceDependency,
     enviroment: Enviroment = Enviroment.live,
