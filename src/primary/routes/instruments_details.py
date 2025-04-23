@@ -53,13 +53,14 @@ async def sync_instruments_details_from_primary(
         logger.info(f"Params: {params.model_dump(mode='json')}")
     else:
         logger.info("No params provided")
-    return await service.sync_instruments_details_from_primary(
+    instruments = await service.sync_instruments_details_from_primary(
         username=username,
         password=password,
         url=url,
         params=params,
         enviroment=enviroment.value,
     )
+    return instruments[:100]
 
 
 @instruments_details_router.get(
