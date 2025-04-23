@@ -74,7 +74,7 @@ class MarketSegmentID(str, Enum):
 
 # -------------------------------------------------
 class MarketID(str, Enum):
-    """Código que identifica el ID del mercado al qu pertenece el segmento."""
+    """Código que identifica el ID del mercado al que pertenece el segmento."""
 
     rofex = "ROFX"
     merval = "MERV"

@@ -1,8 +1,9 @@
-__all__ = ["InstrumentDetails", "ParamsInstumentDetails"]
+__all__ = ["InstrumentDetails", "ParamsInstumentDetails", "StoredInstrumentDetails"]
 
 from typing import List
 
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel, Field, RootModel
+from pydantic_mongo import PydanticObjectId
 
 from .common import (
     CFICode,
@@ -16,8 +17,8 @@ from .common import (
 
 # --------------------------------------------------
 class ParamsInstumentDetails(BaseModel):
-    marketId: MarketID
-    symbol: str
+    marketId: MarketID | None = None
+    symbol: str | None = None
 
 
 # --------------------------------------------------
@@ -62,3 +63,8 @@ class InstrumentDetails(BaseModel):
     underlying: str
     cficode: CFICode
     enviroment: Enviroment
+
+
+# -------------------------------------------------
+class StoredInstrumentDetails(InstrumentDetails):
+    id: PydanticObjectId = Field(alias="_id")

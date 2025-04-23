@@ -12,6 +12,7 @@ class Segment(BaseModel):
     marketSegmentId: MarketSegmentID
     marketId: MarketID
 
+
 # -------------------------------------------------
 class StoredSegment(Segment):
     id: PydanticObjectId = Field(alias="_id")

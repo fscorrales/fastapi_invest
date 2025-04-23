@@ -5,12 +5,12 @@ Author  : Fernando Corrales <fscpython@gmail.com>
 
 Date    : 19-abr-2025
 
-Purpose : Lista de Instrumentos disponibles por cficode
+Purpose : Lista de Instrumentos disponibles con más detalle
 
 API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Instrumentos-detail
 """
 
-__all__ = ["get_token"]
+__all__ = ["get_instruments_details"]
 
 import argparse
 import asyncio
@@ -19,10 +19,10 @@ from typing import List
 from httpx import AsyncClient
 
 from ..schemas import (
-    CFICode,
     ConnectPrimary,
-    InstrumentByCFICode,
-    ParamsInstumentsByCFICode,
+    InstrumentDetails,
+    MarketID,
+    ParamsInstumentDetails,
 )
 from .connect_primary import get_token
 
@@ -34,16 +34,6 @@ def get_args():
     parser = argparse.ArgumentParser(
         description="Connect to Primary API",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-
-    parser.add_argument(
-        "-c",
-        "--cficode",
-        metavar="CFICode",
-        type=str,
-        default="ESXXXX",
-        help="Specify the cficode to look up (e.g., ESXXXX)",
-        choices=[c.value for c in CFICode],
     )
 
     parser.add_argument(
@@ -62,6 +52,25 @@ def get_args():
         metavar="password",
         type=str,
         default=None,
+    )
+
+    parser.add_argument(
+        "-s",
+        "--symbol",
+        help="Specify the symbol of the instrument to look up (e.g., AAPL, TSLA)",
+        metavar="symbol",
+        type=str,
+        default=None,
+    )
+
+    parser.add_argument(
+        "-m",
+        "--market_id",
+        metavar="MarketID",
+        help="Specify the market id to look up (e.g., ROFX, MERV)",
+        default="ROFX",
+        type=str,
+        choices=[c.value for c in MarketID],
     )
 
     parser.add_argument(
@@ -116,18 +125,22 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_instruments_by_cficode(
+async def get_instruments_details(
     primary: ConnectPrimary,
-    params: ParamsInstumentsByCFICode,
     url: str = None,
+    params: ParamsInstumentDetails = None,
     httpxAsyncClient: AsyncClient = None,
-) -> List[InstrumentByCFICode]:
+) -> List[InstrumentDetails]:
     """Get response from Primary REST API"""
     if url is None:
-        url = primary.base_url + "/rest/instruments/byCFICode"
+        url = (
+            primary.base_url + "/rest/instruments/detail"
+            if params
+            else primary.base_url + "/rest/instruments/details"
+        )
 
     h = {"X-Auth-Token": primary.x_auth_token}
-    params_dict = params.model_dump(mode="json")
+    params_dict = params.model_dump(mode="json") if params else None
 
     if httpxAsyncClient:
         r = await httpxAsyncClient.get(url, headers=h, params=params_dict)
@@ -140,20 +153,46 @@ async def get_instruments_by_cficode(
 
     if r.status_code == 200:
         data = r.json()
-        instrumentos = data
+        # instrumentos = data
         if data["status"] == "OK":
             enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
+            data_field = "instrument" if params_dict else "instruments"
             # Verificar si data[data_field] es un diccionario o una lista
-            if isinstance(data["instruments"], dict):
+            if isinstance(data[data_field], dict):
                 # Si es un diccionario, conviértelo en una lista con un solo elemento
-                instrumentos_data = [data["instruments"]]
+                instrumentos_data = [data[data_field]]
             else:
                 # Si es una lista, úsala directamente
-                instrumentos_data = data["instruments"]
+                instrumentos_data = data[data_field]
             instrumentos = [
-                InstrumentByCFICode(
-                    symbol=instrumento["symbol"],
-                    marketId=instrumento["marketId"],
+                InstrumentDetails(
+                    symbol=instrumento["instrumentId"]["symbol"],
+                    marketId=instrumento["instrumentId"]["marketId"],
+                    marketSegmentId=instrumento["segment"]["marketSegmentId"],
+                    lowLimitPrice=instrumento["lowLimitPrice"],
+                    highLimitPrice=instrumento["highLimitPrice"],
+                    minPriceIncrement=instrumento["minPriceIncrement"],
+                    minTradeVol=instrumento["minTradeVol"],
+                    maxTradeVol=instrumento["maxTradeVol"],
+                    tickSize=instrumento["tickSize"],
+                    contractMultiplier=instrumento["contractMultiplier"],
+                    roundLot=instrumento["roundLot"],
+                    priceConvertionFactor=instrumento["priceConvertionFactor"],
+                    maturityDate=instrumento["maturityDate"],
+                    currency=instrumento["currency"],
+                    orderTypes=instrumento["orderTypes"],
+                    timesInForce=instrumento["timesInForce"],
+                    securityType=instrumento["securityType"],
+                    settlType=instrumento["settlType"],
+                    instrumentPricePrecision=instrumento["instrumentPricePrecision"],
+                    instrumentSizePrecision=instrumento["instrumentSizePrecision"],
+                    securityId=instrumento["securityId"],
+                    securityIdSource=instrumento["securityIdSource"],
+                    securityDescription=instrumento["securityDescription"],
+                    tickPriceRanges=instrumento["tickPriceRanges"],
+                    strike=instrumento["strike"],
+                    underlying=instrumento["underlying"],
+                    cficode=instrumento["cficode"],
                     enviroment=enviroment,
                 )
                 for instrumento in instrumentos_data
@@ -168,7 +207,10 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    params = ParamsInstumentsByCFICode(CFICode=args.cficode)
+    if args.symbol and args.market_id:
+        params = ParamsInstumentDetails(symbol=args.symbol, marketId=args.market_id)
+    else:
+        params = None
 
     async with AsyncClient() as c:
         connect_primary = await get_token(
@@ -178,7 +220,7 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            instrumentos = await get_instruments_by_cficode(
+            instrumentos = await get_instruments_details(
                 primary=connect_primary, httpxAsyncClient=c, params=params
             )
             print(instrumentos)
@@ -190,5 +232,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.instruments_by_cficode -c ESXXXX
-    # poetry run python -m src.pyrofex.handlers.instruments_by_cficode -c ESXXXX -l
+    # python -m src.primary.handlers.instruments_details
+    # poetry run python -m src.primary.handlers.instruments_details -l
+    # poetry run python -m src.primary.handlers.instruments_details -m 'ROFX' -s 'SOJ.ROS/MAY25 264 C'

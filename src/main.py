@@ -7,8 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .auth.routes import auth_router
 from .config import Database
 from .iol.routes import iol_router
+from .primary.routes import primary_router
 from .rava.routes import rava_router
-from .pyrofex.routes import primary_router
 
 
 @asynccontextmanager

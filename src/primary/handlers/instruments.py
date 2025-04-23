@@ -5,12 +5,12 @@ Author  : Fernando Corrales <fscpython@gmail.com>
 
 Date    : 18-abr-2025
 
-Purpose : Lista de Segmentos disponibles
+Purpose : Lista de Instrumentos disponibles
 
-API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Segmentos
+API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Instrumentos-detail
 """
 
-__all__ = ["get_segments"]
+__all__ = ["get_instruments"]
 
 import argparse
 import asyncio
@@ -18,7 +18,7 @@ from typing import List
 
 from httpx import AsyncClient
 
-from ..schemas import ConnectPrimary, Segment
+from ..schemas import ConnectPrimary, Instrument
 from .connect_primary import get_token
 
 
@@ -63,7 +63,7 @@ def get_args():
         help="URL for Primary's API Rest access",
         metavar="rest_url",
         type=str,
-        default="https://api.remarkets.primary.com.ar",
+        default="https://api.remarkets.primary.com.ar/",
     )
 
     parser.add_argument(
@@ -72,7 +72,7 @@ def get_args():
         help="URL for Primary's API Websocket access",
         metavar="websocket_url",
         type=str,
-        default="wss://api.remarkets.primary.com.ar",
+        default="wss://api.remarkets.primary.com.ar/",
     )
 
     args = parser.parse_args()
@@ -101,12 +101,12 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_segments(
+async def get_instruments(
     primary: ConnectPrimary, url: str = None, httpxAsyncClient: AsyncClient = None
-) -> List[Segment]:
+) -> List[Instrument]:
     """Get response from Primary REST API"""
     if url is None:
-        url = primary.base_url + "/rest/segment/all"
+        url = primary.base_url + "/rest/instruments/all"
 
     h = {"X-Auth-Token": primary.x_auth_token}
 
@@ -123,18 +123,19 @@ async def get_segments(
         data = r.json()
         if data["status"] == "OK":
             enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
-            segmentos = [
-                Segment(
+            instrumentos = [
+                Instrument(
+                    symbol=instrumento["instrumentId"]["symbol"],
+                    marketId=instrumento["instrumentId"]["marketId"],
+                    cficode=instrumento["cficode"],
                     enviroment=enviroment,
-                    marketSegmentId=segmento["marketSegmentId"],
-                    marketId=segmento["marketId"],
                 )
-                for segmento in data["segments"]
+                for instrumento in data["instruments"]
             ]
         else:
             raise ValueError(f"Primary API Error: {data.get('description')}")
 
-        return segmentos
+        return instrumentos
 
 
 # --------------------------------------------------
@@ -151,15 +152,17 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            segmentos = await get_segments(primary=connect_primary, httpxAsyncClient=c)
-            print(segmentos)
+            instrumentos = await get_instruments(
+                primary=connect_primary, httpxAsyncClient=c
+            )
+            print(instrumentos)
         except Exception as e:
-            print(f"Error al obtener segmentos: {e}")
+            print(f"Error al obtener instrumentos: {e}")
 
 
 # --------------------------------------------------
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.pyrofex.handlers.segments
-    # poetry run python -m src.pyrofex.handlers.segments -l
+    # python -m src.primary.handlers.instruments
+    # poetry run python -m src.primary.handlers.instruments -l
