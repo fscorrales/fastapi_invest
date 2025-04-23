@@ -14,7 +14,6 @@ __all__ = ["get_token"]
 
 import argparse
 import asyncio
-import json
 from typing import List
 
 import orjson
@@ -26,6 +25,7 @@ from ..schemas import (
     Entry,
     MarketData,
     MarketID,
+    SettlementTerm,
     WSMessageSubscription,
     WSProductSubscription,
 )
@@ -47,11 +47,22 @@ def get_args():
     )
 
     parser.add_argument(
-        "symbol",
-        help="Specify the symbol of the instrument to look up (e.g., GGAL, YPFD)",
-        metavar="symbol",
+        "symbols",
+        help="Specify one or more symbols of the instruments to look up (e.g., GGAL YPFD PAMP)",
+        metavar="Symbols",
         type=str,
-        default=None,
+        nargs="+",
+    )
+
+    parser.add_argument(
+        "-t",
+        "--terms",
+        help="Settlement terms for the trade (e.g., 24hs 48hs CI)",
+        metavar="term",
+        type=str,
+        choices=[c.value for c in SettlementTerm],
+        default=["CI", "24hs"],
+        nargs="+",
     )
 
     parser.add_argument(
@@ -71,7 +82,7 @@ def get_args():
         metavar="entries",
         type=str,
         nargs="+",
-        default=["OP", "CL", "HI", "LO", "BI", "OF"],
+        default=["LA", "HI", "LO", "BI", "OF", "NV", "EV"],
         choices=[c.value for c in Entry],
     )
 
@@ -157,6 +168,19 @@ def get_args():
 
 
 # --------------------------------------------------
+def format_instruments(
+    symbols: List[str], settlement_terms: List[SettlementTerm] = ["CI", "24hs"]
+) -> List[str]:
+    """Get formatted instruments from symbols"""
+    formatted_instruments = [
+        f"MERV - XMEV - {symbol} - {settlement_term}"
+        for symbol in symbols
+        for settlement_term in settlement_terms
+    ]
+    return formatted_instruments
+
+
+# --------------------------------------------------
 async def receive_messages(ws):
     while True:
         try:
@@ -193,7 +217,10 @@ async def process_messages():
 
 # --------------------------------------------------
 async def stream_market_data(
-    primary: ConnectPrimary, msg_subscription: WSMessageSubscription, url: str = None, seconds_delay: int = 5
+    primary: ConnectPrimary,
+    msg_subscription: WSMessageSubscription,
+    url: str = None,
+    seconds_delay: int = 5,
 ) -> List[MarketData]:
     """Get response from Primary WS API"""
     if url is None:
@@ -269,18 +296,16 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
+    formatted_instruments = format_instruments(
+        symbols=args.symbols, settlement_terms=args.terms
+    )
     msg_subscription = WSMessageSubscription(
         entries=args.entries,
         products=[
-            WSProductSubscription(
-                symbol="MERV - XMEV - GGAL - 24hs",
-                marketId="ROFX",
-            ),
-            WSProductSubscription(
-                symbol="MERV - XMEV - TXAR - 24hs",
-                marketId="ROFX",
-            )
+            WSProductSubscription(symbol=s, marketId=args.market_id)
+            for s in formatted_instruments
         ],
+        depth=args.depth,
     )
 
     # print(json.dumps(msg_subscription.model_dump(mode="json")))
@@ -309,4 +334,4 @@ if __name__ == "__main__":
     # From /fastapi_invest
     # python -m src.primary.handlers.ws_market_data
     # poetry run python -m src.primary.handlers.ws_market_data
-    # poetry run python -m src.primary.handlers.ws_market_data "MERV - XMEV - GGAL - 24hs" -l
+    # poetry run python -m src.primary.handlers.ws_market_data GGAL TXAR -l -d 3

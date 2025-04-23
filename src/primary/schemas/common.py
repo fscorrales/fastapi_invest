@@ -10,6 +10,7 @@ __all__ = [
     "OrderSide",
     "OrderStatus",
     "OrderTimeInForce",
+    "SettlementTerm",
 ]
 
 from enum import Enum
@@ -94,10 +95,10 @@ class Entry(str, Enum):
     offer = "OF"
     last = "LA"  # Ultimo precio
     open = "OP"  # Precio de apertura
-    close = "CL"  # Precio de cierre
+    close = "CL"  # Precio de cierre ANTERIOR
     high = "HI"  # Precio máximo
     low = "LO"  # Precio mínimo
-    trade_volume = "TV"  # Volumen operado en contratos/nominales
+    trade_volume = "TV"  # Volumen operado en contratos/nominales (null value)
     settlement = "SE"  # Precio de ajuste (solo para futuros)
     open_interest = "OI"  # Interés abierto (solo para futuros)
     index_volue = "IV"  # Valor del índice (solo para índices)
@@ -115,6 +116,13 @@ class Depth(int, Enum):
     level_3 = 3
     level_4 = 4
     level_5 = 5
+
+
+# -------------------------------------------------
+class SettlementTerm(str, Enum):
+    t24 = "24hs"
+    t48 = "48hs"
+    ci = "CI"
 
 
 # -------------------------------------------------
