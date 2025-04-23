@@ -1,10 +1,10 @@
-from typing import List, Annotated
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger, settings
-from ..schemas import Enviroment, Instrument, StoredInstrument, FilterParamsInstruments
+from ..schemas import Enviroment, FilterParamsInstruments, Instrument, StoredInstrument
 from ..services import InstrumentsServiceDependency
 
 instruments_router = APIRouter(prefix="/instruments", tags=["Primary - Instruments"])

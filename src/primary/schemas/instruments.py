@@ -1,11 +1,12 @@
 __all__ = ["Instrument", "StoredInstrument", "FilterParamsInstruments"]
 
+from typing import Optional
+
 from pydantic import BaseModel, Field
 from pydantic_mongo import PydanticObjectId
 
-from .common import CFICode, Enviroment, MarketID
 from ...utils import BaseFilterParams
-from typing import Optional
+from .common import CFICode, Enviroment, MarketID
 
 
 # --------------------------------------------------

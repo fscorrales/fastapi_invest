@@ -57,7 +57,9 @@ class InstrumentsService:
                 )
 
     # -------------------------------------------------
-    async def get_instruments_from_db(self, params: BaseFilterParams) -> List[StoredInstrument]:
+    async def get_instruments_from_db(
+        self, params: BaseFilterParams
+    ) -> List[StoredInstrument]:
         try:
             return await self.instruments.find_with_filter_params(params=params)
         except Exception as e:

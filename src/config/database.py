@@ -6,8 +6,8 @@ from fastapi.encoders import jsonable_encoder
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 
-from .__base_config import settings
 from ..utils import BaseFilterParams
+from .__base_config import settings
 
 ModelType = TypeVar("ModelType", bound=BaseModel)
 
@@ -159,7 +159,9 @@ class BaseRepository(Generic[ModelType]):
         return [self.model(**doc) for doc in docs]
 
     # -------------------------------------------------
-    async def find_with_filter_params(self, params: BaseFilterParams) -> list[ModelType]:
+    async def find_with_filter_params(
+        self, params: BaseFilterParams
+    ) -> list[ModelType]:
         filter_dict = params.get_full_filter()
         sort_direction = 1 if params.sort_dir == "asc" else -1
 
