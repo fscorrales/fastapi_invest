@@ -169,5 +169,5 @@ class BaseRepository(Generic[ModelType]):
             .limit(params.limit)
             .sort(params.sort_by, sort_direction)
         )
-        docs = await cursor.to_list(length=params.limit)
-        return [self.model(**doc) for doc in docs]
+        return await cursor.to_list(length=params.limit)
+        # return [self.model(**doc) for doc in docs]
