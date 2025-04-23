@@ -56,7 +56,7 @@ class SegmentsService:
     # -------------------------------------------------
     async def get_segments_from_db(self) -> List[StoredSegment]:
         try:
-            return await self.segments.get_all()
+            return await self.segments.get_all(limit=100)
         except Exception as e:
             logger.error(f"Error retrieving Primary's Segments from database: {e}")
             raise HTTPException(

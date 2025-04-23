@@ -65,7 +65,7 @@ class InstrumentsDetailsService:
     # -------------------------------------------------
     async def get_instruments_details_from_db(self) -> List[StoredInstrumentDetails]:
         try:
-            return await self.instruments.get_all()
+            return await self.instruments.get_all(limit=100)
         except Exception as e:
             logger.error(
                 f"Error retrieving Primary's Instruments Details from database: {e}"

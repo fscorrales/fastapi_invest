@@ -62,7 +62,7 @@ class MiCuentaEstadoService:
     # -------------------------------------------------
     async def get_cuentas_from_db(self) -> List[StoredCuentas]:
         try:
-            return await self.cuentas.get_all()
+            return await self.cuentas.get_all(limit=100)
         except Exception as e:
             logger.error(f"Error retrieving IOL'S Cuentas from database: {e}")
             raise HTTPException(
@@ -73,7 +73,7 @@ class MiCuentaEstadoService:
     # -------------------------------------------------
     async def get_saldos_from_db(self) -> List[StoredSaldos]:
         try:
-            return await self.saldos.get_all()
+            return await self.saldos.get_all(limit=100)
         except Exception as e:
             logger.error(f"Error retrieving IOL'S Saldos from database: {e}")
             raise HTTPException(

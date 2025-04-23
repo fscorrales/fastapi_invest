@@ -74,9 +74,12 @@ class BaseRepository(Generic[ModelType]):
         return await self.collection.insert_many(data)
 
     # -------------------------------------------------
-    async def get_all(self, limit: int = 100) -> List[ModelType]:
-        return await self.collection.find().to_list(length=limit)
-        # return [self.model(**doc) for doc in docs]
+    async def get_all(self, limit: Optional[int] = None) -> List[ModelType]:
+        cursor = self.collection.find()
+        if limit is not None:
+            cursor = cursor.limit(limit)
+        docs = await cursor.to_list(length=None if limit is None else limit)
+        return docs
 
     # -------------------------------------------------
     async def get_by_id(self, id: str) -> Optional[ModelType]:

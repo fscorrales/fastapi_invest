@@ -57,7 +57,7 @@ class MiCuentaPortafolioService:
     # -------------------------------------------------
     async def get_portafolio_from_db(self) -> List[StoredPosicionPortafolio]:
         try:
-            return await self.portafolio.get_all()
+            return await self.portafolio.get_all(limit=100)
         except Exception as e:
             logger.error(f"Error retrieving IOL'S Portafolio from database: {e}")
             raise HTTPException(
