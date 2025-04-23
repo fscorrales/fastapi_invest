@@ -1,9 +1,9 @@
 __all__ = ["BaseFilterParams"]
 
-from bson import ObjectId
-from pydantic import BaseModel, Field, PrivateAttr
 from typing import Literal, Optional
 
+from bson import ObjectId
+from pydantic import BaseModel, Field, PrivateAttr
 
 op_map = {
     ">=": "$gte",
@@ -14,6 +14,7 @@ op_map = {
     "=": "$eq",
     "~": "$regex",
 }
+
 
 # -------------------------------------------------
 def data_filter(
@@ -37,6 +38,7 @@ def data_filter(
 
     return filter_dict
 
+
 # -------------------------------------------------
 def get_filter_query(f):
     op = ""
@@ -50,6 +52,7 @@ def get_filter_query(f):
     k, v = f.split(op)
     return {k.strip(): {op_map[op]: format_value(v)}}
 
+
 # -------------------------------------------------
 def format_value(v):
     return (
@@ -58,9 +61,12 @@ def format_value(v):
         else (
             float(v)
             if v.strip().isdecimal()
-            else ObjectId(v.strip()) if len(v.strip()) == 24 else v.strip()
+            else ObjectId(v.strip())
+            if len(v.strip()) == 24
+            else v.strip()
         )
     )
+
 
 # -------------------------------------------------
 class BaseFilterParams(BaseModel):
