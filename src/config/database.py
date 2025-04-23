@@ -163,8 +163,12 @@ class BaseRepository(Generic[ModelType]):
 
     # -------------------------------------------------
     async def find_with_filter_params(
-        self, params: BaseFilterParams
+        self, params: Optional[BaseFilterParams] = None
     ) -> list[ModelType]:
+        if params is None:
+            # Si no se pasan filtros, traer todos los documentos sin límite
+            return await self.get_all()
+
         filter_dict = params.get_full_filter()
         sort_direction = 1 if params.sort_dir == "asc" else -1
 
