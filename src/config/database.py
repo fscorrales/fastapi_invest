@@ -7,6 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 
 from .__base_config import settings
+from ..utils import BaseFilterParams
 
 ModelType = TypeVar("ModelType", bound=BaseModel)
 
@@ -155,4 +156,18 @@ class BaseRepository(Generic[ModelType]):
     async def get_paginated(self, skip: int = 0, limit: int = 20) -> List[ModelType]:
         cursor = self.collection.find().skip(skip).limit(limit)
         docs = await cursor.to_list(length=limit)
+        return [self.model(**doc) for doc in docs]
+
+    # -------------------------------------------------
+    async def find_with_filter_params(self, params: BaseFilterParams) -> list[ModelType]:
+        filter_dict = params.get_full_filter()
+        sort_direction = 1 if params.sort_dir == "asc" else -1
+
+        cursor = (
+            self.collection.find(filter_dict)
+            .skip(params.offset)
+            .limit(params.limit)
+            .sort(params.sort_by, sort_direction)
+        )
+        docs = await cursor.to_list(length=params.limit)
         return [self.model(**doc) for doc in docs]

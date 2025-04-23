@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger, settings
-from ..schemas import Enviroment, Instrument, StoredInstrument
+from ..schemas import Enviroment, Instrument, StoredInstrument, FilterParamsInstruments
 from ..services import InstrumentsServiceDependency
 
 instruments_router = APIRouter(prefix="/instruments", tags=["Primary - Instruments"])
@@ -45,5 +45,6 @@ async def sync_instruments_from_primary(
 @instruments_router.get("/get_from_db", response_model=List[StoredInstrument])
 async def get_instruments_from_db(
     service: InstrumentsServiceDependency,
+    params: Annotated[FilterParamsInstruments, Depends()],
 ):
     return await service.get_instruments_from_db()

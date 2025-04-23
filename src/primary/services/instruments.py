@@ -8,6 +8,7 @@ from httpx import AsyncClient
 from pydantic import ValidationError
 
 from ...config import logger
+from ...utils import BaseFilterParams
 from ..handlers import get_instruments, get_token
 from ..repositories import (
     InstrumentsRepositoryDependency,
@@ -56,9 +57,9 @@ class InstrumentsService:
                 )
 
     # -------------------------------------------------
-    async def get_instruments_from_db(self) -> List[StoredInstrument]:
+    async def get_instruments_from_db(self, params: BaseFilterParams) -> List[StoredInstrument]:
         try:
-            return await self.instruments.get_all()
+            return await self.instruments.find_with_filter_params(params=params)
         except Exception as e:
             logger.error(f"Error retrieving Primary's Instruments from database: {e}")
             raise HTTPException(

@@ -1,4 +1,4 @@
-__all__ = ["Instrument", "StoredInstrument"]
+__all__ = ["Instrument", "StoredInstrument", "FilterParamsInstruments"]
 
 from pydantic import BaseModel, Field
 from pydantic_mongo import PydanticObjectId
@@ -17,3 +17,8 @@ class Instrument(BaseModel):
 # -------------------------------------------------
 class StoredInstrument(Instrument):
     id: PydanticObjectId = Field(alias="_id")
+
+
+# -------------------------------------------------
+class FilterParamsInstruments(BaseFilterParams):
+    enviroment: Optional[Enviroment] = None
