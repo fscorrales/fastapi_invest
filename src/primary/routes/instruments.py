@@ -47,4 +47,6 @@ async def get_instruments_from_db(
     service: InstrumentsServiceDependency,
     params: Annotated[FilterParamsInstruments, Depends()],
 ):
-    return await service.get_instruments_from_db()
+    # if params.enviroment:
+    #     params.set_extra_filter({"enviroment": {"$eq": params.enviroment.value}})
+    return await service.get_instruments_from_db(params=params)
