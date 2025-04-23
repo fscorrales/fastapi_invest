@@ -52,6 +52,9 @@ class BaseRepository(Generic[ModelType]):
 
     # -------------------------------------------------
     async def save(self, data: ModelType) -> ModelType:
+        if not isinstance(data, self.model):
+            raise TypeError(f"Expected instance of {self.model}, got {type(data)}")
+
         doc = jsonable_encoder(data, by_alias=True)
 
         if self.unique_field and doc.get(self.unique_field):
@@ -63,7 +66,10 @@ class BaseRepository(Generic[ModelType]):
                     f"Duplicate entry for field '{self.unique_field}': {doc[self.unique_field]}"
                 )
 
-        return await self.collection.insert_one(doc)
+        result = await self.collection.insert_one(doc)
+        doc["_id"] = result.inserted_id  # agregamos el _id devuelto por Mongo
+
+        return self.model(**doc)  # devolvés el modelo reconstruido con _id incluido
 
     # -------------------------------------------------
     async def save_all(self, data: List[ModelType]) -> List[ModelType]:
