@@ -1,11 +1,16 @@
-__all__ = ["validate_and_extract_data_from_df", "ErrorsWithDocId", "validate_not_empty","PyObjectId"]
+__all__ = [
+    "validate_and_extract_data_from_df",
+    "ErrorsWithDocId",
+    "validate_not_empty",
+    "PyObjectId",
+]
 
-from typing import List, Any
+from typing import Any, List
 
 import pandas as pd
-from pydantic import BaseModel, ValidationError, GetCoreSchemaHandler
-from pydantic_core import core_schema
 from bson import ObjectId
+from pydantic import BaseModel, GetCoreSchemaHandler, ValidationError
+from pydantic_core import core_schema
 
 
 class ErrorsDetails(BaseModel):
@@ -62,14 +67,18 @@ def validate_and_extract_data_from_df(
             errors_list.append(ErrorsWithDocId(doc_id=doc_id, details=error_details))
     return ValidationResultSchema(errors=errors_list, validated=validated_list)
 
+
 def validate_not_empty(field: str) -> str:
     if not field:
         raise ValueError("Field cannot be empty or zero")
     return field
 
+
 class PyObjectId(ObjectId):
     @classmethod
-    def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
         return core_schema.json_or_python_schema(
             python_schema=core_schema.with_info_plain_validator_function(cls.validate),
             json_schema=core_schema.with_info_plain_validator_function(cls.validate),
