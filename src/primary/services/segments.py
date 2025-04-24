@@ -13,6 +13,7 @@ from ..repositories import (
     SegmentsRepositoryDependency,
 )
 from ..schemas import Segment, StoredSegment
+from ...utils import BaseFilterParams
 
 
 # -------------------------------------------------
@@ -54,9 +55,9 @@ class SegmentsService:
                 )
 
     # -------------------------------------------------
-    async def get_segments_from_db(self) -> List[StoredSegment]:
+    async def get_segments_from_db(self, params: BaseFilterParams) -> List[StoredSegment]:
         try:
-            return await self.segments.get_all(limit=100)
+            return await self.segments.find_with_filter_params(params=params)
         except Exception as e:
             logger.error(f"Error retrieving Primary's Segments from database: {e}")
             raise HTTPException(

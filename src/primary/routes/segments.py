@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger, settings
-from ..schemas import Enviroment, Segment, StoredSegment
+from ..schemas import Enviroment, Segment, StoredSegment, FilterParamsSegments
 from ..services import SegmentsServiceDependency
 
 segments_router = APIRouter(prefix="/segments", tags=["Primary - Segments"])
@@ -45,5 +45,8 @@ async def sync_segments_from_primary(
 @segments_router.get("/get_from_db", response_model=List[StoredSegment])
 async def get_segments_from_db(
     service: SegmentsServiceDependency,
+    params: Annotated[FilterParamsSegments, Depends()],
 ):
-    return await service.get_segments_from_db()
+    if params.enviroment:
+        params.set_extra_filter({"enviroment": {"$eq": params.enviroment.value}})
+    return await service.get_segments_from_db(params=params)
