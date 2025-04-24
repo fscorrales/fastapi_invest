@@ -12,7 +12,7 @@ from ..handlers import get_instruments_details, get_token
 from ..repositories import (
     InstrumentsDetailsRepositoryDependency,
 )
-from ..schemas import InstrumentDetails, ParamsInstumentDetails, StoredInstrumentDetails, SyncResult
+from ..schemas import InstrumentDetails, ParamsInstumentDetails, StoredInstrumentDetails, SyncResult, PrimaryCredentials
 from ...utils import BaseFilterParams
 
 
@@ -24,17 +24,14 @@ class InstrumentsDetailsService:
     # -------------------------------------------------
     async def sync_instruments_details_from_primary(
         self,
-        username: str,
-        password: str,
-        url: str,
+        credentials: PrimaryCredentials,
         params: ParamsInstumentDetails = None,
-        enviroment: str = "REMARKETS",
     ) -> SyncResult:
         async with AsyncClient() as c:
             try:
                 # Intentar obtener el token
                 connect_primary = await get_token(
-                    username, password, url, httpxAsyncClient=c
+                    credentials.username, credentials.password, credentials.url, httpxAsyncClient=c
                 )
                 # Intentar obtener el estado de cuenta
                 fields = await get_instruments_details(
@@ -47,17 +44,17 @@ class InstrumentsDetailsService:
 
                 # Contar los instrumentos existentes antes de eliminarlos
                 deleted_count = await self.instruments.count_by_fields(
-                    {"enviroment": enviroment}
+                    {"enviroment": credentials.enviroment}
                 )
                 await self.instruments.delete_by_fields(
-                    {"enviroment": enviroment}
+                    {"enviroment": credentials.enviroment}
                 )  # Eliminar el portafolio anterior
                 await self.instruments.save_all(data_to_store)
 
                 return {
                     "added": len(data_to_store),
                     "deleted": deleted_count,
-                    "enviroment": enviroment,
+                    "enviroment": credentials.enviroment,
                 }
             except ValidationError as e:
                 logger.error(f"Validation Error: {e}")

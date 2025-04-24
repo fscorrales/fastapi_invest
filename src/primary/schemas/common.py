@@ -1,4 +1,5 @@
 __all__ = [
+    "PrimaryCredentials",
     "Enviroment",
     "CFICode",
     "MarketSegmentID",
@@ -18,6 +19,8 @@ from enum import Enum
 
 from pydantic import BaseModel
 
+from typing import Optional
+
 
 # -------------------------------------------------
 class Enviroment(str, Enum):
@@ -25,6 +28,14 @@ class Enviroment(str, Enum):
 
     live = "LIVE"
     remarkets = "REMARKETS"  # Ambiente de pruebas de Primary
+
+
+# -------------------------------------------------
+class PrimaryCredentials(BaseModel):
+    username: Optional[str] = None
+    password: Optional[str] = None
+    url: Optional[str] = None
+    enviroment: Enviroment = Enviroment.live
 
 
 # -------------------------------------------------

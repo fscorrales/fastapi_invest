@@ -11,6 +11,7 @@ from ..schemas import (
     StoredInstrumentDetails,
     FilterParamsInstrumentsDetails,
     SyncResult,
+    PrimaryCredentials,
 )
 from ..services import InstrumentsDetailsServiceDependency
 
@@ -56,12 +57,16 @@ async def sync_instruments_details_from_primary(
     else:
         logger.info("No params provided")
 
-    return await service.sync_instruments_details_from_primary(
+    credentials = PrimaryCredentials(
         username=username,
         password=password,
         url=url,
+        enviroment=enviroment,
+    )
+
+    return await service.sync_instruments_details_from_primary(
+        credentials=credentials,
         params=params,
-        enviroment=enviroment.value,
     )
 
 
