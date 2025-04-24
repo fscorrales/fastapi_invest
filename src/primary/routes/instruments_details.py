@@ -10,6 +10,7 @@ from ..schemas import (
     ParamsInstumentDetails,
     StoredInstrumentDetails,
     FilterParamsInstrumentsDetails,
+    SyncResult,
 )
 from ..services import InstrumentsDetailsServiceDependency
 
@@ -19,7 +20,7 @@ instruments_details_router = APIRouter(
 
 
 @instruments_details_router.post(
-    "/sync_from_primary", response_model=List[InstrumentDetails]
+    "/sync_from_primary", response_model=SyncResult
 )
 async def sync_instruments_details_from_primary(
     auth: OptionalAuthorizationDependency,
@@ -54,14 +55,14 @@ async def sync_instruments_details_from_primary(
         logger.info(f"Params: {params.model_dump(mode='json')}")
     else:
         logger.info("No params provided")
-    instruments = await service.sync_instruments_details_from_primary(
+
+    return await service.sync_instruments_details_from_primary(
         username=username,
         password=password,
         url=url,
         params=params,
         enviroment=enviroment.value,
     )
-    return instruments[:100]
 
 
 @instruments_details_router.get(
@@ -73,4 +74,4 @@ async def get_instruments_details_from_db(
 ):
     if params.enviroment:
         params.set_extra_filter({"enviroment": {"$eq": params.enviroment.value}})
-    return await service.get_instruments_from_db(params=params)
+    return await service.get_instruments_details_from_db(params=params)

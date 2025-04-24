@@ -12,7 +12,7 @@ from ..handlers import get_instruments_details, get_token
 from ..repositories import (
     InstrumentsDetailsRepositoryDependency,
 )
-from ..schemas import InstrumentDetails, ParamsInstumentDetails, StoredInstrumentDetails
+from ..schemas import InstrumentDetails, ParamsInstumentDetails, StoredInstrumentDetails, SyncResult
 from ...utils import BaseFilterParams
 
 
@@ -29,7 +29,7 @@ class InstrumentsDetailsService:
         url: str,
         params: ParamsInstumentDetails = None,
         enviroment: str = "REMARKETS",
-    ) -> List[InstrumentDetails]:
+    ) -> SyncResult:
         async with AsyncClient() as c:
             try:
                 # Intentar obtener el token
@@ -45,12 +45,20 @@ class InstrumentsDetailsService:
                     InstrumentDetails(**field.model_dump()) for field in fields
                 ]
 
+                # Contar los instrumentos existentes antes de eliminarlos
+                deleted_count = await self.instruments.count_by_fields(
+                    {"enviroment": enviroment}
+                )
                 await self.instruments.delete_by_fields(
                     {"enviroment": enviroment}
                 )  # Eliminar el portafolio anterior
                 await self.instruments.save_all(data_to_store)
 
-                return fields
+                return {
+                    "added": len(data_to_store),
+                    "deleted": deleted_count,
+                    "enviroment": enviroment,
+                }
             except ValidationError as e:
                 logger.error(f"Validation Error: {e}")
                 raise HTTPException(

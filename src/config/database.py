@@ -186,3 +186,7 @@ class BaseRepository(Generic[ModelType]):
         )
         return await cursor.to_list(length=params.limit)
         # return [self.model(**doc) for doc in docs]
+    
+    # -------------------------------------------------
+    async def count_by_fields(self, filters: dict) -> int:
+        return await self.collection.count_documents(filters)

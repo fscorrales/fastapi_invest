@@ -11,6 +11,7 @@ __all__ = [
     "OrderStatus",
     "OrderTimeInForce",
     "SettlementTerm",
+    "SyncResult"
 ]
 
 from enum import Enum
@@ -169,3 +170,10 @@ class OrderTimeInForce(str, Enum):
     gtd = "GTD"  # Good Till Date
     fok = "FOK"  # Fill or Kill
     gtc = "GTC"
+
+
+# -------------------------------------------------
+class SyncResult(BaseModel):
+    added: int
+    deleted: int
+    enviroment: Enviroment
