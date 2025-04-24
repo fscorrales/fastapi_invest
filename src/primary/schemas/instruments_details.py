@@ -1,6 +1,7 @@
-__all__ = ["InstrumentDetails", "ParamsInstumentDetails", "StoredInstrumentDetails"]
+__all__ = ["InstrumentDetails", "ParamsInstumentDetails", "StoredInstrumentDetails", "FilterParamsInstrumentsDetails"]
 
-from typing import List
+from typing import List, Optional
+from ...utils import BaseFilterParams
 
 from pydantic import BaseModel, Field, RootModel
 from pydantic_mongo import PydanticObjectId
@@ -68,3 +69,8 @@ class InstrumentDetails(BaseModel):
 # -------------------------------------------------
 class StoredInstrumentDetails(InstrumentDetails):
     id: PydanticObjectId = Field(alias="_id")
+
+
+# -------------------------------------------------
+class FilterParamsInstrumentsDetails(BaseFilterParams):
+    enviroment: Optional[Enviroment] = None

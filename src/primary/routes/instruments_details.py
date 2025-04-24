@@ -1,6 +1,6 @@
 from typing import Annotated, List
 
-from fastapi import APIRouter, Form
+from fastapi import APIRouter, Form, Depends
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger, settings
@@ -9,6 +9,7 @@ from ..schemas import (
     InstrumentDetails,
     ParamsInstumentDetails,
     StoredInstrumentDetails,
+    FilterParamsInstrumentsDetails,
 )
 from ..services import InstrumentsDetailsServiceDependency
 
@@ -68,5 +69,8 @@ async def sync_instruments_details_from_primary(
 )
 async def get_instruments_details_from_db(
     service: InstrumentsDetailsServiceDependency,
+    params: Annotated[FilterParamsInstrumentsDetails, Depends()],
 ):
-    return await service.get_instruments_from_db()
+    if params.enviroment:
+        params.set_extra_filter({"enviroment": {"$eq": params.enviroment.value}})
+    return await service.get_instruments_from_db(params=params)

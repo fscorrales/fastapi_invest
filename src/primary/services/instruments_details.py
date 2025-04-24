@@ -13,6 +13,7 @@ from ..repositories import (
     InstrumentsDetailsRepositoryDependency,
 )
 from ..schemas import InstrumentDetails, ParamsInstumentDetails, StoredInstrumentDetails
+from ...utils import BaseFilterParams
 
 
 # -------------------------------------------------
@@ -63,9 +64,9 @@ class InstrumentsDetailsService:
                 )
 
     # -------------------------------------------------
-    async def get_instruments_details_from_db(self) -> List[StoredInstrumentDetails]:
+    async def get_instruments_details_from_db(self, params: BaseFilterParams) -> List[StoredInstrumentDetails]:
         try:
-            return await self.instruments.get_all(limit=100)
+            return await self.instruments.find_with_filter_params(params=params)
         except Exception as e:
             logger.error(
                 f"Error retrieving Primary's Instruments Details from database: {e}"
