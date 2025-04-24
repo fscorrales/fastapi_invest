@@ -26,43 +26,35 @@ instruments_details_router = APIRouter(
 async def sync_instruments_details_from_primary(
     auth: OptionalAuthorizationDependency,
     service: InstrumentsDetailsServiceDependency,
-    params: ParamsInstumentDetails = None,
-    enviroment: Enviroment = Enviroment.live,
-    username: str = None,
-    password: str = None,
-    url: str = None,
+    credentials: Annotated[PrimaryCredentials, Depends()],
+    params: Annotated[ParamsInstumentDetails, Depends()],
 ):
     if auth.is_admin:
-        username = (
+        credentials.username = (
             settings.PRIMARY_LIVE_USERNAME
-            if enviroment == Enviroment.live
+            if credentials.enviroment == Enviroment.live
             else settings.PRIMARY_REMARKETS_USERNAME
         )
-        password = (
+        credentials.password = (
             settings.PRIMARY_LIVE_PASSWORD
-            if enviroment == Enviroment.live
+            if credentials.enviroment == Enviroment.live
             else settings.PRIMARY_REMARKETS_PASSWORD
         )
-        url = (
+        credentials.url = (
             settings.PRIMARY_LIVE_URL
-            if enviroment == Enviroment.live
+            if credentials.enviroment == Enviroment.live
             else settings.PRIMARY_REMARKETS_URL
         )
 
     logger.info(
-        f"Syncing {enviroment.value} instruments details from Primary API with url: {url}"
+        f"Syncing {credentials.enviroment.value} instruments details from Primary API with url: {credentials.url}"
     )
-    if params:
-        logger.info(f"Params: {params.model_dump(mode='json')}")
-    else:
-        logger.info("No params provided")
 
-    credentials = PrimaryCredentials(
-        username=username,
-        password=password,
-        url=url,
-        enviroment=enviroment,
-    )
+    if not params.marketId or not params.symbol:
+        params = None
+        logger.info("No params provided")
+    else:
+        logger.info(f"Params: {params.model_dump(mode='json')}")
 
     return await service.sync_instruments_details_from_primary(
         credentials=credentials,

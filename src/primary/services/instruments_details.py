@@ -42,12 +42,16 @@ class InstrumentsDetailsService:
                     InstrumentDetails(**field.model_dump()) for field in fields
                 ]
 
+                if params:
+                    delete_dict = {"enviroment": credentials.enviroment, "symbol": params.symbol, "marketId": params.marketId}
+                else:
+                    delete_dict = {"enviroment": credentials.enviroment}
                 # Contar los instrumentos existentes antes de eliminarlos
                 deleted_count = await self.instruments.count_by_fields(
-                    {"enviroment": credentials.enviroment}
+                    delete_dict
                 )
                 await self.instruments.delete_by_fields(
-                    {"enviroment": credentials.enviroment}
+                    delete_dict
                 )  # Eliminar el portafolio anterior
                 await self.instruments.save_all(data_to_store)
 
