@@ -33,7 +33,7 @@ class InstrumentsDetailsService:
                 connect_primary = await get_token(
                     credentials.username, credentials.password, credentials.url, httpxAsyncClient=c
                 )
-                # Intentar obtener el estado de cuenta
+
                 fields = await get_instruments_details(
                     primary=connect_primary, params=params, httpxAsyncClient=c
                 )

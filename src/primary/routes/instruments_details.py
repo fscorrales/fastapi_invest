@@ -1,6 +1,6 @@
 from typing import Annotated, List
 
-from fastapi import APIRouter, Form, Depends
+from fastapi import APIRouter, Depends
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger, settings

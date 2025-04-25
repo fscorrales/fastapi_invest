@@ -4,41 +4,40 @@ from fastapi import APIRouter, Depends
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger, settings
-from ..schemas import Enviroment, FilterParamsInstruments, Instrument, StoredInstrument
+from ..schemas import Enviroment, FilterParamsInstruments, Instrument, StoredInstrument, SyncResult, PrimaryCredentials
 from ..services import InstrumentsServiceDependency
 
 instruments_router = APIRouter(prefix="/instruments", tags=["Primary - Instruments"])
 
 
-@instruments_router.post("/sync_from_primary", response_model=List[Instrument])
+@instruments_router.post("/sync_from_primary", response_model=SyncResult)
 async def sync_instruments_from_primary(
     auth: OptionalAuthorizationDependency,
     service: InstrumentsServiceDependency,
-    enviroment: Enviroment = Enviroment.live,
-    username: str = None,
-    password: str = None,
-    url: str = None,
+    credentials: Annotated[PrimaryCredentials, Depends()],
 ):
     if auth.is_admin:
-        username = (
+        credentials.username = (
             settings.PRIMARY_LIVE_USERNAME
-            if enviroment == Enviroment.live
+            if credentials.enviroment == Enviroment.live
             else settings.PRIMARY_REMARKETS_USERNAME
         )
-        password = (
+        credentials.password = (
             settings.PRIMARY_LIVE_PASSWORD
-            if enviroment == Enviroment.live
+            if credentials.enviroment == Enviroment.live
             else settings.PRIMARY_REMARKETS_PASSWORD
         )
-        url = (
+        credentials.url = (
             settings.PRIMARY_LIVE_URL
-            if enviroment == Enviroment.live
+            if credentials.enviroment == Enviroment.live
             else settings.PRIMARY_REMARKETS_URL
         )
 
-    logger.info(f"Syncing {enviroment.value} segments from Primary API with url: {url}")
+    logger.info(
+        f"Syncing {credentials.enviroment.value} instruments details from Primary API with url: {credentials.url}"
+    )
     return await service.sync_instruments_from_primary(
-        username=username, password=password, url=url, enviroment=enviroment.value
+        credentials=credentials
     )
 
 

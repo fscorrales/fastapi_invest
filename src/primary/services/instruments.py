@@ -13,7 +13,7 @@ from ..handlers import get_instruments, get_token
 from ..repositories import (
     InstrumentsRepositoryDependency,
 )
-from ..schemas import Instrument, StoredInstrument
+from ..schemas import Instrument, StoredInstrument, SyncResult, PrimaryCredentials
 
 
 # -------------------------------------------------
@@ -23,27 +23,36 @@ class InstrumentsService:
 
     # -------------------------------------------------
     async def sync_instruments_from_primary(
-        self, username: str, password: str, url: str, enviroment: str = "REMARKETS"
-    ) -> List[Instrument]:
+        self, credentials: PrimaryCredentials
+    ) -> SyncResult:
         async with AsyncClient() as c:
             try:
                 # Intentar obtener el token
                 connect_primary = await get_token(
-                    username, password, url, httpxAsyncClient=c
+                    credentials.username, credentials.password, credentials.url, httpxAsyncClient=c
                 )
-                # Intentar obtener el estado de cuenta
+
                 fields = await get_instruments(
                     primary=connect_primary, httpxAsyncClient=c
                 )
 
                 data_to_store = [Instrument(**field.model_dump()) for field in fields]
 
+                delete_dict = {"enviroment": credentials.enviroment}
+                # Contar los instrumentos existentes antes de eliminarlos
+                deleted_count = await self.instruments.count_by_fields(
+                    delete_dict
+                )
                 await self.instruments.delete_by_fields(
-                    {"enviroment": enviroment}
+                    delete_dict
                 )  # Eliminar el portafolio anterior
                 await self.instruments.save_all(data_to_store)
 
-                return fields
+                return {
+                    "added": len(data_to_store),
+                    "deleted": deleted_count,
+                    "enviroment": credentials.enviroment,
+                }
             except ValidationError as e:
                 logger.error(f"Validation Error: {e}")
                 raise HTTPException(
