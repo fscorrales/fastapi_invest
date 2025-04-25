@@ -1,10 +1,15 @@
-from typing import List, Annotated
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends
 
 from ...auth.services import OptionalAuthorizationDependency
-from ...config import logger, settings
-from ..schemas import Enviroment, Segment, StoredSegment, FilterParamsSegments, PrimaryCredentials, SyncResult
+from ...config import logger
+from ..schemas import (
+    FilterParamsSegments,
+    PrimaryCredentials,
+    StoredSegment,
+    SyncResult,
+)
 from ..services import SegmentsServiceDependency, prepare_primary_credentials
 
 segments_router = APIRouter(prefix="/segments", tags=["Primary - Segments"])
@@ -18,10 +23,10 @@ async def sync_segments_from_primary(
 ):
     credentials = prepare_primary_credentials(auth, credentials)
 
-    logger.info(f"Syncing {enviroment.value} segments from Primary API with url: {url}")
-    return await service.sync_segments_from_primary(
-        credentials = credentials
+    logger.info(
+        f"Syncing {credentials.enviroment.value} segments from Primary API with url: {credentials.url}"
     )
+    return await service.sync_segments_from_primary(credentials=credentials)
 
 
 @segments_router.get("/get_from_db", response_model=List[StoredSegment])
