@@ -1,11 +1,16 @@
-__all__ = ["InstrumentDetails", "ParamsInstumentDetails", "StoredInstrumentDetails", "FilterParamsInstrumentsDetails"]
+__all__ = [
+    "InstrumentDetails",
+    "ParamsInstumentDetails",
+    "StoredInstrumentDetails",
+    "FilterParamsInstrumentsDetails",
+]
 
 from typing import List, Optional
-from ...utils import BaseFilterParams
 
 from pydantic import BaseModel, Field, RootModel
 from pydantic_mongo import PydanticObjectId
 
+from ...utils import BaseFilterParams
 from .common import (
     CFICode,
     Enviroment,

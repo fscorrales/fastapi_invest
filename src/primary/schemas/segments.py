@@ -1,11 +1,12 @@
 __all__ = ["Segment", "StoredSegment", "FilterParamsSegments"]
 
+from typing import Optional
+
 from pydantic import BaseModel, Field
 from pydantic_mongo import PydanticObjectId
 
-from .common import Enviroment, MarketID, MarketSegmentID
 from ...utils import BaseFilterParams
-from typing import Optional
+from .common import Enviroment, MarketID, MarketSegmentID
 
 
 # --------------------------------------------------
