@@ -13,7 +13,7 @@ from ..handlers import get_instruments, get_token
 from ..repositories import (
     InstrumentsRepositoryDependency,
 )
-from ..schemas import Instrument, StoredInstrument, SyncResult, PrimaryCredentials
+from ..schemas import Instrument, PrimaryCredentials, StoredInstrument, SyncResult
 
 
 # -------------------------------------------------
@@ -29,7 +29,10 @@ class InstrumentsService:
             try:
                 # Intentar obtener el token
                 connect_primary = await get_token(
-                    credentials.username, credentials.password, credentials.url, httpxAsyncClient=c
+                    credentials.username,
+                    credentials.password,
+                    credentials.url,
+                    httpxAsyncClient=c,
                 )
 
                 fields = await get_instruments(
@@ -40,9 +43,7 @@ class InstrumentsService:
 
                 delete_dict = {"enviroment": credentials.enviroment}
                 # Contar los instrumentos existentes antes de eliminarlos
-                deleted_count = await self.instruments.count_by_fields(
-                    delete_dict
-                )
+                deleted_count = await self.instruments.count_by_fields(delete_dict)
                 await self.instruments.delete_by_fields(
                     delete_dict
                 )  # Eliminar el portafolio anterior

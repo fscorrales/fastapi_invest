@@ -8,12 +8,12 @@ from httpx import AsyncClient
 from pydantic import ValidationError
 
 from ...config import logger
+from ...utils import BaseFilterParams
 from ..handlers import get_segments, get_token
 from ..repositories import (
     SegmentsRepositoryDependency,
 )
-from ..schemas import Segment, StoredSegment, SyncResult, PrimaryCredentials
-from ...utils import BaseFilterParams
+from ..schemas import PrimaryCredentials, Segment, StoredSegment, SyncResult
 
 
 # -------------------------------------------------
@@ -29,7 +29,10 @@ class SegmentsService:
             try:
                 # Intentar obtener el token
                 connect_primary = await get_token(
-                    credentials.username, credentials.password, credentials.url, httpxAsyncClient=c
+                    credentials.username,
+                    credentials.password,
+                    credentials.url,
+                    httpxAsyncClient=c,
                 )
                 # Intentar obtener el estado de cuenta
                 fields = await get_segments(primary=connect_primary, httpxAsyncClient=c)
@@ -38,9 +41,7 @@ class SegmentsService:
 
                 delete_dict = {"enviroment": credentials.enviroment}
                 # Contar los instrumentos existentes antes de eliminarlos
-                deleted_count = await self.segments.count_by_fields(
-                    delete_dict
-                )
+                deleted_count = await self.segments.count_by_fields(delete_dict)
                 await self.segments.delete_by_fields(
                     delete_dict
                 )  # Eliminar el portafolio anterior
@@ -65,7 +66,9 @@ class SegmentsService:
                 )
 
     # -------------------------------------------------
-    async def get_segments_from_db(self, params: BaseFilterParams) -> List[StoredSegment]:
+    async def get_segments_from_db(
+        self, params: BaseFilterParams
+    ) -> List[StoredSegment]:
         try:
             return await self.segments.find_with_filter_params(params=params)
         except Exception as e:
