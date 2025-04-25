@@ -12,7 +12,7 @@ from ..handlers import get_segments, get_token
 from ..repositories import (
     SegmentsRepositoryDependency,
 )
-from ..schemas import Segment, StoredSegment
+from ..schemas import Segment, StoredSegment, SyncResult, PrimaryCredentials
 from ...utils import BaseFilterParams
 
 
@@ -23,25 +23,35 @@ class SegmentsService:
 
     # -------------------------------------------------
     async def sync_segments_from_primary(
-        self, username: str, password: str, url: str, enviroment: str = "REMARKETS"
-    ) -> List[Segment]:
+        self, credentials: PrimaryCredentials
+    ) -> SyncResult:
         async with AsyncClient() as c:
             try:
                 # Intentar obtener el token
                 connect_primary = await get_token(
-                    username, password, url, httpxAsyncClient=c
+                    credentials.username, credentials.password, credentials.url, httpxAsyncClient=c
                 )
                 # Intentar obtener el estado de cuenta
                 fields = await get_segments(primary=connect_primary, httpxAsyncClient=c)
 
                 data_to_store = [Segment(**field.model_dump()) for field in fields]
 
+                delete_dict = {"enviroment": credentials.enviroment}
+                # Contar los instrumentos existentes antes de eliminarlos
+                deleted_count = await self.segments.count_by_fields(
+                    delete_dict
+                )
                 await self.segments.delete_by_fields(
-                    {"enviroment": enviroment}
+                    delete_dict
                 )  # Eliminar el portafolio anterior
+
                 await self.segments.save_all(data_to_store)
 
-                return fields
+                return {
+                    "added": len(data_to_store),
+                    "deleted": deleted_count,
+                    "enviroment": credentials.enviroment,
+                }
             except ValidationError as e:
                 logger.error(f"Validation Error: {e}")
                 raise HTTPException(

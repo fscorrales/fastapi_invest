@@ -13,7 +13,7 @@ from ..schemas import (
     SyncResult,
     PrimaryCredentials,
 )
-from ..services import InstrumentsDetailsServiceDependency
+from ..services import InstrumentsDetailsServiceDependency, prepare_primary_credentials
 
 instruments_details_router = APIRouter(
     prefix="/instruments_details", tags=["Primary - Instruments Details"]
@@ -29,22 +29,7 @@ async def sync_instruments_details_from_primary(
     credentials: Annotated[PrimaryCredentials, Depends()],
     params: Annotated[ParamsInstumentDetails, Depends()],
 ):
-    if auth.is_admin:
-        credentials.username = (
-            settings.PRIMARY_LIVE_USERNAME
-            if credentials.enviroment == Enviroment.live
-            else settings.PRIMARY_REMARKETS_USERNAME
-        )
-        credentials.password = (
-            settings.PRIMARY_LIVE_PASSWORD
-            if credentials.enviroment == Enviroment.live
-            else settings.PRIMARY_REMARKETS_PASSWORD
-        )
-        credentials.url = (
-            settings.PRIMARY_LIVE_URL
-            if credentials.enviroment == Enviroment.live
-            else settings.PRIMARY_REMARKETS_URL
-        )
+    credentials = prepare_primary_credentials(auth, credentials)
 
     logger.info(
         f"Syncing {credentials.enviroment.value} instruments details from Primary API with url: {credentials.url}"

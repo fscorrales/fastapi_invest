@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger, settings
 from ..schemas import Enviroment, FilterParamsInstruments, Instrument, StoredInstrument, SyncResult, PrimaryCredentials
-from ..services import InstrumentsServiceDependency
+from ..services import InstrumentsServiceDependency, prepare_primary_credentials
 
 instruments_router = APIRouter(prefix="/instruments", tags=["Primary - Instruments"])
 
@@ -16,22 +16,7 @@ async def sync_instruments_from_primary(
     service: InstrumentsServiceDependency,
     credentials: Annotated[PrimaryCredentials, Depends()],
 ):
-    if auth.is_admin:
-        credentials.username = (
-            settings.PRIMARY_LIVE_USERNAME
-            if credentials.enviroment == Enviroment.live
-            else settings.PRIMARY_REMARKETS_USERNAME
-        )
-        credentials.password = (
-            settings.PRIMARY_LIVE_PASSWORD
-            if credentials.enviroment == Enviroment.live
-            else settings.PRIMARY_REMARKETS_PASSWORD
-        )
-        credentials.url = (
-            settings.PRIMARY_LIVE_URL
-            if credentials.enviroment == Enviroment.live
-            else settings.PRIMARY_REMARKETS_URL
-        )
+    credentials = prepare_primary_credentials(auth, credentials)
 
     logger.info(
         f"Syncing {credentials.enviroment.value} instruments details from Primary API with url: {credentials.url}"
