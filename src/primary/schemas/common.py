@@ -34,7 +34,7 @@ class PrimaryCredentials(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = None
     url: Optional[str] = None
-    enviroment: Enviroment = Enviroment.live
+    enviroment: Enviroment
 
 
 # -------------------------------------------------
