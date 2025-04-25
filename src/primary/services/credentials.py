@@ -1,8 +1,9 @@
 __all__ = ["prepare_primary_credentials"]
 
-from ..schemas import Enviroment, PrimaryCredentials
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import settings
+from ..schemas import Enviroment, PrimaryCredentials
+
 
 def prepare_primary_credentials(
     auth: OptionalAuthorizationDependency,
