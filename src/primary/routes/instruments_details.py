@@ -3,15 +3,13 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends
 
 from ...auth.services import OptionalAuthorizationDependency
-from ...config import logger, settings
+from ...config import logger
 from ..schemas import (
-    Enviroment,
-    InstrumentDetails,
-    ParamsInstumentDetails,
-    StoredInstrumentDetails,
     FilterParamsInstrumentsDetails,
-    SyncResult,
+    ParamsInstumentDetails,
     PrimaryCredentials,
+    StoredInstrumentDetails,
+    SyncResult,
 )
 from ..services import InstrumentsDetailsServiceDependency, prepare_primary_credentials
 
@@ -20,9 +18,7 @@ instruments_details_router = APIRouter(
 )
 
 
-@instruments_details_router.post(
-    "/sync_from_primary", response_model=SyncResult
-)
+@instruments_details_router.post("/sync_from_primary", response_model=SyncResult)
 async def sync_instruments_details_from_primary(
     auth: OptionalAuthorizationDependency,
     service: InstrumentsDetailsServiceDependency,
