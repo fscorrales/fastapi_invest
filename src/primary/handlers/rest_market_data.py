@@ -152,9 +152,6 @@ def get_args():
         args.rest_url = settings.PRIMARY_LIVE_URL
         args.websocket = settings.PRIMARY_LIVE_WS
 
-    args.environment = "LIVE" if args.live else "REMARKETS"
-    args.external = False if args.market_id == MarketID.rofex.value else True
-
     return args
 
 
