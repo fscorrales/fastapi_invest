@@ -10,7 +10,7 @@ Purpose : Lista de Instrumentos disponibles por cficode
 API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Instrumentos-detail
 """
 
-__all__ = ["get_token"]
+__all__ = ["get_instruments_by_cficode"]
 
 import argparse
 import asyncio
@@ -154,6 +154,7 @@ async def get_instruments_by_cficode(
                 InstrumentByCFICode(
                     symbol=instrumento["symbol"],
                     marketId=instrumento["marketId"],
+                    cficode=params.CFICode,
                     enviroment=enviroment,
                 )
                 for instrumento in instrumentos_data

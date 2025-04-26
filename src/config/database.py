@@ -22,6 +22,7 @@ COLLECTIONS = [
     "primary_instruments",
     "primary_instruments_details",
     "primary_instruments_by_segment",
+    "primary_instruments_by_cficode",
 ]
 
 

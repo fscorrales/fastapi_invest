@@ -1,7 +1,16 @@
-__all__ = ["ParamsInstumentsByCFICode", "InstrumentByCFICode"]
+__all__ = [
+    "ParamsInstumentsByCFICode",
+    "InstrumentByCFICode",
+    "StoredInstrumentByCFICode",
+    "FilterParamsInstrumentsByCFICode",
+]
 
-from pydantic import BaseModel
+from typing import Optional
 
+from pydantic import BaseModel, Field
+from pydantic_mongo import PydanticObjectId
+
+from ...utils import BaseFilterParams
 from .common import CFICode, Enviroment, InstrumentID
 
 
@@ -13,3 +22,14 @@ class ParamsInstumentsByCFICode(BaseModel):
 # --------------------------------------------------
 class InstrumentByCFICode(InstrumentID):
     enviroment: Enviroment
+    cficode: CFICode
+
+
+# --------------------------------------------------
+class StoredInstrumentByCFICode(InstrumentByCFICode):
+    id: PydanticObjectId = Field(alias="_id")
+
+
+# -------------------------------------------------
+class FilterParamsInstrumentsByCFICode(BaseFilterParams):
+    enviroment: Optional[Enviroment] = None
