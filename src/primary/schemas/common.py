@@ -13,10 +13,13 @@ __all__ = [
     "OrderTimeInForce",
     "SettlementTerm",
     "SyncResult",
+    "PriceWithSize",
+    "PriceWithSizeAndDate",
+    "MarketData",
 ]
 
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -187,3 +190,35 @@ class SyncResult(BaseModel):
     added: int
     deleted: int
     enviroment: Enviroment
+
+
+# --------------------------------------------------
+class PriceWithSize(BaseModel):
+    price: float
+    size: int
+
+
+# --------------------------------------------------
+class PriceWithSizeAndDate(PriceWithSize):
+    size: Optional[int] = None  # Size of the last trade
+    date: Optional[int] = None  # Timestamp in milliseconds since epoch
+
+
+# --------------------------------------------------
+class MarketData(BaseModel):
+    nv: Optional[int] = None  # Notional Value
+    bi: Optional[List[PriceWithSize]] = None  # Bid depends on the depth
+    of: Optional[List[PriceWithSize]] = None  # Offer depends on the depth
+    ev: Optional[float] = None  # Effective Value
+    cl: Optional[PriceWithSizeAndDate] = None  # Previous Close
+    la: Optional[PriceWithSizeAndDate] = None  # Last Trade
+    op: Optional[float] = None  # Opening Price
+    hi: Optional[float] = None  # Highest Price
+    lo: Optional[float] = None  # Lowest Price
+    tv: Optional[int] = None  # Volumen operado en contratos/nominales (null value)
+    se: Optional[float] = None  # Precio de ajuste (solo para futuros)
+    oi: Optional[float] = None  # Interés abierto (solo para futuros)
+    iv: Optional[float] = None  # Valor del índice (solo para índices)
+    acp: Optional[float] = (
+        None  # Precio de cierre del día de la fecha para instrumentos externos a MATBA ROFEX
+    )
