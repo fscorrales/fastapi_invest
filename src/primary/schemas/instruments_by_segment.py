@@ -34,3 +34,5 @@ class StoredInstrumentBySegment(InstrumentBySegment):
 # -------------------------------------------------
 class FilterParamsInstrumentsBySegment(BaseFilterParams):
     enviroment: Optional[Enviroment] = None
+    marketId: Optional[MarketID] = None
+    marketSegmentId: Optional[MarketSegmentID] = None
