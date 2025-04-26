@@ -5,12 +5,12 @@ from typing import Annotated
 from fastapi import Depends
 
 from ...config import BaseRepository
-from ..schemas import StoredInstrumentByCFICode
+from ..schemas import InstrumentByCFICodeDocument
 
 
-class InstrumentsByCFICodeRepository(BaseRepository[StoredInstrumentByCFICode]):
+class InstrumentsByCFICodeRepository(BaseRepository[InstrumentByCFICodeDocument]):
     collection_name = "primary_instruments_by_cficode"
-    model = StoredInstrumentByCFICode
+    model = InstrumentByCFICodeDocument
 
 
 InstrumentsByCFICodeRepositoryDependency = Annotated[

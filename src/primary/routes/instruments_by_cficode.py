@@ -6,10 +6,10 @@ from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
 from ...utils import apply_auto_filter
 from ..schemas import (
+    InstrumentByCFICodeDocument,
     InstrumentsByCFICodeFilter,
     InstrumentsByCFICodeParams,
     PrimaryCredentials,
-    StoredInstrumentByCFICode,
     SyncResult,
 )
 from ..services import (
@@ -44,7 +44,7 @@ async def sync_instruments_by_cficode_from_primary(
 
 
 @instruments_by_cficode_router.get(
-    "/get_from_db", response_model=List[StoredInstrumentByCFICode]
+    "/get_from_db", response_model=List[InstrumentByCFICodeDocument]
 )
 async def get_instruments_by_cficode_from_db(
     service: InstrumentsByCFICodeServiceDependency,

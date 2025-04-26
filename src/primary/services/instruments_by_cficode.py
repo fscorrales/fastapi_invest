@@ -15,9 +15,9 @@ from ..repositories import (
 )
 from ..schemas import (
     InstrumentByCFICode,
+    InstrumentByCFICodeDocument,
     InstrumentsByCFICodeParams,
     PrimaryCredentials,
-    StoredInstrumentByCFICode,
     SyncResult,
 )
 
@@ -83,7 +83,7 @@ class InstrumentsByCFICodeService:
     # -------------------------------------------------
     async def get_instruments_by_cficode_from_db(
         self, params: BaseFilterParams
-    ) -> List[StoredInstrumentByCFICode]:
+    ) -> List[InstrumentByCFICodeDocument]:
         try:
             return await self.instruments.find_with_filter_params(params=params)
         except Exception as e:

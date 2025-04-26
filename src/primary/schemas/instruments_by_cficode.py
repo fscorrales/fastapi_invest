@@ -1,7 +1,7 @@
 __all__ = [
     "InstrumentsByCFICodeParams",
     "InstrumentByCFICode",
-    "StoredInstrumentByCFICode",
+    "InstrumentByCFICodeDocument",
     "InstrumentsByCFICodeFilter",
 ]
 
@@ -26,7 +26,7 @@ class InstrumentByCFICode(InstrumentID):
 
 
 # --------------------------------------------------
-class StoredInstrumentByCFICode(InstrumentByCFICode):
+class InstrumentByCFICodeDocument(InstrumentByCFICode):
     id: PydanticObjectId = Field(alias="_id")
 
 
