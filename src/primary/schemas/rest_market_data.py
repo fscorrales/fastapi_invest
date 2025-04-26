@@ -1,4 +1,4 @@
-__all__ = ["ParamsMarketData", "MarketData"]
+__all__ = ["RestMarketDataParams", "RestMarketData"]
 
 from typing import List
 
@@ -8,7 +8,7 @@ from .common import Depth, Entry, Enviroment, MarketData, MarketID
 
 
 # --------------------------------------------------
-class ParamsMarketData(BaseModel):
+class RestMarketDataParams(BaseModel):
     marketId: MarketID
     symbol: str
     entries: List[Entry]

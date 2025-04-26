@@ -10,15 +10,22 @@ Purpose : Obtener datos actuales de instrumentos del mercado.
 API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Precios-get
 """
 
-__all__ = ["get_token"]
+__all__ = ["get_market_data"]
 
 import argparse
 import asyncio
-from typing import List
 
 from httpx import AsyncClient
 
-from ..schemas import ConnectPrimary, Entry, MarketData, MarketID, ParamsMarketData
+from ..schemas import (
+    ConnectPrimary,
+    Entry,
+    MarketID,
+    RestMarketData,
+    RestMarketDataParams,
+    SettlementTerm,
+)
+from ..services.format import format_instruments
 from .connect_primary import get_token
 
 
@@ -37,6 +44,16 @@ def get_args():
         metavar="symbol",
         type=str,
         default=None,
+    )
+
+    parser.add_argument(
+        "-set",
+        "--settlement_term",
+        metavar="Settlement Term",
+        help="Specify the settlement term for the instrument (e.g., 24hs for next-day settlement or CI for immediate settlement)",
+        default="24hs",
+        type=str,
+        choices=[c.value for c in SettlementTerm],
     )
 
     parser.add_argument(
@@ -144,10 +161,10 @@ def get_args():
 # --------------------------------------------------
 async def get_market_data(
     primary: ConnectPrimary,
-    params: ParamsMarketData,
+    params: RestMarketDataParams,
     url: str = None,
     httpxAsyncClient: AsyncClient = None,
-) -> List[MarketData]:
+) -> RestMarketData:
     """Get response from Primary REST API"""
     if url is None:
         url = primary.base_url + "/rest/marketdata/get"
@@ -166,27 +183,21 @@ async def get_market_data(
 
     if r.status_code == 200:
         data = r.json()
-        instrumentos = data
-        # if data["status"] == "OK":
-        #     enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
-        #     # Verificar si data[data_field] es un diccionario o una lista
-        #     if isinstance(data["instruments"], dict):
-        #         # Si es un diccionario, conviértelo en una lista con un solo elemento
-        #         instrumentos_data = [data["instruments"]]
-        #     else:
-        #         # Si es una lista, úsala directamente
-        #         instrumentos_data = data["instruments"]
-        #     instrumentos = [
-        #         MarketHistData(
-        #             symbol=instrumento["symbol"],
-        #             marketId=instrumento["marketId"],
-        #             enviroment=enviroment,
-        #         )
-        #         for instrumento in instrumentos_data
-        #     ]
-        # else:
-        #     raise ValueError(f"Primary API Error: {data.get('description')}")
-        return instrumentos
+        # market_data = data
+        if data["status"] == "OK":
+            enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
+            data = data["marketData"]
+            market_data = RestMarketData(
+                enviroment=enviroment,
+                **{
+                    key: data[key.upper()]
+                    for key in RestMarketData.model_fields.keys()
+                    if key.upper() in data
+                },
+            )
+        else:
+            raise ValueError(f"Primary API Error: {data.get('description')}")
+        return market_data
 
 
 # --------------------------------------------------
@@ -194,9 +205,12 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    params = ParamsMarketData(
+    params = RestMarketDataParams(
         marketId=args.market_id,
-        symbol=args.symbol,
+        # symbol=args.symbol,
+        symbol=format_instruments(
+            symbols=args.symbol, settlement_terms=args.settlement_term
+        )[0],
         depth=args.depth,
         entries=args.entries,
     )
@@ -222,6 +236,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.primary.handlers.market_data 'DLR/DIC23'
-    # poetry run python -m src.primary.handlers.market_data 'MERV - XMEV - GGAL - 24hs'
-    # poetry run python -m src.primary.handlers.market_data 'MERV - XMEV - GGAL - 24hs' -l -d 2
+    # python -m src.primary.handlers.rest_market_data 'DLR/DIC23'
+    # poetry run python -m src.primary.handlers.rest_market_data 'MERV - XMEV - GGAL - 24hs'
+    # poetry run python -m src.primary.handlers.rest_market_data 'GGAL' -l -d 2
