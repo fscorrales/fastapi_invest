@@ -7,7 +7,7 @@ from ...config import logger
 from ...utils import apply_auto_filter
 from ..schemas import (
     InstrumentsByCFICodeFilter,
-    InstumentsByCFICodeParams,
+    InstrumentsByCFICodeParams,
     PrimaryCredentials,
     StoredInstrumentByCFICode,
     SyncResult,
@@ -27,7 +27,7 @@ async def sync_instruments_by_cficode_from_primary(
     auth: OptionalAuthorizationDependency,
     service: InstrumentsByCFICodeServiceDependency,
     credentials: Annotated[PrimaryCredentials, Depends()],
-    params: Annotated[InstumentsByCFICodeParams, Depends()],
+    params: Annotated[InstrumentsByCFICodeParams, Depends()],
 ):
     credentials = prepare_primary_credentials(auth, credentials)
 

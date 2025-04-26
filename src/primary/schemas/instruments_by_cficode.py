@@ -1,5 +1,5 @@
 __all__ = [
-    "InstumentsByCFICodeParams",
+    "InstrumentsByCFICodeParams",
     "InstrumentByCFICode",
     "StoredInstrumentByCFICode",
     "InstrumentsByCFICodeFilter",
@@ -15,7 +15,7 @@ from .common import CFICode, Enviroment, InstrumentID, MarketID
 
 
 # --------------------------------------------------
-class InstumentsByCFICodeParams(BaseModel):
+class InstrumentsByCFICodeParams(BaseModel):
     CFICode: CFICode
 
 
