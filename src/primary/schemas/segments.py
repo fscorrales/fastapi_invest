@@ -1,4 +1,4 @@
-__all__ = ["Segment", "StoredSegment", "FilterParamsSegments"]
+__all__ = ["Segment", "StoredSegment", "SegmentsFilter"]
 
 from typing import Optional
 
@@ -22,7 +22,7 @@ class StoredSegment(Segment):
 
 
 # -------------------------------------------------
-class FilterParamsSegments(BaseFilterParams):
+class SegmentsFilter(BaseFilterParams):
     enviroment: Optional[Enviroment] = None
     marketId: Optional[MarketID] = None
     marketSegmentId: Optional[MarketSegmentID] = None

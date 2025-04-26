@@ -6,8 +6,8 @@ from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
 from ...utils import apply_auto_filter
 from ..schemas import (
-    FilterParamsSegments,
     PrimaryCredentials,
+    SegmentsFilter,
     StoredSegment,
     SyncResult,
 )
@@ -33,7 +33,7 @@ async def sync_segments_from_primary(
 @segments_router.get("/get_from_db", response_model=List[StoredSegment])
 async def get_segments_from_db(
     service: SegmentsServiceDependency,
-    params: Annotated[FilterParamsSegments, Depends()],
+    params: Annotated[SegmentsFilter, Depends()],
 ):
     apply_auto_filter(params=params)
     return await service.get_segments_from_db(params=params)
