@@ -1,7 +1,7 @@
 __all__ = [
     "InstrumentsBySegmentParams",
     "InstrumentBySegment",
-    "StoredInstrumentBySegment",
+    "InstrumentBySegmentDocument",
     "InstrumentsBySegmentFilter",
 ]
 
@@ -27,7 +27,7 @@ class InstrumentBySegment(InstrumentID):
 
 
 # --------------------------------------------------
-class StoredInstrumentBySegment(InstrumentBySegment):
+class InstrumentBySegmentDocument(InstrumentBySegment):
     id: PydanticObjectId = Field(alias="_id")
 
 

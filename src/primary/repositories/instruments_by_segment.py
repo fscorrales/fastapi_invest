@@ -5,12 +5,12 @@ from typing import Annotated
 from fastapi import Depends
 
 from ...config import BaseRepository
-from ..schemas import StoredInstrumentBySegment
+from ..schemas import InstrumentBySegmentDocument
 
 
-class InstrumentsBySegmentRepository(BaseRepository[StoredInstrumentBySegment]):
+class InstrumentsBySegmentRepository(BaseRepository[InstrumentBySegmentDocument]):
     collection_name = "primary_instruments_by_segment"
-    model = StoredInstrumentBySegment
+    model = InstrumentBySegmentDocument
 
 
 InstrumentsBySegmentRepositoryDependency = Annotated[

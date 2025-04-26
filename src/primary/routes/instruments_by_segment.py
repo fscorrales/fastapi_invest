@@ -6,10 +6,10 @@ from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
 from ...utils import apply_auto_filter
 from ..schemas import (
+    InstrumentBySegmentDocument,
     InstrumentsBySegmentFilter,
     InstrumentsBySegmentParams,
     PrimaryCredentials,
-    StoredInstrumentBySegment,
     SyncResult,
 )
 from ..services import (
@@ -44,7 +44,7 @@ async def sync_instruments_by_segment_from_primary(
 
 
 @instruments_by_segment_router.get(
-    "/get_from_db", response_model=List[StoredInstrumentBySegment]
+    "/get_from_db", response_model=List[InstrumentBySegmentDocument]
 )
 async def get_instruments_by_segment_from_db(
     service: InstrumentsBySegmentServiceDependency,
