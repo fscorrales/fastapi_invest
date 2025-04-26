@@ -24,3 +24,5 @@ class StoredSegment(Segment):
 # -------------------------------------------------
 class FilterParamsSegments(BaseFilterParams):
     enviroment: Optional[Enviroment] = None
+    marketId: Optional[MarketID] = None
+    marketSegmentId: Optional[MarketSegmentID] = None
