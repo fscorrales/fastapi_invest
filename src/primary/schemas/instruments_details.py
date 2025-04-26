@@ -1,6 +1,6 @@
 __all__ = [
     "InstrumentDetails",
-    "ParamsInstumentDetails",
+    "ParamsInstrumentDetails",
     "StoredInstrumentDetails",
     "FilterParamsInstrumentsDetails",
 ]
@@ -22,7 +22,7 @@ from .common import (
 
 
 # --------------------------------------------------
-class ParamsInstumentDetails(BaseModel):
+class ParamsInstrumentDetails(BaseModel):
     marketId: MarketID | None = None
     symbol: str | None = None
 

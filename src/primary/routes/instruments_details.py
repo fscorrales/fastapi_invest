@@ -7,7 +7,7 @@ from ...config import logger
 from ...utils import apply_auto_filter
 from ..schemas import (
     FilterParamsInstrumentsDetails,
-    ParamsInstumentDetails,
+    ParamsInstrumentDetails,
     PrimaryCredentials,
     StoredInstrumentDetails,
     SyncResult,
@@ -24,7 +24,7 @@ async def sync_instruments_details_from_primary(
     auth: OptionalAuthorizationDependency,
     service: InstrumentsDetailsServiceDependency,
     credentials: Annotated[PrimaryCredentials, Depends()],
-    params: Annotated[ParamsInstumentDetails, Depends()],
+    params: Annotated[ParamsInstrumentDetails, Depends()],
 ):
     credentials = prepare_primary_credentials(auth, credentials)
 
