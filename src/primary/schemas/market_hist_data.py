@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from .common import Enviroment, InstrumentID, MarketID
 
 
+# --------------------------------------------------
 class ParamsMarketHistData(BaseModel):
     marketId: MarketID
     symbol: str

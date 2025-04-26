@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from .common import Depth, Entry, Enviroment, InstrumentID, MarketID
 
 
+# --------------------------------------------------
 class ParamsMarketData(BaseModel):
     marketId: MarketID
     symbol: str
