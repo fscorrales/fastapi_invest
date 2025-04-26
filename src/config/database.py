@@ -21,6 +21,7 @@ COLLECTIONS = [
     "primary_segments",
     "primary_instruments",
     "primary_instruments_details",
+    "primary_instruments_by_segment",
 ]
 
 

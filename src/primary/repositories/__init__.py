@@ -1,3 +1,4 @@
 from .instruments import *
+from .instruments_by_segment import *
 from .instruments_details import *
 from .segments import *

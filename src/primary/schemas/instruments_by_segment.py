@@ -1,16 +1,36 @@
-__all__ = ["ParamsInstumentsBySegment", "InstrumentBySegment"]
+__all__ = [
+    "ParamsInstumentsBySegment",
+    "InstrumentBySegment",
+    "StoredInstrumentBySegment",
+    "FilterParamsInstrumentsBySegment",
+]
 
-from pydantic import BaseModel
+from typing import Optional
 
+from pydantic import BaseModel, Field
+from pydantic_mongo import PydanticObjectId
+
+from ...utils import BaseFilterParams
 from .common import Enviroment, InstrumentID, MarketID, MarketSegmentID
 
 
 # --------------------------------------------------
 class ParamsInstumentsBySegment(BaseModel):
-    MarketSegmentID: MarketSegmentID
     MarketID: MarketID
+    MarketSegmentID: MarketSegmentID
 
 
 # --------------------------------------------------
 class InstrumentBySegment(InstrumentID):
+    marketSegmentId: MarketSegmentID
     enviroment: Enviroment
+
+
+# --------------------------------------------------
+class StoredInstrumentBySegment(InstrumentBySegment):
+    id: PydanticObjectId = Field(alias="_id")
+
+
+# -------------------------------------------------
+class FilterParamsInstrumentsBySegment(BaseFilterParams):
+    enviroment: Optional[Enviroment] = None

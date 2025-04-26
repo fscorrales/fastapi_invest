@@ -10,7 +10,7 @@ Purpose : Lista de Instrumentos disponibles por segmento
 API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Instrumentos-detail
 """
 
-__all__ = ["get_token"]
+__all__ = ["get_instruments_by_segment"]
 
 import argparse
 import asyncio
@@ -127,7 +127,7 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_instruments_by_cficode(
+async def get_instruments_by_segment(
     primary: ConnectPrimary,
     params: ParamsInstumentsBySegment,
     url: str = None,
@@ -165,6 +165,7 @@ async def get_instruments_by_cficode(
                 InstrumentBySegment(
                     symbol=instrumento["symbol"],
                     marketId=instrumento["marketId"],
+                    marketSegmentId=params.MarketSegmentID,
                     enviroment=enviroment,
                 )
                 for instrumento in instrumentos_data
@@ -192,7 +193,7 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            instrumentos = await get_instruments_by_cficode(
+            instrumentos = await get_instruments_by_segment(
                 primary=connect_primary, httpxAsyncClient=c, params=params
             )
             print(instrumentos)
