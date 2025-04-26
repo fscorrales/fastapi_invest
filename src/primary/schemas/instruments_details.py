@@ -1,7 +1,7 @@
 __all__ = [
     "InstrumentDetails",
     "InstrumentDetailsParams",
-    "StoredInstrumentDetails",
+    "InstrumentDetailsDocument",
     "InstrumentsDetailsFilter",
 ]
 
@@ -72,7 +72,7 @@ class InstrumentDetails(BaseModel):
 
 
 # -------------------------------------------------
-class StoredInstrumentDetails(InstrumentDetails):
+class InstrumentDetailsDocument(InstrumentDetails):
     id: PydanticObjectId = Field(alias="_id")
 
 
