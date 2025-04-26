@@ -6,8 +6,8 @@ from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
 from ...utils import apply_auto_filter
 from ..schemas import (
-    FilterParamsInstrumentsBySegment,
-    ParamsInstumentsBySegment,
+    InstrumentsBySegmentFilter,
+    InstrumentsBySegmentParams,
     PrimaryCredentials,
     StoredInstrumentBySegment,
     SyncResult,
@@ -27,7 +27,7 @@ async def sync_instruments_by_segment_from_primary(
     auth: OptionalAuthorizationDependency,
     service: InstrumentsBySegmentServiceDependency,
     credentials: Annotated[PrimaryCredentials, Depends()],
-    params: Annotated[ParamsInstumentsBySegment, Depends()],
+    params: Annotated[InstrumentsBySegmentParams, Depends()],
 ):
     credentials = prepare_primary_credentials(auth, credentials)
 
@@ -48,7 +48,7 @@ async def sync_instruments_by_segment_from_primary(
 )
 async def get_instruments_by_segment_from_db(
     service: InstrumentsBySegmentServiceDependency,
-    params: Annotated[FilterParamsInstrumentsBySegment, Depends()],
+    params: Annotated[InstrumentsBySegmentFilter, Depends()],
 ):
     apply_auto_filter(params=params)
     return await service.get_instruments_by_segment_from_db(params=params)

@@ -15,7 +15,7 @@ from ..repositories import (
 )
 from ..schemas import (
     InstrumentBySegment,
-    ParamsInstumentsBySegment,
+    InstrumentsBySegmentParams,
     PrimaryCredentials,
     StoredInstrumentBySegment,
     SyncResult,
@@ -29,7 +29,7 @@ class InstrumentsBySegmentService:
 
     # -------------------------------------------------
     async def sync_instruments_by_segment_from_primary(
-        self, credentials: PrimaryCredentials, params: ParamsInstumentsBySegment = None
+        self, credentials: PrimaryCredentials, params: InstrumentsBySegmentParams = None
     ) -> SyncResult:
         async with AsyncClient() as c:
             try:

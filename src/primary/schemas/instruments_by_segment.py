@@ -1,8 +1,8 @@
 __all__ = [
-    "ParamsInstumentsBySegment",
+    "InstrumentsBySegmentParams",
     "InstrumentBySegment",
     "StoredInstrumentBySegment",
-    "FilterParamsInstrumentsBySegment",
+    "InstrumentsBySegmentFilter",
 ]
 
 from typing import Optional
@@ -15,7 +15,7 @@ from .common import Enviroment, InstrumentID, MarketID, MarketSegmentID
 
 
 # --------------------------------------------------
-class ParamsInstumentsBySegment(BaseModel):
+class InstrumentsBySegmentParams(BaseModel):
     MarketID: MarketID
     MarketSegmentID: MarketSegmentID
 
@@ -32,7 +32,7 @@ class StoredInstrumentBySegment(InstrumentBySegment):
 
 
 # -------------------------------------------------
-class FilterParamsInstrumentsBySegment(BaseFilterParams):
+class InstrumentsBySegmentFilter(BaseFilterParams):
     enviroment: Optional[Enviroment] = None
     marketId: Optional[MarketID] = None
     marketSegmentId: Optional[MarketSegmentID] = None

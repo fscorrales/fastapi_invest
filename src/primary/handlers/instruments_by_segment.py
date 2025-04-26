@@ -21,9 +21,9 @@ from httpx import AsyncClient
 from ..schemas import (
     ConnectPrimary,
     InstrumentBySegment,
+    InstrumentsBySegmentParams,
     MarketID,
     MarketSegmentID,
-    ParamsInstumentsBySegment,
 )
 from .connect_primary import get_token
 
@@ -129,7 +129,7 @@ def get_args():
 # --------------------------------------------------
 async def get_instruments_by_segment(
     primary: ConnectPrimary,
-    params: ParamsInstumentsBySegment,
+    params: InstrumentsBySegmentParams,
     url: str = None,
     httpxAsyncClient: AsyncClient = None,
 ) -> List[InstrumentBySegment]:
@@ -180,7 +180,7 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    params = ParamsInstumentsBySegment(
+    params = InstrumentsBySegmentParams(
         MarketSegmentID=args.segment_id, MarketID=args.market_id
     )
     print(f"Segment: {args.segment_id}, Market: {args.market_id}")
