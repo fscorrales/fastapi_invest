@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
+from ...utils import apply_auto_filter
 from ..schemas import (
     FilterParamsInstrumentsByCFICode,
     ParamsInstumentsByCFICode,
@@ -49,6 +50,5 @@ async def get_instruments_by_cficode_from_db(
     service: InstrumentsByCFICodeServiceDependency,
     params: Annotated[FilterParamsInstrumentsByCFICode, Depends()],
 ):
-    if params.enviroment:
-        params.set_extra_filter({"enviroment": {"$eq": params.enviroment.value}})
+    apply_auto_filter(params=params)
     return await service.get_instruments_by_cficode_from_db(params=params)

@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from pydantic_mongo import PydanticObjectId
 
 from ...utils import BaseFilterParams
-from .common import CFICode, Enviroment, InstrumentID
+from .common import CFICode, Enviroment, InstrumentID, MarketID
 
 
 # --------------------------------------------------
@@ -33,3 +33,5 @@ class StoredInstrumentByCFICode(InstrumentByCFICode):
 # -------------------------------------------------
 class FilterParamsInstrumentsByCFICode(BaseFilterParams):
     enviroment: Optional[Enviroment] = None
+    cficode: Optional[CFICode] = None
+    marketId: Optional[MarketID] = None
