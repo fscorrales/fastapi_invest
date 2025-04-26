@@ -5,12 +5,12 @@ from typing import Annotated
 from fastapi import Depends
 
 from ...config import BaseRepository
-from ..schemas import StoredSegment
+from ..schemas import SegmentDocument
 
 
-class SegmentsRepository(BaseRepository[StoredSegment]):
+class SegmentsRepository(BaseRepository[SegmentDocument]):
     collection_name = "primary_segments"
-    model = StoredSegment
+    model = SegmentDocument
 
 
 SegmentsRepositoryDependency = Annotated[SegmentsRepository, Depends()]

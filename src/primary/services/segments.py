@@ -13,7 +13,7 @@ from ..handlers import get_segments, get_token
 from ..repositories import (
     SegmentsRepositoryDependency,
 )
-from ..schemas import PrimaryCredentials, Segment, StoredSegment, SyncResult
+from ..schemas import PrimaryCredentials, Segment, SegmentDocument, SyncResult
 
 
 # -------------------------------------------------
@@ -68,7 +68,7 @@ class SegmentsService:
     # -------------------------------------------------
     async def get_segments_from_db(
         self, params: BaseFilterParams
-    ) -> List[StoredSegment]:
+    ) -> List[SegmentDocument]:
         try:
             return await self.segments.find_with_filter_params(params=params)
         except Exception as e:

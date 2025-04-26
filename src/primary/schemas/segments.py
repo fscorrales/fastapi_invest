@@ -1,4 +1,4 @@
-__all__ = ["Segment", "StoredSegment", "SegmentsFilter"]
+__all__ = ["Segment", "SegmentDocument", "SegmentsFilter"]
 
 from typing import Optional
 
@@ -17,7 +17,7 @@ class Segment(BaseModel):
 
 
 # -------------------------------------------------
-class StoredSegment(Segment):
+class SegmentDocument(Segment):
     id: PydanticObjectId = Field(alias="_id")
 
 

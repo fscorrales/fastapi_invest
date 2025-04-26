@@ -7,8 +7,8 @@ from ...config import logger
 from ...utils import apply_auto_filter
 from ..schemas import (
     PrimaryCredentials,
+    SegmentDocument,
     SegmentsFilter,
-    StoredSegment,
     SyncResult,
 )
 from ..services import SegmentsServiceDependency, prepare_primary_credentials
@@ -30,7 +30,7 @@ async def sync_segments_from_primary(
     return await service.sync_segments_from_primary(credentials=credentials)
 
 
-@segments_router.get("/get_from_db", response_model=List[StoredSegment])
+@segments_router.get("/get_from_db", response_model=List[SegmentDocument])
 async def get_segments_from_db(
     service: SegmentsServiceDependency,
     params: Annotated[SegmentsFilter, Depends()],
