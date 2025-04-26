@@ -1,4 +1,5 @@
 from .credentials import *
+from .format import *
 from .instruments import *
 from .instruments_by_cficode import *
 from .instruments_by_segment import *
