@@ -25,3 +25,5 @@ class StoredInstrument(Instrument):
 # -------------------------------------------------
 class FilterParamsInstruments(BaseFilterParams):
     enviroment: Optional[Enviroment] = None
+    marketId: Optional[MarketID] = None
+    cficode: Optional[CFICode] = None

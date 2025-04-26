@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
+from ...utils import apply_auto_filter
 from ..schemas import (
     FilterParamsInstruments,
     PrimaryCredentials,
@@ -34,6 +35,5 @@ async def get_instruments_from_db(
     service: InstrumentsServiceDependency,
     params: Annotated[FilterParamsInstruments, Depends()],
 ):
-    if params.enviroment:
-        params.set_extra_filter({"enviroment": {"$eq": params.enviroment.value}})
+    apply_auto_filter(params=params)
     return await service.get_instruments_from_db(params=params)
