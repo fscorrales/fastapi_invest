@@ -1,4 +1,4 @@
-__all__ = ["Instrument", "StoredInstrument", "FilterParamsInstruments"]
+__all__ = ["Instrument", "StoredInstrument", "InstrumentsFilter"]
 
 from typing import Optional
 
@@ -23,7 +23,7 @@ class StoredInstrument(Instrument):
 
 
 # -------------------------------------------------
-class FilterParamsInstruments(BaseFilterParams):
+class InstrumentsFilter(BaseFilterParams):
     enviroment: Optional[Enviroment] = None
     marketId: Optional[MarketID] = None
     cficode: Optional[CFICode] = None

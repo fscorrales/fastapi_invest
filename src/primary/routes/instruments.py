@@ -6,7 +6,7 @@ from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
 from ...utils import apply_auto_filter
 from ..schemas import (
-    FilterParamsInstruments,
+    InstrumentsFilter,
     PrimaryCredentials,
     StoredInstrument,
     SyncResult,
@@ -33,7 +33,7 @@ async def sync_instruments_from_primary(
 @instruments_router.get("/get_from_db", response_model=List[StoredInstrument])
 async def get_instruments_from_db(
     service: InstrumentsServiceDependency,
-    params: Annotated[FilterParamsInstruments, Depends()],
+    params: Annotated[InstrumentsFilter, Depends()],
 ):
     apply_auto_filter(params=params)
     return await service.get_instruments_from_db(params=params)
