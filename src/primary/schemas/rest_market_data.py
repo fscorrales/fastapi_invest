@@ -4,7 +4,7 @@ from typing import List
 
 from pydantic import BaseModel
 
-from .common import Depth, Entry, Enviroment, InstrumentID, MarketID
+from .common import Depth, Entry, Enviroment, MarketData, MarketID
 
 
 # --------------------------------------------------
@@ -16,7 +16,7 @@ class ParamsMarketData(BaseModel):
 
 
 # --------------------------------------------------
-class MarketData(InstrumentID):
+class RestMarketData(MarketData):
     enviroment: Enviroment
 
 
