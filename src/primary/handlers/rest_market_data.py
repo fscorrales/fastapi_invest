@@ -238,4 +238,4 @@ if __name__ == "__main__":
     # From /fastapi_invest
     # python -m src.primary.handlers.rest_market_data 'DLR/DIC23'
     # poetry run python -m src.primary.handlers.rest_market_data 'MERV - XMEV - GGAL - 24hs'
-    # poetry run python -m src.primary.handlers.rest_market_data 'GGAL' -l -d 2
+    # poetry run python -m src.primary.handlers.rest_market_data GGAL -l -d 2
