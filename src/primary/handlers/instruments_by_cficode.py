@@ -22,7 +22,7 @@ from ..schemas import (
     CFICode,
     ConnectPrimary,
     InstrumentByCFICode,
-    ParamsInstumentsByCFICode,
+    InstumentsByCFICodeParams,
 )
 from .connect_primary import get_token
 
@@ -118,7 +118,7 @@ def get_args():
 # --------------------------------------------------
 async def get_instruments_by_cficode(
     primary: ConnectPrimary,
-    params: ParamsInstumentsByCFICode,
+    params: InstumentsByCFICodeParams,
     url: str = None,
     httpxAsyncClient: AsyncClient = None,
 ) -> List[InstrumentByCFICode]:
@@ -169,7 +169,7 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    params = ParamsInstumentsByCFICode(CFICode=args.cficode)
+    params = InstumentsByCFICodeParams(CFICode=args.cficode)
 
     async with AsyncClient() as c:
         connect_primary = await get_token(

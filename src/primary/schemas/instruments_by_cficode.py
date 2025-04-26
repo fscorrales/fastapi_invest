@@ -1,8 +1,8 @@
 __all__ = [
-    "ParamsInstumentsByCFICode",
+    "InstumentsByCFICodeParams",
     "InstrumentByCFICode",
     "StoredInstrumentByCFICode",
-    "FilterParamsInstrumentsByCFICode",
+    "InstrumentsByCFICodeFilter",
 ]
 
 from typing import Optional
@@ -15,7 +15,7 @@ from .common import CFICode, Enviroment, InstrumentID, MarketID
 
 
 # --------------------------------------------------
-class ParamsInstumentsByCFICode(BaseModel):
+class InstumentsByCFICodeParams(BaseModel):
     CFICode: CFICode
 
 
@@ -31,7 +31,7 @@ class StoredInstrumentByCFICode(InstrumentByCFICode):
 
 
 # -------------------------------------------------
-class FilterParamsInstrumentsByCFICode(BaseFilterParams):
+class InstrumentsByCFICodeFilter(BaseFilterParams):
     enviroment: Optional[Enviroment] = None
     cficode: Optional[CFICode] = None
     marketId: Optional[MarketID] = None

@@ -15,7 +15,7 @@ from ..repositories import (
 )
 from ..schemas import (
     InstrumentByCFICode,
-    ParamsInstumentsByCFICode,
+    InstumentsByCFICodeParams,
     PrimaryCredentials,
     StoredInstrumentByCFICode,
     SyncResult,
@@ -31,7 +31,7 @@ class InstrumentsByCFICodeService:
     async def sync_instruments_by_cficode_from_primary(
         self,
         credentials: PrimaryCredentials,
-        params: ParamsInstumentsByCFICode = None,
+        params: InstumentsByCFICodeParams = None,
     ) -> SyncResult:
         async with AsyncClient() as c:
             try:
