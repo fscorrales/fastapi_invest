@@ -15,7 +15,7 @@ from ..repositories import (
 )
 from ..schemas import (
     InstrumentDetails,
-    ParamsInstrumentDetails,
+    InstrumentDetailsParams,
     PrimaryCredentials,
     StoredInstrumentDetails,
     SyncResult,
@@ -31,7 +31,7 @@ class InstrumentsDetailsService:
     async def sync_instruments_details_from_primary(
         self,
         credentials: PrimaryCredentials,
-        params: ParamsInstrumentDetails = None,
+        params: InstrumentDetailsParams = None,
     ) -> SyncResult:
         async with AsyncClient() as c:
             try:

@@ -1,8 +1,8 @@
 __all__ = [
     "InstrumentDetails",
-    "ParamsInstrumentDetails",
+    "InstrumentDetailsParams",
     "StoredInstrumentDetails",
-    "FilterParamsInstrumentsDetails",
+    "InstrumentsDetailsFilter",
 ]
 
 from typing import List, Optional
@@ -22,7 +22,7 @@ from .common import (
 
 
 # --------------------------------------------------
-class ParamsInstrumentDetails(BaseModel):
+class InstrumentDetailsParams(BaseModel):
     marketId: MarketID | None = None
     symbol: str | None = None
 
@@ -77,7 +77,7 @@ class StoredInstrumentDetails(InstrumentDetails):
 
 
 # -------------------------------------------------
-class FilterParamsInstrumentsDetails(BaseFilterParams):
+class InstrumentsDetailsFilter(BaseFilterParams):
     enviroment: Optional[Enviroment] = None
     marketId: Optional[MarketID] = None
     marketSegmentId: Optional[MarketSegmentID] = None

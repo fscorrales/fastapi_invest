@@ -21,8 +21,8 @@ from httpx import AsyncClient
 from ..schemas import (
     ConnectPrimary,
     InstrumentDetails,
+    InstrumentDetailsParams,
     MarketID,
-    ParamsInstrumentDetails,
 )
 from .connect_primary import get_token
 
@@ -128,7 +128,7 @@ def get_args():
 async def get_instruments_details(
     primary: ConnectPrimary,
     url: str = None,
-    params: ParamsInstrumentDetails = None,
+    params: InstrumentDetailsParams = None,
     httpxAsyncClient: AsyncClient = None,
 ) -> List[InstrumentDetails]:
     """Get response from Primary REST API"""
@@ -208,7 +208,7 @@ async def main():
 
     args = get_args()
     if args.symbol and args.market_id:
-        params = ParamsInstrumentDetails(symbol=args.symbol, marketId=args.market_id)
+        params = InstrumentDetailsParams(symbol=args.symbol, marketId=args.market_id)
     else:
         params = None
 

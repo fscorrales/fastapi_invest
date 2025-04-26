@@ -6,8 +6,8 @@ from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
 from ...utils import apply_auto_filter
 from ..schemas import (
-    FilterParamsInstrumentsDetails,
-    ParamsInstrumentDetails,
+    InstrumentDetailsParams,
+    InstrumentsDetailsFilter,
     PrimaryCredentials,
     StoredInstrumentDetails,
     SyncResult,
@@ -24,7 +24,7 @@ async def sync_instruments_details_from_primary(
     auth: OptionalAuthorizationDependency,
     service: InstrumentsDetailsServiceDependency,
     credentials: Annotated[PrimaryCredentials, Depends()],
-    params: Annotated[ParamsInstrumentDetails, Depends()],
+    params: Annotated[InstrumentDetailsParams, Depends()],
 ):
     credentials = prepare_primary_credentials(auth, credentials)
 
@@ -49,7 +49,7 @@ async def sync_instruments_details_from_primary(
 )
 async def get_instruments_details_from_db(
     service: InstrumentsDetailsServiceDependency,
-    params: Annotated[FilterParamsInstrumentsDetails, Depends()],
+    params: Annotated[InstrumentsDetailsFilter, Depends()],
 ):
     apply_auto_filter(params=params)
     return await service.get_instruments_details_from_db(params=params)
