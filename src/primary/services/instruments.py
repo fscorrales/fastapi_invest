@@ -13,7 +13,7 @@ from ..handlers import get_instruments, get_token
 from ..repositories import (
     InstrumentsRepositoryDependency,
 )
-from ..schemas import Instrument, PrimaryCredentials, StoredInstrument, SyncResult
+from ..schemas import Instrument, InstrumentDocument, PrimaryCredentials, SyncResult
 
 
 # -------------------------------------------------
@@ -69,7 +69,7 @@ class InstrumentsService:
     # -------------------------------------------------
     async def get_instruments_from_db(
         self, params: BaseFilterParams
-    ) -> List[StoredInstrument]:
+    ) -> List[InstrumentDocument]:
         try:
             return await self.instruments.find_with_filter_params(params=params)
         except Exception as e:

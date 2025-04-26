@@ -1,4 +1,4 @@
-__all__ = ["Instrument", "StoredInstrument", "InstrumentsFilter"]
+__all__ = ["Instrument", "InstrumentDocument", "InstrumentsFilter"]
 
 from typing import Optional
 
@@ -18,7 +18,7 @@ class Instrument(BaseModel):
 
 
 # -------------------------------------------------
-class StoredInstrument(Instrument):
+class InstrumentDocument(Instrument):
     id: PydanticObjectId = Field(alias="_id")
 
 
