@@ -1,4 +1,4 @@
-__all__ = ["BaseFilterParams"]
+__all__ = ["BaseFilterParams", "apply_auto_filter"]
 
 from typing import Literal, Optional
 
@@ -77,10 +77,27 @@ class BaseFilterParams(BaseModel):
     sort_dir: Literal["asc", "desc"] = "asc"
 
     # Campo interno, no forma parte de la query
-    _extra_filter: Optional[dict] = PrivateAttr(default=None)
+    _extra_filter: dict = PrivateAttr(default_factory=dict)
 
     def set_extra_filter(self, extra: Optional[dict]):
-        self._extra_filter = extra
+        if extra:
+            self._extra_filter.update(extra)
 
     def get_full_filter(self):
         return data_filter(self.query_filter, extra_filter=self._extra_filter)
+
+
+# -------------------------------------------------
+def apply_auto_filter(params: BaseFilterParams) -> None:
+    base_fields = set(BaseFilterParams.model_fields.keys())
+    param_fields = set(type(params).model_fields.keys())
+
+    # Detectamos sólo los campos nuevos del modelo hijo
+    additional_fields = param_fields - base_fields
+
+    for field in additional_fields:
+        value = getattr(params, field, None)
+        if value is not None:
+            params.set_extra_filter(
+                {field: {"$eq": value.value if hasattr(value, "value") else value}}
+            )
