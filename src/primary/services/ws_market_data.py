@@ -1,7 +1,7 @@
 __all__ = ["WSMarketDataService", "WSMarketDataServiceDependency"]
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Annotated
 
 import orjson
@@ -20,10 +20,38 @@ from ..schemas import (
 )
 
 
+def _init_market_data():
+    df = pd.DataFrame(
+        columns=[
+            "timestamp",
+            "lo",
+            "nv",
+            "ev",
+            "op",
+            "hi",
+            "tv",
+            "se",
+            "oi",
+            "iv",
+            "acp",
+            "bi",
+            "of",
+            "cl_price",
+            "cl_date",
+            "la_price",
+            "la_size",
+            "la_date",
+        ]
+    )
+    df.index.name = "symbol"
+    return df
+
+
 # -------------------------------------------------
 @dataclass
 class WSMarketDataService:
-    market_data_df: pd.DataFrame
+    market_data: pd.DataFrame = field(default_factory=_init_market_data)
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     task: asyncio.Task = None
     """
     WebSocket Market Data Service
@@ -63,6 +91,7 @@ class WSMarketDataService:
                     detail="Invalid credentials or unable to authenticate",
                 )
 
+    # -------------------------------------------------
     async def disconnect(self):
         if self.task and not self.task.done():
             self.task.cancel()
@@ -72,6 +101,7 @@ class WSMarketDataService:
                 pass
             self.task = None
 
+    # -------------------------------------------------
     async def _websocket_receiver(
         self, primary: ConnectPrimary, params: WSMarketDataParams, url: str = None
     ):
@@ -105,33 +135,65 @@ class WSMarketDataService:
             finally:
                 await ws.close()
 
-    def _handle_message(self, message: str):
+    # -------------------------------------------------
+    async def _handle_message(self, message: str):
         try:
             data = orjson.loads(message)
+
             if data.get("type") != "Md":
-                return  # ignorar si no es Market Data
+                return  # Solo procesamos Market Data
 
-            symbol = data["instrumentId"]["symbol"]
-            timestamp = data["timestamp"]
-            price = None
+            instrument = data["instrumentId"]["symbol"]
+            timestamp = data.get("timestamp")
+            md = data.get("marketData", {})
 
-            market_data = data.get("marketData", {})
-            if "OP" in market_data and market_data["OP"] is not None:
-                price = market_data["OP"]
-            elif "CL" in market_data and isinstance(market_data["CL"], dict):
-                price = market_data["CL"].get("price")
+            # Armamos el registro
+            record = {
+                "timestamp": timestamp,
+                "lo": md.get("LO"),
+                "nv": md.get("NV"),
+                "ev": md.get("EV"),
+                "op": md.get("OP"),
+                "hi": md.get("HI"),
+                "tv": md.get("TV"),
+                "se": md.get("SE"),
+                "oi": md.get("OI"),
+                "iv": md.get("IV"),
+                "acp": md.get("ACP"),
+                "bi": md.get("BI", []),
+                "of": md.get("OF", []),
+                "cl_price": None,
+                "cl_date": None,
+                "la_price": None,
+                "la_size": None,
+                "la_date": None,
+            }
 
-            if price is not None:
-                # Actualizar o insertar
-                self.market_data_df.loc[symbol] = {
-                    "symbol": symbol,
-                    "price": price,
-                    "timestamp": timestamp,
-                }
+            if cl := md.get("CL"):
+                record["cl_price"] = cl.get("price")
+                record["cl_date"] = cl.get("date")
+
+            if la := md.get("LA"):
+                record["la_price"] = la.get("price")
+                record["la_size"] = la.get("size")
+                record["la_date"] = la.get("date")
+
+            async with self.lock:
+                if instrument in self.market_data.index:
+                    # ✅ Solo actualizamos si el timestamp recibido es más reciente
+                    existing_timestamp = self.market_data.at[instrument, "timestamp"]
+                    if timestamp > existing_timestamp:
+                        for key, value in record.items():
+                            self.market_data.at[instrument, key] = value
+                else:
+                    # No existe -> lo agregamos
+                    new_row = pd.DataFrame([record], index=[instrument])
+                    self.market_data = pd.concat([self.market_data, new_row])
 
         except Exception as e:
-            print(f"❌ Error procesando mensaje: {e}")
+            print(f"Error procesando mensaje: {e}")
 
+    # -------------------------------------------------
     def get_dataframe(self) -> pd.DataFrame:
         return self.market_data_df.copy()
 
