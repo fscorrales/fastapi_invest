@@ -10,7 +10,7 @@ Purpose : Obtener datos actuales de instrumentos del mercado.
 API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Precios-get
 """
 
-__all__ = ["get_token"]
+__all__ = ["format_params", "stream_market_data"]
 
 import argparse
 import asyncio
@@ -26,9 +26,10 @@ from ..schemas import (
     MarketData,
     MarketID,
     SettlementTerm,
-    WSMessageSubscription,
+    WSMarketDataParams,
     WSProductSubscription,
 )
+from ..services.format import format_instruments
 from .connect_primary import get_token
 
 # Estado global del stream
@@ -161,23 +162,7 @@ def get_args():
         args.rest_url = settings.PRIMARY_LIVE_URL
         args.websocket = settings.PRIMARY_LIVE_WS
 
-    args.environment = "LIVE" if args.live else "REMARKETS"
-    args.external = False if args.market_id == MarketID.rofex.value else True
-
     return args
-
-
-# --------------------------------------------------
-def format_instruments(
-    symbols: List[str], settlement_terms: List[SettlementTerm] = ["CI", "24hs"]
-) -> List[str]:
-    """Get formatted instruments from symbols"""
-    formatted_instruments = [
-        f"MERV - XMEV - {symbol} - {settlement_term}"
-        for symbol in symbols
-        for settlement_term in settlement_terms
-    ]
-    return formatted_instruments
 
 
 # --------------------------------------------------
@@ -216,19 +201,39 @@ async def process_messages():
 
 
 # --------------------------------------------------
+def format_params(params: WSMarketDataParams) -> WSMarketDataParams:
+    """Format parameters for the subscription message"""
+    formatted_instruments = format_instruments(
+        symbols=params.symbols, settlement_terms=params.settlement_terms
+    )
+    params.products = [
+        WSProductSubscription(symbol=s, marketId=params.marketId)
+        for s in formatted_instruments
+    ]
+    params.settlement_terms = None
+    params.symbols = None
+    params.marketId = None
+    params.type = "smd"
+    params.level = 1
+    return params
+
+
+# --------------------------------------------------
 async def stream_market_data(
     primary: ConnectPrimary,
-    msg_subscription: WSMessageSubscription,
+    params: WSMarketDataParams,
     url: str = None,
-    seconds_delay: int = 5,
+    # seconds_delay: int = 5,
 ) -> List[MarketData]:
     """Get response from Primary WS API"""
     if url is None:
         url = primary.websocket_url
 
     h = {"X-Auth-Token": primary.x_auth_token}
-    # h = [("X-Auth-Token", primary.x_auth_token)]
-    msg_dict = msg_subscription.model_dump(mode="json")
+
+    # Params para el mensaje de suscripción
+    params = format_params(params)
+    msg_dict = params.model_dump(mode="json", exclude_none=True)
     print(f"📡 Suscribiendo a {msg_dict}")
 
     async with websockets.connect(url, extra_headers=h) as ws:
@@ -270,13 +275,11 @@ async def stream_market_data(
 
 
 # --------------------------------------------------
-def start_stream(
-    primary: ConnectPrimary, msg_subscription: WSMessageSubscription, url: str = None
-):
+def start_stream(primary: ConnectPrimary, params: WSMarketDataParams):
     global stream_task
     if stream_task is None or stream_task.done():
         stream_task = asyncio.create_task(
-            stream_market_data(primary=primary, msg_subscription=msg_subscription)
+            stream_market_data(primary=primary, params=params)
         )
         return True
     return False
@@ -296,15 +299,18 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    formatted_instruments = format_instruments(
-        symbols=args.symbols, settlement_terms=args.terms
-    )
-    msg_subscription = WSMessageSubscription(
+    # formatted_instruments = format_instruments(
+    #     symbols=args.symbols, settlement_terms=args.terms
+    # )
+    msg_subscription = WSMarketDataParams(
+        symbols=args.symbols,
+        settlement_terms=args.terms,
+        marketId=args.market_id,
+        # products=[
+        #     WSProductSubscription(symbol=s, marketId=args.market_id)
+        #     for s in formatted_instruments
+        # ],
         entries=args.entries,
-        products=[
-            WSProductSubscription(symbol=s, marketId=args.market_id)
-            for s in formatted_instruments
-        ],
         depth=args.depth,
     )
 
@@ -321,8 +327,7 @@ async def main():
         try:
             await stream_market_data(
                 primary=connect_primary,
-                msg_subscription=msg_subscription,
-                url=args.websocket,
+                params=msg_subscription,
             )
         except Exception as e:
             print(f"Error al obtener instrumentos: {e}")

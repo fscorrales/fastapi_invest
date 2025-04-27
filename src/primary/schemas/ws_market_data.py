@@ -1,10 +1,23 @@
-__all__ = ["WSMessageSubscription", "WSMarketData", "WSProductSubscription"]
+__all__ = [
+    "WSMarketDataParams",
+    "WSMarketData",
+    "WSProductSubscription",
+    "WSProductSubscription",
+]
 
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel
 
-from .common import Depth, Entry, Enviroment, InstrumentID, MarketID
+from .common import (
+    Depth,
+    Entry,
+    Enviroment,
+    InstrumentID,
+    MarketData,
+    MarketID,
+    SettlementTerm,
+)
 
 
 # --------------------------------------------------
@@ -14,44 +27,18 @@ class WSProductSubscription(BaseModel):
 
 
 # --------------------------------------------------
-class WSMessageSubscription(BaseModel):
-    type: str = "smd"
-    level: int = 1
+class WSMarketDataParams(BaseModel):
+    symbols: List[str] = None
+    settlement_terms: List[SettlementTerm] = None
+    marketId: MarketID = MarketID.rofex
     entries: List[Entry]
-    products: List[WSProductSubscription]
+    # products: List[WSProductSubscription]
     depth: Depth = Depth.level_1
 
 
 # --------------------------------------------------
-class PriceWithSize(BaseModel):
-    price: float
-    size: int
-
-
-# --------------------------------------------------
-class PriceWithSizeAndDate(PriceWithSize):
-    size: Optional[int] = None  # Size of the last trade
-    date: Optional[int] = None  # Timestamp in milliseconds since epoch
-
-
-# --------------------------------------------------
-class WSMarketData(BaseModel):
-    NV: Optional[int] = None  # Notional Value
-    BI: Optional[List[PriceWithSize]] = None  # Bid depends on the depth
-    OF: Optional[List[PriceWithSize]] = None  # Offer depends on the depth
-    EV: Optional[float] = None  # Effective Value
-    CL: Optional[PriceWithSizeAndDate] = None  # Previous Close
-    LA: Optional[PriceWithSizeAndDate] = None  # Last Trade
-    OP: Optional[float] = None  # Opening Price
-    HI: Optional[float] = None  # Highest Price
-    LO: Optional[float] = None  # Lowest Price
-    TV: Optional[int] = None  # Volumen operado en contratos/nominales (null value)
-    SE: Optional[float] = None  # Precio de ajuste (solo para futuros)
-    OI: Optional[float] = None  # Interés abierto (solo para futuros)
-    IV: Optional[float] = None  # Valor del índice (solo para índices)
-    ACP: Optional[float] = (
-        None  # Precio de cierre del día de la fecha para instrumentos externos a MATBA ROFEX
-    )
+class WSMarketData(MarketData):
+    pass
 
 
 # --------------------------------------------------
