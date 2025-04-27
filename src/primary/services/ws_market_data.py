@@ -23,8 +23,8 @@ from ..schemas import (
 # -------------------------------------------------
 @dataclass
 class WSMarketDataService:
-    task: asyncio.Task = None
     market_data_df: pd.DataFrame
+    task: asyncio.Task = None
     """
     WebSocket Market Data Service
     """
