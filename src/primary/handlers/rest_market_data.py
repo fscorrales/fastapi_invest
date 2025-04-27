@@ -182,19 +182,20 @@ async def get_market_data(
         data = r.json()
         # market_data = data
         if data["status"] == "OK":
-            enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
-            data = data["marketData"]
-            market_data = RestMarketData(
-                enviroment=enviroment,
+            market_data = data["marketData"]
+            trade = RestMarketData(
+                symbol=data["symbol"],
+                marketId=data["marketId"],
+                enviroment="REMARKETS" if "remarkets" in primary.base_url else "LIVE",
                 **{
-                    key: data[key.upper()]
+                    key: market_data[key.upper()]
                     for key in RestMarketData.model_fields.keys()
-                    if key.upper() in data
+                    if key.upper() in market_data
                 },
             )
         else:
             raise ValueError(f"Primary API Error: {data.get('description')}")
-        return market_data
+        return trade
 
 
 # --------------------------------------------------
@@ -234,5 +235,4 @@ if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
     # python -m src.primary.handlers.rest_market_data 'DLR/DIC23'
-    # poetry run python -m src.primary.handlers.rest_market_data 'MERV - XMEV - GGAL - 24hs'
-    # poetry run python -m src.primary.handlers.rest_market_data GGAL -l -d 2
+    # poetry run python -m src.primary.handlers.rest_market_data GGAL -d 2 -l
