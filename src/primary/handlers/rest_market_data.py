@@ -10,7 +10,7 @@ Purpose : Obtener datos actuales de instrumentos del mercado.
 API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Precios-get
 """
 
-__all__ = ["get_market_data"]
+__all__ = ["get_rest_market_data"]
 
 import argparse
 import asyncio
@@ -156,7 +156,7 @@ def get_args():
 
 
 # --------------------------------------------------
-async def get_market_data(
+async def get_rest_market_data(
     primary: ConnectPrimary,
     params: RestMarketDataParams,
     url: str = None,
@@ -222,7 +222,7 @@ async def main():
         )
         try:
             print("params", params.model_dump(mode="json"))
-            data = await get_market_data(
+            data = await get_rest_market_data(
                 primary=connect_primary, httpxAsyncClient=c, params=params
             )
             print(data)
