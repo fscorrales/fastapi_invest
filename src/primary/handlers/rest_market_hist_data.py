@@ -3,27 +3,30 @@
 
 Author  : Fernando Corrales <fscpython@gmail.com>
 
-Date    : 19-abr-2025
+Date    : 20-abr-2025
 
-Purpose : Obtener datos históricos de instrumentos del mercado.
+Purpose : Obtener datos actuales de instrumentos del mercado.
 
 API Docs: https://apihub.primary.com.ar/assets/apidoc/trading/index.html#api-Precios-getTrades
 """
 
-__all__ = ["get_token"]
+__all__ = ["get_market_hist_data"]
 
 import argparse
 import asyncio
+import datetime
 from typing import List
 
 from httpx import AsyncClient
 
 from ..schemas import (
     ConnectPrimary,
-    MarketHistData,
     MarketID,
-    ParamsMarketHistData,
+    RestMarketHistData,
+    RestMarketHistDataParams,
+    SettlementTerm,
 )
+from ..services.format import format_instruments
 from .connect_primary import get_token
 
 
@@ -45,6 +48,16 @@ def get_args():
     )
 
     parser.add_argument(
+        "-set",
+        "--settlement_term",
+        metavar="Settlement Term",
+        help="Specify the settlement term for the instrument (e.g., 24hs for next-day settlement or CI for immediate settlement)",
+        default="24hs",
+        type=str,
+        choices=[c.value for c in SettlementTerm],
+    )
+
+    parser.add_argument(
         "-m",
         "--market_id",
         metavar="market_id",
@@ -59,6 +72,24 @@ def get_args():
         "--date",
         help="Date in format YYYY-MM-DD",
         metavar="Date",
+        type=str,
+        default=None,
+    )
+
+    parser.add_argument(
+        "-df",
+        "--date_from",
+        help="Date in format YYYY-MM-DD",
+        metavar="Date From",
+        type=str,
+        default=None,
+    )
+
+    parser.add_argument(
+        "-dt",
+        "--date_to",
+        help="Date To in format YYYY-MM-DD",
+        metavar="Date To",
         type=str,
         default=None,
     )
@@ -138,16 +169,16 @@ def get_args():
 # --------------------------------------------------
 async def get_market_hist_data(
     primary: ConnectPrimary,
-    params: ParamsMarketHistData,
+    params: RestMarketHistDataParams,
     url: str = None,
     httpxAsyncClient: AsyncClient = None,
-) -> List[MarketHistData]:
+) -> List[RestMarketHistData]:
     """Get response from Primary REST API"""
     if url is None:
         url = primary.base_url + "/rest/data/getTrades"
 
     h = {"X-Auth-Token": primary.x_auth_token}
-    params_dict = params.model_dump(mode="json")
+    params_dict = params.model_dump(mode="json", exclude_none=True)
 
     if httpxAsyncClient:
         r = await httpxAsyncClient.get(url, headers=h, params=params_dict)
@@ -160,27 +191,24 @@ async def get_market_hist_data(
 
     if r.status_code == 200:
         data = r.json()
-        instrumentos = data
-        # if data["status"] == "OK":
-        #     enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
-        #     # Verificar si data[data_field] es un diccionario o una lista
-        #     if isinstance(data["instruments"], dict):
-        #         # Si es un diccionario, conviértelo en una lista con un solo elemento
-        #         instrumentos_data = [data["instruments"]]
-        #     else:
-        #         # Si es una lista, úsala directamente
-        #         instrumentos_data = data["instruments"]
-        #     instrumentos = [
-        #         MarketHistData(
-        #             symbol=instrumento["symbol"],
-        #             marketId=instrumento["marketId"],
-        #             enviroment=enviroment,
-        #         )
-        #         for instrumento in instrumentos_data
-        #     ]
-        # else:
-        #     raise ValueError(f"Primary API Error: {data.get('description')}")
-        return instrumentos
+        # market_data = data
+        if data["status"] == "OK":
+            enviroment = "REMARKETS" if "remarkets" in primary.base_url else "LIVE"
+            trades = data["trades"]
+            market_data = [
+                RestMarketHistData(
+                    enviroment=enviroment,
+                    **{
+                        key: trade[key.upper()]
+                        for key in RestMarketHistData.model_fields.keys()
+                        if key.upper() in trade
+                    },
+                )
+                for trade in trades
+            ]
+        else:
+            raise ValueError(f"Primary API Error: {data.get('description')}")
+        return market_data
 
 
 # --------------------------------------------------
@@ -188,14 +216,18 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    params = ParamsMarketHistData(
+    params = RestMarketHistDataParams(
         marketId=args.market_id,
-        symbol=args.symbol,
-        date=args.date,
-        # dateFrom=args.date + "T00:00:00",
-        # dateTo=args.date + "T23:59:59",
-        external=args.external,
-        environment=args.environment,
+        symbol=format_instruments(
+            symbols=args.symbol, settlement_terms=args.settlement_term
+        )[0],
+        # date=args.date,
+        # dateFrom=args.date_from + "T00:00:00",
+        # dateTo=args.date_to + "T23:59:59",
+        dateFrom=datetime.date(year=2025, month=1, day=1),
+        dateTo=datetime.date.today(),
+        # external=args.external,
+        # environment=args.environment,
     )
 
     async with AsyncClient() as c:
@@ -206,7 +238,7 @@ async def main():
             httpxAsyncClient=c,
         )
         try:
-            print("params", params.model_dump(mode="json"))
+            print("params", params.model_dump(mode="json", exclude_none=True))
             data = await get_market_hist_data(
                 primary=connect_primary, httpxAsyncClient=c, params=params
             )
@@ -219,6 +251,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
     # From /fastapi_invest
-    # python -m src.primary.handlers.market_hist_data 'DLR/DIC23'
-    # poetry run python -m src.primary.handlers.market_hist_data 'MERV - XMEV - GGAL - 24hs' -d 2024-04-19
-    # poetry run python -m src.primary.handlers.market_hist_data 'MERV - XMEV - GGAL - 24hs' -d 2025-04-15 -l
+    # python -m src.primary.handlers.rest_market_hist_data 'DLR/DIC23'
+    # poetry run python -m src.primary.handlers.rest_market_hist_data 'MERV - XMEV - GGAL - 24hs'
+    # poetry run python -m src.primary.handlers.rest_market_hist_data GGAL -l -df 2025-04-21 -dt 2025-04-24
