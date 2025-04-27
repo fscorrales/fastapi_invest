@@ -23,6 +23,7 @@ COLLECTIONS = [
     "primary_instruments_details",
     "primary_instruments_by_segment",
     "primary_instruments_by_cficode",
+    "primary_rest_market_data",
 ]
 
 

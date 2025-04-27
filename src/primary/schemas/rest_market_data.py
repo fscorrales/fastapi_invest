@@ -1,4 +1,4 @@
-__all__ = ["RestMarketDataParams", "RestMarketData"]
+__all__ = ["RestMarketDataParams", "RestMarketData", "RestMarketDataDocument"]
 
 from typing import List
 
