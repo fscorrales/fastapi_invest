@@ -136,4 +136,12 @@ class WSMarketDataService:
         return self.market_data_df.copy()
 
 
+# # Singleton de WebSocketManager
+# primary_ws_manager = WSMarketDataService()
+
+
+# def get_primary_ws_manager() -> WSMarketDataService:
+#     return primary_ws_manager
+
+
 WSMarketDataServiceDependency = Annotated[WSMarketDataService, Depends()]
