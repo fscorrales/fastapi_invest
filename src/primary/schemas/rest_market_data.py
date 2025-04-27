@@ -1,19 +1,26 @@
-__all__ = ["RestMarketDataParams", "RestMarketData", "RestMarketDataDocument"]
+__all__ = [
+    "RestMarketDataParams",
+    "RestMarketData",
+    "RestMarketDataDocument",
+    "RestMarketDataFilter",
+]
 
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 from pydantic_mongo import PydanticObjectId
 
-from .common import Depth, Entry, Enviroment, MarketData, MarketID
+from ...utils import BaseFilterParams
+from .common import Depth, Entry, Enviroment, MarketData, MarketID, SettlementTerm
 
 
 # --------------------------------------------------
 class RestMarketDataParams(BaseModel):
     marketId: MarketID
     symbol: str
-    entries: List[Entry]
-    depth: Depth = Depth.level_1  # Affects only to BI, OF entries.
+    settlement_term: SettlementTerm
+    entries: List[Entry] = ["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"]
+    depth: Depth
 
 
 # --------------------------------------------------
@@ -26,6 +33,13 @@ class RestMarketData(MarketData):
 # --------------------------------------------------
 class RestMarketDataDocument(RestMarketData):
     id: PydanticObjectId = Field(alias="_id")
+
+
+# -------------------------------------------------
+class RestMarketDataFilter(BaseFilterParams):
+    enviroment: Optional[Enviroment] = None
+    marketId: Optional[MarketID] = None
+    symbol: Optional[str] = None
 
 
 # {

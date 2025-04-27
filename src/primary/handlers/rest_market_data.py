@@ -167,7 +167,13 @@ async def get_rest_market_data(
         url = primary.base_url + "/rest/marketdata/get"
 
     h = {"X-Auth-Token": primary.x_auth_token}
-    params_dict = params.model_dump(mode="json")
+    params.symbol = (
+        format_instruments(
+            symbols=params.symbol, settlement_terms=params.settlement_term
+        )[0],
+    )
+    params.settlement_term = None
+    params_dict = params.model_dump(mode="json", exclude_none=True)
 
     if httpxAsyncClient:
         r = await httpxAsyncClient.get(url, headers=h, params=params_dict)
@@ -205,10 +211,8 @@ async def main():
     args = get_args()
     params = RestMarketDataParams(
         marketId=args.market_id,
-        # symbol=args.symbol,
-        symbol=format_instruments(
-            symbols=args.symbol, settlement_terms=args.settlement_term
-        )[0],
+        symbol=args.symbol,
+        settlement_term=args.settlement_term,
         depth=args.depth,
         entries=args.entries,
     )
