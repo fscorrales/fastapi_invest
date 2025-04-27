@@ -14,7 +14,6 @@ __all__ = ["get_market_hist_data"]
 
 import argparse
 import asyncio
-import datetime
 from typing import List
 
 from httpx import AsyncClient
@@ -221,13 +220,15 @@ async def main():
         symbol=format_instruments(
             symbols=args.symbol, settlement_terms=args.settlement_term
         )[0],
-        # date=args.date,
+        date=args.date,
+        dateFrom=args.date_from,
+        dateTo=args.date_to,
         # dateFrom=args.date_from + "T00:00:00",
         # dateTo=args.date_to + "T23:59:59",
-        dateFrom=datetime.date(year=2025, month=1, day=1),
-        dateTo=datetime.date.today(),
-        # external=args.external,
-        # environment=args.environment,
+        # dateFrom=datetime.date(year=2025, month=1, day=1),
+        # dateTo=datetime.date.today(),
+        external=args.external,
+        environment=args.environment,
     )
 
     async with AsyncClient() as c:
