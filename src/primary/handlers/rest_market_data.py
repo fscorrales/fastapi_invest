@@ -167,11 +167,9 @@ async def get_rest_market_data(
         url = primary.base_url + "/rest/marketdata/get"
 
     h = {"X-Auth-Token": primary.x_auth_token}
-    params.symbol = (
-        format_instruments(
+    params.symbol = format_instruments(
             symbols=params.symbol, settlement_terms=params.settlement_term
-        )[0],
-    )
+        )[0]
     params.settlement_term = None
     params_dict = params.model_dump(mode="json", exclude_none=True)
 

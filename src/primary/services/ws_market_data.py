@@ -20,7 +20,7 @@ from ..schemas import (
 )
 
 
-def _init_market_data():
+def _init_market_data_df():
     df = pd.DataFrame(
         columns=[
             "timestamp",
@@ -50,7 +50,7 @@ def _init_market_data():
 # -------------------------------------------------
 @dataclass
 class WSMarketDataService:
-    market_data: pd.DataFrame = field(default_factory=_init_market_data)
+    market_data_df: pd.DataFrame = field(default_factory=_init_market_data_df)
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     task: asyncio.Task = None
     """
@@ -90,6 +90,8 @@ class WSMarketDataService:
                     status_code=401,
                     detail="Invalid credentials or unable to authenticate",
                 )
+
+            return "OK"
 
     # -------------------------------------------------
     async def disconnect(self):
@@ -179,16 +181,16 @@ class WSMarketDataService:
                 record["la_date"] = la.get("date")
 
             async with self.lock:
-                if instrument in self.market_data.index:
+                if instrument in self.market_data_df.index:
                     # ✅ Solo actualizamos si el timestamp recibido es más reciente
-                    existing_timestamp = self.market_data.at[instrument, "timestamp"]
+                    existing_timestamp = self.market_data_df.at[instrument, "timestamp"]
                     if timestamp > existing_timestamp:
                         for key, value in record.items():
-                            self.market_data.at[instrument, key] = value
+                            self.market_data_df.at[instrument, key] = value
                 else:
                     # No existe -> lo agregamos
                     new_row = pd.DataFrame([record], index=[instrument])
-                    self.market_data = pd.concat([self.market_data, new_row])
+                    self.market_data_df = pd.concat([self.market_data_df, new_row])
 
         except Exception as e:
             print(f"Error procesando mensaje: {e}")
@@ -198,12 +200,12 @@ class WSMarketDataService:
         return self.market_data_df.copy()
 
 
-# # Singleton de WebSocketManager
-# primary_ws_manager = WSMarketDataService()
+# Singleton de WebSocketManager
+primary_ws_manager = WSMarketDataService()
 
 
-# def get_primary_ws_manager() -> WSMarketDataService:
-#     return primary_ws_manager
+def get_primary_ws_manager() -> WSMarketDataService:
+    return primary_ws_manager
 
 
-WSMarketDataServiceDependency = Annotated[WSMarketDataService, Depends()]
+WSMarketDataServiceDependency = Annotated[WSMarketDataService, Depends(get_primary_ws_manager)]

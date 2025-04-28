@@ -18,7 +18,7 @@ def format_instruments(
         # Si settlement_terms es un único SettlementTerm, lo convertimos en una lista
         settlement_terms = [settlement_terms]
     formatted_instruments = [
-        f"MERV - XMEV - {symbol} - {settlement_term}"
+        f"MERV - XMEV - {symbol} - {settlement_term.value}"
         for symbol in symbols
         for settlement_term in settlement_terms
     ]

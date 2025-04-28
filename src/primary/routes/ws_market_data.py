@@ -19,11 +19,11 @@ from ..services import (
 )
 
 ws_market_data_router = APIRouter(
-    prefix="/ws_maket_data", tags=["Primary - Websocket Market Data"]
+    prefix="/ws_market_data", tags=["Primary - Websocket Market Data"]
 )
 
 
-@ws_market_data_router.post("/start")
+@ws_market_data_router.post("/start", response_model=str)
 async def start_primary_stream(
     auth: OptionalAuthorizationDependency,
     service: WSMarketDataServiceDependency,
@@ -42,28 +42,28 @@ async def start_primary_stream(
 
     logger.info(f"Params: {params.model_dump(mode='json')}")
 
-    await service.sync_ws_market_data_from_primary(
+    return await service.sync_ws_market_data_from_primary(
         credentials=credentials,
         params=params,
     )
 
     # await ws_manager.connect(primary=connect_primary, msg_subscription=msg_subscription)
-    return {"message": "WebSocket conectado."}
+    # return {"message": "WebSocket conectado."}
 
 
-@ws_market_data_router.post("/stop")
-async def stop_primary_stream(
-    # ws_manager: PrimaryWebSocketManager = Depends(get_primary_ws_manager),
-    service: WSMarketDataServiceDependency,
-):
-    await service.disconnect()
-    return {"message": "WebSocket desconectado."}
+# @ws_market_data_router.post("/stop")
+# async def stop_primary_stream(
+#     # ws_manager: PrimaryWebSocketManager = Depends(get_primary_ws_manager),
+#     service: WSMarketDataServiceDependency,
+# ):
+#     await service.disconnect()
+#     return {"message": "WebSocket desconectado."}
 
 
-@ws_market_data_router.get("/dataframe")
-async def get_market_data(
-    # ws_manager: PrimaryWebSocketManager = Depends(get_primary_ws_manager),
-    service: WSMarketDataServiceDependency,
-):
-    df = service.get_dataframe()
-    return df.to_dict(orient="records")
+# @ws_market_data_router.get("/dataframe")
+# async def get_market_data(
+#     # ws_manager: PrimaryWebSocketManager = Depends(get_primary_ws_manager),
+#     service: WSMarketDataServiceDependency,
+# ):
+#     df = service.get_dataframe()
+#     return df.to_dict(orient="records")
