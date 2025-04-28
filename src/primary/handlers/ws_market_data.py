@@ -206,16 +206,24 @@ def format_params(params: WSMarketDataParams) -> WSMarketDataParams:
     formatted_instruments = format_instruments(
         symbols=params.symbols, settlement_terms=params.settlement_terms
     )
-    params.products = [
-        WSProductSubscription(symbol=s, marketId=params.marketId)
-        for s in formatted_instruments
-    ]
-    params.settlement_terms = None
-    params.symbols = None
-    params.marketId = None
-    params.type = "smd"
-    params.level = 1
-    return params
+    # params.products = [
+    #     WSProductSubscription(symbol=s, marketId=params.marketId)
+    #     for s in formatted_instruments
+    # ]
+    # params.settlement_terms = None
+    # params.symbols = None
+    # params.marketId = None
+    # return params
+    return {
+        "type": "smd",
+        "level": 1,
+        "entries": params.entries,
+        "products": [
+            WSProductSubscription(symbol=s, marketId=params.marketId).model_dump()
+            for s in formatted_instruments
+        ],
+        "depth": params.depth,
+    }
 
 
 # --------------------------------------------------
@@ -232,8 +240,8 @@ async def stream_market_data(
     h = {"X-Auth-Token": primary.x_auth_token}
 
     # Params para el mensaje de suscripción
-    params = format_params(params)
-    msg_dict = params.model_dump(mode="json", exclude_none=True)
+    msg_dict = format_params(params)
+    # msg_dict = params.model_dump(mode="json", exclude_none=True)
     print(f"📡 Suscribiendo a {msg_dict}")
 
     async with websockets.connect(url, extra_headers=h) as ws:
@@ -274,24 +282,24 @@ async def stream_market_data(
         await asyncio.gather(producer, consumer)
 
 
-# --------------------------------------------------
-def start_stream(primary: ConnectPrimary, params: WSMarketDataParams):
-    global stream_task
-    if stream_task is None or stream_task.done():
-        stream_task = asyncio.create_task(
-            stream_market_data(primary=primary, params=params)
-        )
-        return True
-    return False
+# # --------------------------------------------------
+# def start_stream(primary: ConnectPrimary, params: WSMarketDataParams):
+#     global stream_task
+#     if stream_task is None or stream_task.done():
+#         stream_task = asyncio.create_task(
+#             stream_market_data(primary=primary, params=params)
+#         )
+#         return True
+#     return False
 
 
-# --------------------------------------------------
-def stop_stream():
-    global stream_task
-    if stream_task and not stream_task.done():
-        stream_task.cancel()
-        return True
-    return False
+# # --------------------------------------------------
+# def stop_stream():
+#     global stream_task
+#     if stream_task and not stream_task.done():
+#         stream_task.cancel()
+#         return True
+#     return False
 
 
 # --------------------------------------------------
@@ -299,23 +307,15 @@ async def main():
     """Make a jazz noise here"""
 
     args = get_args()
-    # formatted_instruments = format_instruments(
-    #     symbols=args.symbols, settlement_terms=args.terms
-    # )
+
     msg_subscription = WSMarketDataParams(
         symbols=args.symbols,
         settlement_terms=args.terms,
         marketId=args.market_id,
-        # products=[
-        #     WSProductSubscription(symbol=s, marketId=args.market_id)
-        #     for s in formatted_instruments
-        # ],
         entries=args.entries,
         depth=args.depth,
     )
 
-    # print(json.dumps(msg_subscription.model_dump(mode="json")))
-    print(f"Conectando a Primary API {args.websocket}")
     async with AsyncClient() as c:
         connect_primary = await get_token(
             username=args.username,

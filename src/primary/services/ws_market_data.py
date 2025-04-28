@@ -68,15 +68,12 @@ class WSMarketDataService:
                     credentials.username,
                     credentials.password,
                     credentials.url,
+                    websocket_url="wss://api.veta.xoms.com.ar",
                     httpxAsyncClient=c,
                 )
 
                 self.task = asyncio.create_task(
-                    self._websocket_receiver(
-                        primary=connect_primary,
-                        params=params,
-                        url=credentials.url,
-                    )
+                    self._websocket_receiver(primary=connect_primary, params=params)
                 )
 
             except ValidationError as e:
@@ -91,7 +88,7 @@ class WSMarketDataService:
                     detail="Invalid credentials or unable to authenticate",
                 )
 
-            return "OK"
+            return {"message": "WebSocket conectado."}
 
     # -------------------------------------------------
     async def disconnect(self):
@@ -105,34 +102,33 @@ class WSMarketDataService:
 
     # -------------------------------------------------
     async def _websocket_receiver(
-        self, primary: ConnectPrimary, params: WSMarketDataParams, url: str = None
+        self, primary: ConnectPrimary, params: WSMarketDataParams
     ):
-        if url is None:
-            url = primary.websocket_url
+        url = primary.websocket_url
         h = {"X-Auth-Token": primary.x_auth_token}
 
         # Params para el mensaje de suscripción
-        params = format_params(params)
-        msg_dict = params.model_dump(mode="json", exclude_none=True)
+        msg_dict = format_params(params)
+        # msg_dict = params.model_dump(mode="json", exclude_none=True)
 
         print(f"📡 Conectando a WebSocket {url}")
         async with websockets.connect(url, extra_headers=h) as ws:
-            await ws.send(orjson.dumps(msg_dict))
+            await ws.send(orjson.dumps(msg_dict).decode())
             print("📡 Suscripción enviada.")
 
             try:
                 while True:
                     try:
                         message = await asyncio.wait_for(ws.recv(), timeout=10)
-                        print("📥 Recibido:", message)
-                        self._handle_message(message)
+                        logger.info("📥 Recibido:", message)
+                        await self._handle_message(message)
                     except asyncio.TimeoutError:
-                        print("⏳ No se recibió respuesta en 10 segundos.")
+                        logger.error("⏳ No se recibió respuesta en 10 segundos.")
 
             except websockets.exceptions.ConnectionClosed:
-                print("❌ Conexión cerrada.")
+                logger.info("❌ Conexión cerrada.")
             except asyncio.CancelledError:
-                print("🛑 Stream cancelado.")
+                logger.error("🛑 Stream cancelado.")
                 raise
             finally:
                 await ws.close()
@@ -197,6 +193,7 @@ class WSMarketDataService:
 
     # -------------------------------------------------
     def get_dataframe(self) -> pd.DataFrame:
+        logger.info(f"Registros actuales en DataFrame: {len(self.market_data_df)}")
         return self.market_data_df.copy()
 
 
@@ -208,4 +205,6 @@ def get_primary_ws_manager() -> WSMarketDataService:
     return primary_ws_manager
 
 
-WSMarketDataServiceDependency = Annotated[WSMarketDataService, Depends(get_primary_ws_manager)]
+WSMarketDataServiceDependency = Annotated[
+    WSMarketDataService, Depends(get_primary_ws_manager)
+]

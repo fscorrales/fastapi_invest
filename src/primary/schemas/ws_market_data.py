@@ -32,7 +32,6 @@ class WSMarketDataParams(BaseModel):
     settlement_terms: List[SettlementTerm] = None
     marketId: MarketID = MarketID.rofex
     entries: List[Entry] = ["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"]
-    # products: List[WSProductSubscription]
     depth: Depth = Depth.level_1
 
 

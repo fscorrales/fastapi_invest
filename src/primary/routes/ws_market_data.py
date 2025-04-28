@@ -23,7 +23,7 @@ ws_market_data_router = APIRouter(
 )
 
 
-@ws_market_data_router.post("/start", response_model=str)
+@ws_market_data_router.post("/start", response_model=dict)
 async def start_primary_stream(
     auth: OptionalAuthorizationDependency,
     service: WSMarketDataServiceDependency,
@@ -51,19 +51,19 @@ async def start_primary_stream(
     # return {"message": "WebSocket conectado."}
 
 
-# @ws_market_data_router.post("/stop")
-# async def stop_primary_stream(
-#     # ws_manager: PrimaryWebSocketManager = Depends(get_primary_ws_manager),
-#     service: WSMarketDataServiceDependency,
-# ):
-#     await service.disconnect()
-#     return {"message": "WebSocket desconectado."}
+@ws_market_data_router.post("/stop")
+async def stop_primary_stream(
+    # ws_manager: PrimaryWebSocketManager = Depends(get_primary_ws_manager),
+    service: WSMarketDataServiceDependency,
+):
+    await service.disconnect()
+    return {"message": "WebSocket desconectado."}
 
 
-# @ws_market_data_router.get("/dataframe")
-# async def get_market_data(
-#     # ws_manager: PrimaryWebSocketManager = Depends(get_primary_ws_manager),
-#     service: WSMarketDataServiceDependency,
-# ):
-#     df = service.get_dataframe()
-#     return df.to_dict(orient="records")
+@ws_market_data_router.get("/dataframe")
+async def get_market_data(
+    # ws_manager: PrimaryWebSocketManager = Depends(get_primary_ws_manager),
+    service: WSMarketDataServiceDependency,
+):
+    df = service.get_dataframe()
+    return df.to_dict(orient="records")
