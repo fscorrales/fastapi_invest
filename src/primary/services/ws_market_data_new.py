@@ -14,7 +14,6 @@ from pydantic import ValidationError
 from ...config import logger
 from ..handlers import format_params, get_token
 from ..schemas import (
-    ConnectPrimary,
     PrimaryCredentials,
     WSMarketDataParams,
 )
@@ -53,12 +52,22 @@ class WSMarketDataService:
     market_data_df: pd.DataFrame = field(default_factory=_init_market_data_df)
     queue = asyncio.Queue()
     data: List[dict] = field(default_factory=list)
+    task: Optional[asyncio.Task] = None
     """
     WebSocket Market Data Service
     """
 
+    # -------------------------------------------------
+    async def stream_market_data(
+        self, credentials: PrimaryCredentials, params: WSMarketDataParams = None
+    ):
+        self.task = asyncio.create_task(self.connect(credentials, params))
+        return {"message": "WebSocket conectado."}
 
-    async def stream_market_data(self, credentials: PrimaryCredentials, params: WSMarketDataParams = None):
+    # -------------------------------------------------
+    async def connect(
+        self, credentials: PrimaryCredentials, params: WSMarketDataParams = None
+    ):
         async with AsyncClient() as c:
             try:
                 # Intentar obtener el token
@@ -73,7 +82,9 @@ class WSMarketDataService:
                 msg_dict = format_params(params)
                 headers = {"X-Auth-Token": connect_primary.x_auth_token}
 
-                async with websockets.connect(connect_primary.websocket_url, extra_headers=headers) as ws:
+                async with websockets.connect(
+                    connect_primary.websocket_url, extra_headers=headers
+                ) as ws:
                     await ws.send(orjson.dumps(msg_dict).decode())
                     print("📡 Suscripción enviada correctamente")
 
@@ -96,6 +107,7 @@ class WSMarketDataService:
 
             return {"message": "WebSocket conectado."}
 
+    # -------------------------------------------------
     async def _receive_messages(self, ws):
         while True:
             try:
@@ -111,6 +123,7 @@ class WSMarketDataService:
                 print("🛑 Recepción cancelada")
                 break
 
+    # -------------------------------------------------
     async def _process_messages(self):
         while True:
             raw = await self.queue.get()
@@ -125,21 +138,29 @@ class WSMarketDataService:
             finally:
                 self.queue.task_done()
 
+    # -------------------------------------------------
     def _parse_message(self, message: dict) -> Optional[dict]:
         """Parsea un mensaje 'Md' y lo convierte en dict"""
         try:
             instrument = message["instrumentId"]["symbol"]
             price = message["marketData"].get("OP")
             timestamp = message.get("timestamp")
-            return {
-                "symbol": instrument,
-                "price": price,
-                "timestamp": timestamp
-            }
+            return {"symbol": instrument, "price": price, "timestamp": timestamp}
         except Exception as e:
             print(f"⚠️ Error parseando mensaje: {e}")
             return None
 
+    # -------------------------------------------------
+    async def disconnect(self):
+        if self.task and not self.task.done():
+            self.task.cancel()
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                print("🛑 Tarea de WebSocket cancelada correctamente.")
+        self.task = None
+
+    # -------------------------------------------------
     def get_dataframe(self) -> pd.DataFrame:
         """Devuelve los datos como un DataFrame"""
         if not self.data:
@@ -151,6 +172,7 @@ class WSMarketDataService:
 primary_ws_manager = WSMarketDataService()
 
 
+# -------------------------------------------------
 def get_primary_ws_manager() -> WSMarketDataService:
     return primary_ws_manager
 
