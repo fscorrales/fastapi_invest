@@ -6,4 +6,4 @@ from .instruments_by_segment import *
 from .instruments_details import *
 from .rest_market_data import *
 from .segments import *
-from .ws_market_data import *
+from .ws_market_data_new import *
