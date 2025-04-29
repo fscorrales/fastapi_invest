@@ -23,23 +23,23 @@ def _init_market_data_df():
     df = pd.DataFrame(
         columns=[
             "timestamp",
-            "lo",
-            "nv",
-            "ev",
-            "op",
-            "hi",
+            "last_price",
+            "last_size",
+            "bid_price",
+            "bid_size",
+            "offer_price",
+            "offer_size",
+            "notonial_value",
+            "effective_value",
+            "open",
+            "close_prev",
+            "high",
+            "low",
             "tv",
             "se",
             "oi",
             "iv",
             "acp",
-            "bi",
-            "of",
-            "cl_price",
-            "cl_date",
-            "la_price",
-            "la_size",
-            "la_date",
         ]
     )
     df.index.name = "symbol"
@@ -181,33 +181,36 @@ class WSMarketDataService:
             # Armamos el registro
             record = {
                 "timestamp": timestamp,
-                "lo": md.get("LO"),
-                "nv": md.get("NV"),
-                "ev": md.get("EV"),
-                "op": md.get("OP"),
-                "hi": md.get("HI"),
+                "last_price": None,
+                "last_size": None,
+                "bid_price": None,
+                "bid_size": None,
+                "offer_price": None,
+                "offer_size": None,
+                "notonial_value": md.get("NV"),
+                "effective_value": md.get("EV"),
+                "open": md.get("OP"),
+                "close_prev": md.get("CL")["price"] if md.get("CL") else None,
+                "high": md.get("HI"),
+                "low": md.get("LO"),
                 "tv": md.get("TV"),
                 "se": md.get("SE"),
                 "oi": md.get("OI"),
                 "iv": md.get("IV"),
                 "acp": md.get("ACP"),
-                "bi": md.get("BI", []),
-                "of": md.get("OF", []),
-                "cl_price": None,
-                "cl_date": None,
-                "la_price": None,
-                "la_size": None,
-                "la_date": None,
             }
 
-            if cl := md.get("CL"):
-                record["cl_price"] = cl.get("price")
-                record["cl_date"] = cl.get("date")
+            if bi := md.get("BI"):
+                record["bid_price"] = bi.get("price")
+                record["bid_size"] = bi.get("size")
+
+            if of := md.get("OF"):
+                record["offer_price"] = of.get("price")
+                record["offer_size"] = of.get("size")
 
             if la := md.get("LA"):
-                record["la_price"] = la.get("price")
-                record["la_size"] = la.get("size")
-                record["la_date"] = la.get("date")
+                record["last_price"] = la.get("price")
+                record["last_size"] = la.get("size")
 
             async with self.lock:
                 if instrument in self.market_data_df.index:

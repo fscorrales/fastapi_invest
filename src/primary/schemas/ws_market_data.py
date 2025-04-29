@@ -3,9 +3,11 @@ __all__ = [
     "WSMarketData",
     "WSProductSubscription",
     "WSProductSubscription",
+    "WSFullMessage",
+    "WSMarketDataDF",
 ]
 
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -66,3 +68,29 @@ class WSFullMessage(BaseModel):
 #         "HI": 7710,
 #     },
 # }
+
+
+# --------------------------------------------------
+class WSMarketDataDF(BaseModel):
+    symbol: str
+    timestamp: Optional[str]
+    last_price: Optional[float]
+    last_size: Optional[float]
+    bid_price: Optional[float]
+    bid_size: Optional[float]
+    offer_price: Optional[float]
+    offer_size: Optional[float]
+    notonial_value: Optional[float]
+    effective_value: Optional[float]
+    open: Optional[float]
+    close_prev: Optional[float]
+    high: Optional[float]
+    low: Optional[float]
+    tv: Optional[float]
+    se: Optional[float]
+    oi: Optional[float]
+    iv: Optional[float]
+    acp: Optional[float]
+
+    class Config:
+        orm_mode = True  # Permite la conversión de modelos ORM a Pydantic

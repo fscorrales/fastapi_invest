@@ -8,6 +8,7 @@ from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
 from ..schemas import (
     PrimaryCredentials,
+    WSMarketDataDF,
     # RestMarketDataDocument,
     # RestMarketDataFilter,
     # SyncResult,
@@ -71,9 +72,9 @@ async def reset_market_data(
     return {"message": "DataFrame reseteado correctamente."}
 
 
-@ws_market_data_router.get("/dataframe")
+@ws_market_data_router.get("/dataframe", response_model=list[WSMarketDataDF])
 async def get_market_data(
     service: WSMarketDataServiceDependency,
 ):
     df = service.get_dataframe()
-    return df.to_dict(orient="records")
+    return [WSMarketDataDF(**row) for row in df]
