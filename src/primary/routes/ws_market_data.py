@@ -67,8 +67,8 @@ async def get_stream_status(
 async def reset_market_data(
     service: WSMarketDataServiceDependency,
 ):
-    service.data.clear()
-    return {"message": "Datos de market data reseteados correctamente."}
+    service.reset_dataframe()
+    return {"message": "DataFrame reseteado correctamente."}
 
 
 @ws_market_data_router.get("/dataframe")

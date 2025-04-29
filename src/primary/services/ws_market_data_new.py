@@ -51,7 +51,7 @@ def _init_market_data_df():
 class WSMarketDataService:
     market_data_df: pd.DataFrame = field(default_factory=_init_market_data_df)
     queue = asyncio.Queue()
-    data: List[dict] = field(default_factory=list)
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     task: Optional[asyncio.Task] = None
     """
     WebSocket Market Data Service
@@ -109,18 +109,38 @@ class WSMarketDataService:
 
     # -------------------------------------------------
     async def _receive_messages(self, ws):
+        self._message_counter = 0  # Inicializamos el contador
+
         while True:
             try:
                 raw = await asyncio.wait_for(ws.recv(), timeout=10)
-                print(f"📥 Recibido: {raw}")
+                self._message_counter += 1
+
+                # Mostrar el mensaje completo solo cada 50 veces
+                if self._message_counter % 50 == 0:
+                    logger.debug(
+                        f"📥 Recibido mensaje #{self._message_counter}: {raw[:300]}..."
+                    )
+                # else:
+                #     # Mostrar resumen si es mensaje de tipo 'Md'
+                #     try:
+                #         msg = orjson.loads(raw)
+                #         if msg.get("type") == "Md":
+                #             symbol = msg["instrumentId"]["symbol"]
+                #             op = msg.get("marketData", {}).get("OP")
+                #             logger.debug(f"📥 {symbol}: OP={op}")
+                #     except Exception:
+                #         pass  # Ignorar si no se puede parsear
+
                 await self.queue.put(raw)
+
             except asyncio.TimeoutError:
-                print("⏳ Timeout esperando mensajes")
+                logger.warning("⏳ Timeout esperando mensajes")
             except websockets.exceptions.ConnectionClosed:
-                print("❌ Conexión cerrada")
+                logger.warning("❌ Conexión cerrada")
                 break
             except asyncio.CancelledError:
-                print("🛑 Recepción cancelada")
+                logger.info("🛑 Recepción cancelada")
                 break
 
     # -------------------------------------------------
@@ -128,27 +148,81 @@ class WSMarketDataService:
         while True:
             raw = await self.queue.get()
             try:
-                msg = orjson.loads(raw)
-                if msg.get("type") == "Md":
-                    parsed = self._parse_message(msg)
-                    if parsed:
-                        self.data.append(parsed)
+                await self._handle_message(raw)
             except Exception as e:
                 print(f"⚠️ Error procesando mensaje: {e}")
             finally:
                 self.queue.task_done()
 
+    # # -------------------------------------------------
+    # def _parse_message(self, message: dict) -> Optional[dict]:
+    #     """Parsea un mensaje 'Md' y lo convierte en dict"""
+    #     try:
+    #         instrument = message["instrumentId"]["symbol"]
+    #         price = message["marketData"].get("OP")
+    #         timestamp = message.get("timestamp")
+    #         return {"symbol": instrument, "price": price, "timestamp": timestamp}
+    #     except Exception as e:
+    #         print(f"⚠️ Error parseando mensaje: {e}")
+    #         return None
+
     # -------------------------------------------------
-    def _parse_message(self, message: dict) -> Optional[dict]:
-        """Parsea un mensaje 'Md' y lo convierte en dict"""
+    async def _handle_message(self, message: str):
         try:
-            instrument = message["instrumentId"]["symbol"]
-            price = message["marketData"].get("OP")
-            timestamp = message.get("timestamp")
-            return {"symbol": instrument, "price": price, "timestamp": timestamp}
+            data = orjson.loads(message)
+
+            if data.get("type") != "Md":
+                return  # Solo procesamos Market Data
+
+            instrument = data["instrumentId"]["symbol"]
+            timestamp = data.get("timestamp")
+            md = data.get("marketData", {})
+
+            # Armamos el registro
+            record = {
+                "timestamp": timestamp,
+                "lo": md.get("LO"),
+                "nv": md.get("NV"),
+                "ev": md.get("EV"),
+                "op": md.get("OP"),
+                "hi": md.get("HI"),
+                "tv": md.get("TV"),
+                "se": md.get("SE"),
+                "oi": md.get("OI"),
+                "iv": md.get("IV"),
+                "acp": md.get("ACP"),
+                "bi": md.get("BI", []),
+                "of": md.get("OF", []),
+                "cl_price": None,
+                "cl_date": None,
+                "la_price": None,
+                "la_size": None,
+                "la_date": None,
+            }
+
+            if cl := md.get("CL"):
+                record["cl_price"] = cl.get("price")
+                record["cl_date"] = cl.get("date")
+
+            if la := md.get("LA"):
+                record["la_price"] = la.get("price")
+                record["la_size"] = la.get("size")
+                record["la_date"] = la.get("date")
+
+            async with self.lock:
+                if instrument in self.market_data_df.index:
+                    # ✅ Solo actualizamos si el timestamp recibido es más reciente
+                    existing_timestamp = self.market_data_df.at[instrument, "timestamp"]
+                    if timestamp > existing_timestamp:
+                        for key, value in record.items():
+                            self.market_data_df.at[instrument, key] = value
+                else:
+                    # No existe -> lo agregamos
+                    new_row = pd.DataFrame([record], index=[instrument])
+                    self.market_data_df = pd.concat([self.market_data_df, new_row])
+
         except Exception as e:
-            print(f"⚠️ Error parseando mensaje: {e}")
-            return None
+            print(f"Error procesando mensaje: {e}")
 
     # -------------------------------------------------
     async def disconnect(self):
@@ -163,9 +237,12 @@ class WSMarketDataService:
     # -------------------------------------------------
     def get_dataframe(self) -> pd.DataFrame:
         """Devuelve los datos como un DataFrame"""
-        if not self.data:
-            return pd.DataFrame()
-        return pd.DataFrame(self.data)
+        return self.market_data_df.copy()
+
+    # -------------------------------------------------
+    def reset_dataframe(self):
+        """Limpia el DataFrame y la lista de datos acumulados"""
+        self.market_data_df = _init_market_data_df()
 
 
 # Singleton de WebSocketManager
