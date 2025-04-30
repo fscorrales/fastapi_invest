@@ -176,7 +176,12 @@ class WSMarketDataService:
 
             instrument = data["instrumentId"]["symbol"]
             timestamp = data.get("timestamp")
-            md = data.get("marketData", {})
+            md_list = data.get("marketData", [])
+            md = {
+                entry["entryType"]: entry
+                for entry in md_list
+                if isinstance(entry, dict) and "entryType" in entry
+            }
 
             # Armamos el registro
             record = {
@@ -225,6 +230,7 @@ class WSMarketDataService:
                     self.market_data_df = pd.concat([self.market_data_df, new_row])
 
         except Exception as e:
+            print(f"⚠️ Mensaje inválido: {md_list}")
             print(f"Error procesando mensaje: {e}")
 
     # -------------------------------------------------

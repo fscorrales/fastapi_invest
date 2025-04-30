@@ -77,4 +77,4 @@ async def get_market_data(
     service: WSMarketDataServiceDependency,
 ):
     df = service.get_dataframe()
-    return [WSMarketDataDF(**row) for row in df]
+    return [WSMarketDataDF(**row.to_dict()) for _, row in df.iterrows()]
