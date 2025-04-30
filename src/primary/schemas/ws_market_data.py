@@ -93,4 +93,4 @@ class WSMarketDataDF(BaseModel):
     acp: Optional[float]
 
     class Config:
-        orm_mode = True  # Permite la conversión de modelos ORM a Pydantic
+        from_attributes = True # Permite la conversión de modelos ORM a Pydantic
