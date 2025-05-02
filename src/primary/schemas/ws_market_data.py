@@ -80,7 +80,7 @@ class WSMarketDataDF(BaseModel):
     bid_size: Optional[float]
     offer_price: Optional[float]
     offer_size: Optional[float]
-    notonial_value: Optional[float]
+    notional_value: Optional[float]
     effective_value: Optional[float]
     open: Optional[float]
     close_prev: Optional[float]
@@ -93,4 +93,4 @@ class WSMarketDataDF(BaseModel):
     acp: Optional[float]
 
     class Config:
-        from_attributes = True # Permite la conversión de modelos ORM a Pydantic
+        from_attributes = True  # Permite la conversión de modelos ORM a Pydantic
