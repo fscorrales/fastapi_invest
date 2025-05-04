@@ -9,6 +9,7 @@ from .config import Database
 from .iol.routes import iol_router
 from .primary.routes import primary_router
 from .rava.routes import rava_router
+from .strategies.routes.strategies import strategies_router
 
 
 @asynccontextmanager
@@ -41,6 +42,7 @@ app.include_router(auth_router)
 app.include_router(iol_router)
 app.include_router(rava_router)
 app.include_router(primary_router)
+app.include_router(strategies_router)
 # # Let's include our auth routes aside from the API routes
 # app.include_router(auth_router)
 
