@@ -14,6 +14,7 @@ from ...primary.services import (
     WSMarketDataServiceDependency,
     prepare_primary_credentials,
 )
+from ..services import TimeArbitrageStrategy, strategy_manager
 
 strategies_router = APIRouter(prefix="/strategies", tags=["Strategies"])
 
@@ -33,20 +34,21 @@ async def time_arbitrage(
         f"Syncing {credentials.enviroment.value} instruments details from Primary API with url: {credentials.url}"
     )
 
-    params = WSMarketDataParams(
-        symbols=["GGAL"],
-        settlement_terms=["CI", "24hs"],
-        marketId="ROFEX",
-        entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
-        depth=1,
-    )
+    strategy_name = "time_arbitrage_GGAL"
 
-    logger.info(f"Params: {params.model_dump(mode='json')}")
+    if strategy_name in strategy_manager.list_active():
+        raise HTTPException(status_code=400, detail="La estrategia ya está corriendo")
 
-    return await service.stream_market_data(
-        credentials=credentials,
-        params=params,
-    )
+    strategy = TimeArbitrageStrategy(market_data_service=service)
+    strategy_manager.register(strategy_name, strategy)
+    strategy_manager.start(strategy_name, credentials)  # AQUI EL ERROR
+
+    return {"message": f"Estrategia '{strategy_name}' iniciada"}
+
+    # return await service.stream_market_data(
+    #     credentials=credentials,
+    #     params=params,
+    # )
 
 
 # class StartRequest(BaseModel):

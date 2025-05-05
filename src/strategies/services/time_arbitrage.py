@@ -6,7 +6,7 @@ from typing import Optional
 
 import pandas as pd
 
-from ...primary.schemas import PrimaryCredentials
+from ...primary.schemas import PrimaryCredentials, WSMarketDataParams
 from ...primary.services import WSMarketDataService
 
 
@@ -22,7 +22,15 @@ class TimeArbitrageStrategy:
         if self._task is None or self._task.done():
             self._running = True
 
-            await self.market_data_service.connect(credentials, params=None)
+            params = WSMarketDataParams(
+                symbols=["GGAL"],
+                settlement_terms=["CI", "24hs"],
+                marketId="ROFX",
+                entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
+                depth=1,
+            )
+
+            await self.market_data_service.connect(credentials, params=params)
             self._task = asyncio.create_task(self._run())
 
     # -------------------------------------------------
