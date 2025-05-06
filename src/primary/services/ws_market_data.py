@@ -176,26 +176,15 @@ class WSMarketDataService:
 
             symbol = data["instrumentId"]["symbol"]
             timestamp = data.get("timestamp")
-            md_list = data.get("marketData", [])
-            md = {
-                entry["entryType"]: entry
-                for entry in md_list
-                if isinstance(entry, dict) and "entryType" in entry
-            }
+            md = data.get("marketData", {})
 
             # Armamos el registro
             record = {
                 "timestamp": timestamp,
-                "last_price": None,
-                "last_size": None,
-                "bid_price": None,
-                "bid_size": None,
-                "offer_price": None,
-                "offer_size": None,
                 "notional_value": md.get("NV"),
                 "effective_value": md.get("EV"),
                 "open": md.get("OP"),
-                "close_prev": md.get("CL")["price"] if md.get("CL") else None,
+                "close_prev": md.get("CL", {}).get("price"),
                 "high": md.get("HI"),
                 "low": md.get("LO"),
                 "tv": md.get("TV"),
@@ -203,34 +192,28 @@ class WSMarketDataService:
                 "oi": md.get("OI"),
                 "iv": md.get("IV"),
                 "acp": md.get("ACP"),
+                "last_price": md.get("LA", {}).get("price"),
+                "last_size": md.get("LA", {}).get("size"),
+                "bid_price": md.get("BI", [{}])[0].get("price"),
+                "bid_size": md.get("BI", [{}])[0].get("size"),
+                "offer_price": md.get("OF", [{}])[0].get("price"),
+                "offer_size": md.get("OF", [{}])[0].get("size"),
             }
 
-            if bi := md.get("BI"):
-                record["bid_price"] = bi.get("price")
-                record["bid_size"] = bi.get("size")
-
-            if of := md.get("OF"):
-                record["offer_price"] = of.get("price")
-                record["offer_size"] = of.get("size")
-
-            if la := md.get("LA"):
-                record["last_price"] = la.get("price")
-                record["last_size"] = la.get("size")
-
             async with self.lock:
+                new_row = pd.DataFrame([record], index=[symbol])
+
                 if symbol in self.market_data_df.index:
-                    # ✅ Solo actualizamos si el timestamp recibido es más reciente
                     existing_timestamp = self.market_data_df.at[symbol, "timestamp"]
                     if timestamp > existing_timestamp:
-                        for key, value in record.items():
-                            self.market_data_df.at[symbol, key] = value
+                        # Reemplazamos toda la fila
+                        self.market_data_df.loc[symbol] = new_row.loc[symbol]
                 else:
-                    # No existe -> lo agregamos
-                    new_row = pd.DataFrame([record], index=[symbol])
+                    # Lo agregamos normalmente
                     self.market_data_df = pd.concat([self.market_data_df, new_row])
 
         except Exception as e:
-            print(f"⚠️ Mensaje inválido: {md_list}")
+            print(f"⚠️ Mensaje inválido: {md}")
             print(f"Error procesando mensaje: {e}")
 
     # -------------------------------------------------
