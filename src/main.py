@@ -9,7 +9,7 @@ from .config import Database
 from .iol.routes import iol_router
 from .primary.routes import primary_router
 from .rava.routes import rava_router
-from .strategies.routes.strategies import strategies_router
+from .strategies.routes import strategies_router
 
 
 @asynccontextmanager

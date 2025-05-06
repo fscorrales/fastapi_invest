@@ -1,9 +1,9 @@
-# __all__ = ["strategies_router"]
+__all__ = ["strategies_router"]
 
-# from fastapi import APIRouter
+from fastapi import APIRouter
 
-# from .segments import segments_router
+from .time_arbitrage import time_arbitrage_router
 
-# strategies_router = APIRouter(prefix="/primary")
+strategies_router = APIRouter(prefix="/strategies")
 
-# strategies_router.include_router(segments_router)
+strategies_router.include_router(time_arbitrage_router)

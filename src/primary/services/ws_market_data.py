@@ -141,7 +141,7 @@ class WSMarketDataService:
             if data.get("type") != "Md":
                 return  # Solo procesamos Market Data
 
-            instrument = data["instrumentId"]["symbol"]
+            symbol = data["instrumentId"]["symbol"]
             timestamp = data.get("timestamp")
             md = data.get("marketData", {})
 
@@ -177,15 +177,15 @@ class WSMarketDataService:
                 record["la_date"] = la.get("date")
 
             async with self.lock:
-                if instrument in self.market_data_df.index:
+                if symbol in self.market_data_df.index:
                     # ✅ Solo actualizamos si el timestamp recibido es más reciente
-                    existing_timestamp = self.market_data_df.at[instrument, "timestamp"]
+                    existing_timestamp = self.market_data_df.at[symbol, "timestamp"]
                     if timestamp > existing_timestamp:
                         for key, value in record.items():
-                            self.market_data_df.at[instrument, key] = value
+                            self.market_data_df.at[symbol, key] = value
                 else:
                     # No existe -> lo agregamos
-                    new_row = pd.DataFrame([record], index=[instrument])
+                    new_row = pd.DataFrame([record], index=[symbol])
                     self.market_data_df = pd.concat([self.market_data_df, new_row])
 
         except Exception as e:
@@ -194,7 +194,9 @@ class WSMarketDataService:
     # -------------------------------------------------
     def get_dataframe(self) -> pd.DataFrame:
         logger.info(f"Registros actuales en DataFrame: {len(self.market_data_df)}")
-        return self.market_data_df.copy()
+        df = self.market_data_df.reset_index()  # ⬅️ Asegura que 'symbol' sea una columna
+        return df
+        # return df.to_dict(orient="records")
 
 
 # Singleton de WebSocketManager

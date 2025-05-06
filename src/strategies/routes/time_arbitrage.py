@@ -16,11 +16,11 @@ from ...primary.services import (
 )
 from ..services import TimeArbitrageStrategy, strategy_manager
 
-strategies_router = APIRouter(prefix="/strategies", tags=["Strategies"])
+time_arbitrage_router = APIRouter(prefix="/time_arbitrage", tags=["Strategies - Time Arbitrage"])
 
 
-@strategies_router.post("/time_arbitrage", response_model=dict)
-async def time_arbitrage(
+@time_arbitrage_router.post("/start", response_model=dict)
+async def start_time_arbitrage(
     auth: OptionalAuthorizationDependency,
     service: WSMarketDataServiceDependency,
     credentials: Annotated[PrimaryCredentials, Depends()],
@@ -34,14 +34,14 @@ async def time_arbitrage(
         f"Syncing {credentials.enviroment.value} instruments details from Primary API with url: {credentials.url}"
     )
 
-    strategy_name = "time_arbitrage_GGAL"
+    strategy_name = "time_arbitrage"
 
     if strategy_name in strategy_manager.list_active():
         raise HTTPException(status_code=400, detail="La estrategia ya está corriendo")
 
     strategy = TimeArbitrageStrategy(market_data_service=service)
     strategy_manager.register(strategy_name, strategy)
-    strategy_manager.start(strategy_name, credentials)  # AQUI EL ERROR
+    strategy_manager.start_strategy(strategy_name, credentials)
 
     return {"message": f"Estrategia '{strategy_name}' iniciada"}
 
@@ -71,8 +71,8 @@ async def time_arbitrage(
 #     return {"status": "started", "strategy": strategy_name}
 
 
-# @router.post("/stop")
-# async def stop_time_arbitrage():
-#     strategy_name = "time_arbitrage"
-#     strategy_manager.stop_strategy(strategy_name)
-#     return {"status": "stopped", "strategy": strategy_name}
+@time_arbitrage_router.post("/stop")
+async def stop_time_arbitrage():
+    strategy_name = "time_arbitrage"
+    strategy_manager.stop_strategy(strategy_name)
+    return {"status": "stopped", "strategy": strategy_name}
