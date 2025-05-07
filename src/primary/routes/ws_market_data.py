@@ -60,8 +60,7 @@ async def stop_primary_stream(
 async def get_stream_status(
     service: WSMarketDataServiceDependency,
 ):
-    status = "running" if service.task and not service.task.done() else "stopped"
-    return {"status": status}
+    return {"status": "running" if service.is_running else "stopped"}
 
 
 @ws_market_data_router.post("/reset", response_model=dict)
@@ -77,4 +76,6 @@ async def get_market_data(
     service: WSMarketDataServiceDependency,
 ):
     df = service.get_dataframe()
+    if df.empty:
+        raise HTTPException(status_code=404, detail="No hay datos disponibles")
     return [WSMarketDataDF(**row.to_dict()) for _, row in df.iterrows()]

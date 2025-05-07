@@ -74,6 +74,8 @@ class WSFullMessage(BaseModel):
 class WSMarketDataDF(BaseModel):
     instrument: str
     timestamp: Optional[int]
+    symbol: Optional[str]
+    settlement: Optional[str]
     last_price: Optional[float]
     last_size: Optional[float]
     bid_price: Optional[float]

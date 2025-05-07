@@ -53,6 +53,7 @@ class WSMarketDataService:
     queue = asyncio.Queue()
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     task: Optional[asyncio.Task] = None
+    is_running: bool = False
     """
     WebSocket Market Data Service
     """
@@ -82,16 +83,22 @@ class WSMarketDataService:
                 msg_dict = format_params(params)
                 headers = {"X-Auth-Token": connect_primary.x_auth_token}
 
-                async with websockets.connect(
+                self.ws = await websockets.connect(
                     connect_primary.websocket_url, extra_headers=headers
-                ) as ws:
-                    await ws.send(orjson.dumps(msg_dict).decode())
-                    print("📡 Suscripción enviada correctamente")
+                )
+                await self.ws.send(orjson.dumps(msg_dict).decode())
+                print("📡 Suscripción enviada correctamente")
 
-                    consumer = asyncio.create_task(self._process_messages())
-                    producer = asyncio.create_task(self._receive_messages(ws))
+                # Guardamos las tareas para posible cancelación luego
+                self.is_running = True
+                self.consumer_task = asyncio.create_task(self._process_messages())
+                self.producer_task = asyncio.create_task(
+                    self._receive_messages(self.ws)
+                )
 
-                    await asyncio.gather(producer, consumer)
+                logger.info(
+                    "[WSMarketDataService] WebSocket conectado y tareas lanzadas"
+                )
 
             except ValidationError as e:
                 logger.error(f"Validation Error: {e}")
@@ -111,60 +118,43 @@ class WSMarketDataService:
     async def _receive_messages(self, ws):
         self._message_counter = 0  # Inicializamos el contador
 
-        while True:
-            try:
-                raw = await asyncio.wait_for(ws.recv(), timeout=10)
-                self._message_counter += 1
+        try:
+            while True:
+                try:
+                    raw = await asyncio.wait_for(ws.recv(), timeout=10)
+                    self._message_counter += 1
 
-                # Mostrar el mensaje completo solo cada 50 veces
-                if self._message_counter % 50 == 0:
-                    logger.debug(
-                        f"📥 Recibido mensaje #{self._message_counter}: {raw[:300]}..."
-                    )
-                # else:
-                #     # Mostrar resumen si es mensaje de tipo 'Md'
-                #     try:
-                #         msg = orjson.loads(raw)
-                #         if msg.get("type") == "Md":
-                #             symbol = msg["instrumentId"]["symbol"]
-                #             op = msg.get("marketData", {}).get("OP")
-                #             logger.debug(f"📥 {symbol}: OP={op}")
-                #     except Exception:
-                #         pass  # Ignorar si no se puede parsear
+                    # Mostrar el mensaje completo solo cada 50 veces
+                    if self._message_counter % 50 == 0:
+                        logger.debug(
+                            f"📥 Recibido mensaje #{self._message_counter}: {raw[:300]}..."
+                        )
 
-                await self.queue.put(raw)
+                    await self.queue.put(raw)
+                except asyncio.TimeoutError:
+                    logger.warning("⏳ Timeout esperando mensajes. Reintentando...")
+                    continue  # ⬅️ importante para seguir escuchando
 
-            except asyncio.TimeoutError:
-                logger.warning("⏳ Timeout esperando mensajes")
-            except websockets.exceptions.ConnectionClosed:
-                logger.warning("❌ Conexión cerrada")
-                break
-            except asyncio.CancelledError:
-                logger.info("🛑 Recepción cancelada")
-                break
+        except asyncio.CancelledError:
+            logger.info("🛑 _receive_messages fue cancelado")
+            raise
+        except websockets.exceptions.ConnectionClosed:
+            logger.warning("❌ Conexión cerrada")
 
     # -------------------------------------------------
     async def _process_messages(self):
-        while True:
-            raw = await self.queue.get()
-            try:
-                await self._handle_message(raw)
-            except Exception as e:
-                print(f"⚠️ Error procesando mensaje: {e}")
-            finally:
-                self.queue.task_done()
-
-    # # -------------------------------------------------
-    # def _parse_message(self, message: dict) -> Optional[dict]:
-    #     """Parsea un mensaje 'Md' y lo convierte en dict"""
-    #     try:
-    #         instrument = message["instrumentId"]["symbol"]
-    #         price = message["marketData"].get("OP")
-    #         timestamp = message.get("timestamp")
-    #         return {"symbol": instrument, "price": price, "timestamp": timestamp}
-    #     except Exception as e:
-    #         print(f"⚠️ Error parseando mensaje: {e}")
-    #         return None
+        try:
+            while True:
+                raw = await self.queue.get()
+                try:
+                    await self._handle_message(raw)
+                except Exception as e:
+                    print(f"⚠️ Error procesando mensaje: {e}")
+                finally:
+                    self.queue.task_done()
+        except asyncio.CancelledError:
+            logger.info("🛑 _process_messages fue cancelado")
+            raise
 
     # -------------------------------------------------
     async def _handle_message(self, message: str):
@@ -218,20 +208,46 @@ class WSMarketDataService:
 
     # -------------------------------------------------
     async def disconnect(self):
-        if self.task and not self.task.done():
-            self.task.cancel()
+        # self.task = None
+        logger.info("🔌 Cerrando conexión WebSocket y tareas asociadas...")
+
+        # Cancelamos las tareas si existen
+        for task_name in ["producer_task", "consumer_task"]:
+            task = getattr(self, task_name, None)
+            if task and not task.done():
+                task.cancel()
+                try:
+                    await task
+                    logger.info(f"🛑 {task_name} cancelada correctamente.")
+                except asyncio.CancelledError:
+                    logger.info(f"🛑 {task_name} fue forzada a cancelarse.")
+                finally:
+                    setattr(self, task_name, None)
+
+        # Cerramos el WebSocket si está abierto
+        if hasattr(self, "ws") and self.ws:
             try:
-                await self.task
-            except asyncio.CancelledError:
-                print("🛑 Tarea de WebSocket cancelada correctamente.")
-        self.task = None
+                await self.ws.close()
+                logger.info("🔒 WebSocket cerrado correctamente.")
+            except Exception as e:
+                logger.warning(f"⚠️ Error cerrando WebSocket: {e}")
+            finally:
+                self.ws = None
+
+        self.is_running = False
 
     # -------------------------------------------------
     def get_dataframe(self) -> pd.DataFrame:
         """Devuelve los datos como un DataFrame"""
+        if self.market_data_df.empty:
+            # raise ValueError("El DataFrame está vacío")
+            return None
+
         df = self.market_data_df.copy()
         df = df.reset_index()  # ⬅️ Asegura que 'instrument' sea una columna
         df = df.rename(columns={"index": "instrument"})  # 👈 renombrar
+        df["symbol"] = df["instrument"].str.split(" - ").str[-2]
+        df["settlement"] = df["instrument"].str.split(" - ").str[-1]
         return df
 
     # -------------------------------------------------
