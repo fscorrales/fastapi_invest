@@ -2,7 +2,7 @@ __all__ = ["WSMarketDataService", "WSMarketDataServiceDependency"]
 
 import asyncio
 from dataclasses import dataclass, field
-from typing import Annotated, List, Optional
+from typing import Annotated, Optional
 
 import orjson
 import pandas as pd
