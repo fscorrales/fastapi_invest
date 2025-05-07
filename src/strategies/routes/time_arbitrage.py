@@ -16,7 +16,9 @@ from ...primary.services import (
 )
 from ..services import TimeArbitrageStrategy, strategy_manager
 
-time_arbitrage_router = APIRouter(prefix="/time_arbitrage", tags=["Strategies - Time Arbitrage"])
+time_arbitrage_router = APIRouter(
+    prefix="/time_arbitrage", tags=["Strategies - Time Arbitrage"]
+)
 
 
 @time_arbitrage_router.post("/start", response_model=dict)
@@ -41,7 +43,7 @@ async def start_time_arbitrage(
 
     strategy = TimeArbitrageStrategy(market_data_service=service)
     strategy_manager.register(strategy_name, strategy)
-    strategy_manager.start_strategy(strategy_name, credentials)
+    await strategy_manager.start_strategy(strategy_name, credentials)
 
     return {"message": f"Estrategia '{strategy_name}' iniciada"}
 
