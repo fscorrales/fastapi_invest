@@ -72,7 +72,7 @@ class WSFullMessage(BaseModel):
 
 # --------------------------------------------------
 class WSMarketDataDF(BaseModel):
-    symbol: str
+    instrument: str
     timestamp: Optional[int]
     last_price: Optional[float]
     last_size: Optional[float]

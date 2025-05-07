@@ -42,7 +42,7 @@ def _init_market_data_df():
             "acp",
         ]
     )
-    df.index.name = "symbol"
+    df.index.name = "instrument"
     return df
 
 
@@ -174,7 +174,7 @@ class WSMarketDataService:
             if data.get("type") != "Md":
                 return  # Solo procesamos Market Data
 
-            symbol = data["instrumentId"]["symbol"]
+            instrument = data["instrumentId"]["symbol"]
             timestamp = data.get("timestamp")
             md = data.get("marketData", {})
 
@@ -201,13 +201,13 @@ class WSMarketDataService:
             }
 
             async with self.lock:
-                new_row = pd.DataFrame([record], index=[symbol])
+                new_row = pd.DataFrame([record], index=[instrument])
 
-                if symbol in self.market_data_df.index:
-                    existing_timestamp = self.market_data_df.at[symbol, "timestamp"]
+                if instrument in self.market_data_df.index:
+                    existing_timestamp = self.market_data_df.at[instrument, "timestamp"]
                     if timestamp > existing_timestamp:
                         # Reemplazamos toda la fila
-                        self.market_data_df.loc[symbol] = new_row.loc[symbol]
+                        self.market_data_df.loc[instrument] = new_row.loc[instrument]
                 else:
                     # Lo agregamos normalmente
                     self.market_data_df = pd.concat([self.market_data_df, new_row])
@@ -230,8 +230,8 @@ class WSMarketDataService:
     def get_dataframe(self) -> pd.DataFrame:
         """Devuelve los datos como un DataFrame"""
         df = self.market_data_df.copy()
-        df = df.reset_index()  # ⬅️ Asegura que 'symbol' sea una columna
-        df = df.rename(columns={"index": "symbol"})  # 👈 renombrar
+        df = df.reset_index()  # ⬅️ Asegura que 'instrument' sea una columna
+        df = df.rename(columns={"index": "instrument"})  # 👈 renombrar
         return df
 
     # -------------------------------------------------
