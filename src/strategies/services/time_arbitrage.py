@@ -1,10 +1,13 @@
 # src/strategies/services/time_arbitrage.py
 
+__all__ = ["TimeArbitrageStrategyService", "TimeArbitrageStrategyDependency"]
+
 import asyncio
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Annotated, Optional
 
 import pandas as pd
+from fastapi import Depends
 
 from ...config import logger
 from ...primary.schemas import PrimaryCredentials, WSMarketDataParams
@@ -36,7 +39,7 @@ def _init_summary_strategy_df():
 
 # -------------------------------------------------
 @dataclass
-class TimeArbitrageStrategy:
+class TimeArbitrageStrategyService:
     market_data_service: WSMarketDataService
     _task: Optional[asyncio.Task] = None
     _running: bool = False
@@ -215,3 +218,6 @@ class TimeArbitrageStrategy:
     def reset_dataframe(self):
         """Limpia el DataFrame y la lista de datos acumulados"""
         self.market_data_df = _init_summary_strategy_df()
+
+
+TimeArbitrageStrategyDependency = Annotated[TimeArbitrageStrategyService, Depends()]
