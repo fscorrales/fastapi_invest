@@ -57,23 +57,72 @@ class TimeArbitrageStrategy:
 
     # -------------------------------------------------
     def evaluate(self, df: pd.DataFrame):
+        cols = [
+            "buy_sell",
+            "symbol_buy",
+            "symbol_sell",
+            "cficode",
+            "currency",
+            "compra",
+            "venta",
+            "q_max",
+            "P&L",
+            "tna",
+            "tna_operacion",
+            "tna_caucion",
+            "days",
+            "var_pe",
+            "min_invest",
+        ]
         try:
             # Filtramos los instrumentos que terminan en "CI" y "24hs"
             df_ci = df.loc[df["settlement"] == "CI"]
             df_24 = df.loc[df["settlement"] == "24hs"]
 
-            for symbol in df_ci["symbol"].unique():
-                ci_row = df_ci.loc[df_ci["symbol"] == symbol]
-                hs24_row = df_24.loc[df_24["symbol"] == symbol]
+            # Buy CI and Sell 24hs
+            ## Buy CI
+            df_buy = df_ci.loc[:, ["symbol", "settlement", "offer_size", "offer_price"]]
+            df_buy["symbol_buy"] = df_buy["symbol"] + " - " + df_buy["settlement"]
+            ## Sell 24hs
+            df_sell = df_24.loc[:, ["symbol", "settlement", "bid_size", "bid_price"]]
+            df_sell["symbol_sell"] = df_sell["symbol"] + " - " + df_sell["settlement"]
+            df_from_to = pd.merge(
+                left=df_buy.loc[:, ~df_sell.columns.isin(["settlement"])],
+                right=df_sell.loc[:, ~df_sell.columns.isin(["settlement"])],
+                how="outer",
+                on=["symbol"],
+                copy=False,
+            )
+            df_from_to["buy_sell"] = "CI / 24hs"
 
-                if not ci_row.empty and not hs24_row.empty:
-                    ci_price = ci_row.iloc[0].get("last_price")
-                    hs24_price = hs24_row.iloc[0].get("last_price")
+            # Buy 24hs and Sell CI
+            ## Buy 24hs
+            df_buy = df_24.loc[:, ["symbol", "settlement", "offer_size", "offer_price"]]
+            df_buy["symbol_buy"] = df_buy["symbol"] + " - " + df_buy["settlement"]
+            ## Sell CI
+            df_sell = df_ci.loc[:, ["symbol", "settlement", "bid_size", "bid_price"]]
+            df_sell["symbol_sell"] = df_sell["symbol"] + " - " + df_sell["settlement"]
+            df_to_from = pd.merge(
+                left=df_buy.loc[:, ~df_sell.columns.isin(["settlement"])],
+                right=df_sell.loc[:, ~df_sell.columns.isin(["settlement"])],
+                how="outer",
+                on=["symbol"],
+                copy=False,
+            )
+            df_to_from["buy_sell"] = "24hs / CI"
 
-                    if ci_price and hs24_price:
-                        spread = hs24_price - ci_price
-                        logger.info(
-                            f"[Time Arbitrage] {symbol}: 24hs={hs24_price}, CI={ci_price}, Spread={spread:.2f}"
-                        )
+            # for symbol in df_ci["symbol"].unique():
+            #     ci_row = df_ci.loc[df_ci["symbol"] == symbol]
+            #     hs24_row = df_24.loc[df_24["symbol"] == symbol]
+
+            #     if not ci_row.empty and not hs24_row.empty:
+            #         ci_price = ci_row.iloc[0].get("last_price")
+            #         hs24_price = hs24_row.iloc[0].get("last_price")
+
+            #         if ci_price and hs24_price:
+            #             spread = hs24_price - ci_price
+            #             logger.info(
+            #                 f"[Time Arbitrage] {symbol}: 24hs={hs24_price}, CI={ci_price}, Spread={spread:.2f}"
+            #             )
         except Exception as e:
             logger.error(f"[TimeArbitrageStrategy] Error en evaluación: {e}")
