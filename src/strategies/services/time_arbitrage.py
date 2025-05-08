@@ -62,7 +62,15 @@ class TimeArbitrageStrategy:
         days: int = 1,
         from_settlement: str = "CI",
         to_settlement: str = "24hs",
-    ):
+    ) -> pd.DataFrame:
+        """ ""
+        Evaluates the time arbitrage strategy between two settlements.
+        It filters the DataFrame for the specified settlements and calculates the rate, TNA, and maximum quantity.
+        """
+        if df.empty:
+            logger.warning("[TimeArbitrageStrategy] DataFrame is empty")
+            return pd.DataFrame()
+
         try:
             # Filtramos los instrumentos que terminan en "CI" y "24hs"
             df_from = df.loc[df["settlement"] == from_settlement]
