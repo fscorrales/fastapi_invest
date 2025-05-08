@@ -56,7 +56,13 @@ class TimeArbitrageStrategy:
                 logger.error(f"[TimeArbitrageStrategy] Error: {e}")
 
     # -------------------------------------------------
-    def evaluate(self, df: pd.DataFrame):
+    def evaluate(
+        self,
+        df: pd.DataFrame,
+        days: int = 1,
+        from_settlement: str = "CI",
+        to_settlement: str = "24hs",
+    ):
         cols = [
             "buy_sell",
             "symbol_buy",
@@ -76,40 +82,69 @@ class TimeArbitrageStrategy:
         ]
         try:
             # Filtramos los instrumentos que terminan en "CI" y "24hs"
-            df_ci = df.loc[df["settlement"] == "CI"]
-            df_24 = df.loc[df["settlement"] == "24hs"]
+            df_from = df.loc[df["settlement"] == from_settlement]
+            df_to = df.loc[df["settlement"] == to_settlement]
 
             # Buy CI and Sell 24hs
             ## Buy CI
-            df_buy = df_ci.loc[:, ["symbol", "settlement", "offer_size", "offer_price"]]
-            df_buy["symbol_buy"] = df_buy["symbol"] + " - " + df_buy["settlement"]
+            df_buy = df_from.loc[:, ["symbol", "offer_size", "offer_price"]]
+            df_buy["symbol_buy"] = df_buy["symbol"] + " - " + from_settlement
             ## Sell 24hs
-            df_sell = df_24.loc[:, ["symbol", "settlement", "bid_size", "bid_price"]]
-            df_sell["symbol_sell"] = df_sell["symbol"] + " - " + df_sell["settlement"]
+            df_sell = df_to.loc[:, ["symbol", "bid_size", "bid_price"]]
+            df_sell["symbol_sell"] = df_sell["symbol"] + " - " + to_settlement
             df_from_to = pd.merge(
-                left=df_buy.loc[:, ~df_sell.columns.isin(["settlement"])],
-                right=df_sell.loc[:, ~df_sell.columns.isin(["settlement"])],
+                left=df_buy,
+                right=df_sell,
                 how="outer",
                 on=["symbol"],
                 copy=False,
             )
-            df_from_to["buy_sell"] = "CI / 24hs"
+            df_from_to["buy_sell"] = from_settlement + " / " + to_settlement
 
             # Buy 24hs and Sell CI
             ## Buy 24hs
-            df_buy = df_24.loc[:, ["symbol", "settlement", "offer_size", "offer_price"]]
-            df_buy["symbol_buy"] = df_buy["symbol"] + " - " + df_buy["settlement"]
+            df_buy = df_to.loc[:, ["symbol", "offer_size", "offer_price"]]
+            df_buy["symbol_buy"] = df_buy["symbol"] + " - " + to_settlement
             ## Sell CI
-            df_sell = df_ci.loc[:, ["symbol", "settlement", "bid_size", "bid_price"]]
-            df_sell["symbol_sell"] = df_sell["symbol"] + " - " + df_sell["settlement"]
+            df_sell = df_from.loc[:, ["symbol", "bid_size", "bid_price"]]
+            df_sell["symbol_sell"] = df_sell["symbol"] + " - " + from_settlement
             df_to_from = pd.merge(
-                left=df_buy.loc[:, ~df_sell.columns.isin(["settlement"])],
-                right=df_sell.loc[:, ~df_sell.columns.isin(["settlement"])],
+                left=df_buy,
+                right=df_sell,
                 how="outer",
                 on=["symbol"],
                 copy=False,
             )
-            df_to_from["buy_sell"] = "24hs / CI"
+            df_to_from["buy_sell"] = to_settlement + " / " + from_settlement
+
+            # Concat both DataFrames
+            df = pd.concat([df_from_to.reset_index(), df_to_from.reset_index()], axis=0)
+            df = df.loc[df["offer_size"] > 0]
+            df = df.loc[df["bid_size"] > 0]
+
+            # Rate
+            # df["rate"] = df["adj_sell"] / df["adj_buy"] - 1
+            df["rate"] = df["bid_price"] / df["offer_price"] - 1
+            df["tnan"] = df["rate"] / days * 365
+
+            # Max Quantity
+            df["q_max"] = df.apply(
+                lambda row: min(row["offer_size"], row["bid_size"]), axis=1
+            )
+
+            # P&L
+            # df["P&L"] = np.where(
+            #     df["compra_venta"] == from_plazo + " / " + to_plazo,
+            #     (df["adj_sell"] - df["adj_buy"])
+            #     - (df["compra"] * df["tna_caucion"] / 365 * days),
+            #     (df["adj_sell"] - df["adj_buy"])
+            #     + (df["adj_sell"] * df["tna_caucion"] / 365 * days),
+            # )
+            # df["P&L"] = np.where(df["cficode"] != "ESXXXX", df["P&L"] / 100, df["P&L"])
+            # df["P&L"] = df["P&L"] * df["q_max"]
+
+            df = df.sort_values(by="tna", ascending=False)
+            return df
 
             # for symbol in df_ci["symbol"].unique():
             #     ci_row = df_ci.loc[df_ci["symbol"] == symbol]
