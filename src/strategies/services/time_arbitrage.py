@@ -1,7 +1,7 @@
 # src/strategies/services/time_arbitrage.py
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import pandas as pd
@@ -11,12 +11,39 @@ from ...primary.schemas import PrimaryCredentials, WSMarketDataParams
 from ...primary.services import WSMarketDataService
 
 
+def _init_summary_strategy_df():
+    df = pd.DataFrame(
+        columns=[
+            "buy_sell",
+            "symbol_buy",
+            "symbol_sell",
+            # "cficode",
+            # "currency",
+            # "compra",
+            # "venta",
+            "q_max",
+            # "P&L",
+            "tna",
+            # "tna_operacion",
+            # "tna_caucion",
+            "days",
+            # "var_pe",
+            # "min_invest",
+        ]
+    )
+    return df
+
+
 # -------------------------------------------------
 @dataclass
 class TimeArbitrageStrategy:
     market_data_service: WSMarketDataService
     _task: Optional[asyncio.Task] = None
     _running: bool = False
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    summary_stratetgy_df: pd.DataFrame = field(
+        default_factory=_init_summary_strategy_df
+    )
 
     # -------------------------------------------------
     async def start(self, credentials: PrimaryCredentials):
@@ -48,7 +75,7 @@ class TimeArbitrageStrategy:
                 async with self.market_data_service.lock:
                     df = self.market_data_service.get_dataframe()
                     if not df.empty:
-                        self.evaluate(df)
+                        await self.evaluate(df)
                 await asyncio.sleep(1)
             except asyncio.CancelledError:
                 break
@@ -56,7 +83,7 @@ class TimeArbitrageStrategy:
                 logger.error(f"[TimeArbitrageStrategy] Error: {e}")
 
     # -------------------------------------------------
-    def evaluate(
+    async def evaluate(
         self,
         df: pd.DataFrame,
         days: int = 1,
@@ -155,7 +182,8 @@ class TimeArbitrageStrategy:
             df = df[cols]
             df = df.sort_values(by="tna", ascending=False)
 
-            return df
+            async with self.lock:
+                self.summary_stratetgy_df = df.copy()
 
             # for symbol in df_ci["symbol"].unique():
             #     ci_row = df_ci.loc[df_ci["symbol"] == symbol]
@@ -172,3 +200,18 @@ class TimeArbitrageStrategy:
             #             )
         except Exception as e:
             logger.error(f"[TimeArbitrageStrategy] Error en evaluación: {e}")
+
+    # -------------------------------------------------
+    def get_dataframe(self) -> pd.DataFrame:
+        """Devuelve los datos como un DataFrame"""
+        if self.summary_stratetgy_df.empty:
+            # raise ValueError("El DataFrame está vacío")
+            return None
+
+        df = self.summary_stratetgy_df.copy()
+        return df
+
+    # -------------------------------------------------
+    def reset_dataframe(self):
+        """Limpia el DataFrame y la lista de datos acumulados"""
+        self.market_data_df = _init_summary_strategy_df()
