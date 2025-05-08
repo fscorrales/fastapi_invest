@@ -63,23 +63,6 @@ class TimeArbitrageStrategy:
         from_settlement: str = "CI",
         to_settlement: str = "24hs",
     ):
-        cols = [
-            "buy_sell",
-            "symbol_buy",
-            "symbol_sell",
-            "cficode",
-            "currency",
-            "compra",
-            "venta",
-            "q_max",
-            "P&L",
-            "tna",
-            "tna_operacion",
-            "tna_caucion",
-            "days",
-            "var_pe",
-            "min_invest",
-        ]
         try:
             # Filtramos los instrumentos que terminan en "CI" y "24hs"
             df_from = df.loc[df["settlement"] == from_settlement]
@@ -125,7 +108,7 @@ class TimeArbitrageStrategy:
             # Rate
             # df["rate"] = df["adj_sell"] / df["adj_buy"] - 1
             df["rate"] = df["bid_price"] / df["offer_price"] - 1
-            df["tnan"] = df["rate"] / days * 365
+            df["tna"] = df["rate"] / days * 365
 
             # Max Quantity
             df["q_max"] = df.apply(
@@ -143,7 +126,27 @@ class TimeArbitrageStrategy:
             # df["P&L"] = np.where(df["cficode"] != "ESXXXX", df["P&L"] / 100, df["P&L"])
             # df["P&L"] = df["P&L"] * df["q_max"]
 
+            df["days"] = days
+            cols = [
+                "buy_sell",
+                "symbol_buy",
+                "symbol_sell",
+                # "cficode",
+                # "currency",
+                # "compra",
+                # "venta",
+                "q_max",
+                # "P&L",
+                "tna",
+                # "tna_operacion",
+                # "tna_caucion",
+                "days",
+                # "var_pe",
+                # "min_invest",
+            ]
+            df = df[cols]
             df = df.sort_values(by="tna", ascending=False)
+
             return df
 
             # for symbol in df_ci["symbol"].unique():
