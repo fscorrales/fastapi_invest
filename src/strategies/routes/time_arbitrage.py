@@ -8,13 +8,17 @@ from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
 from ...primary.schemas import (
     PrimaryCredentials,
-    WSMarketDataParams,
 )
 from ...primary.services import (
     WSMarketDataServiceDependency,
     prepare_primary_credentials,
 )
-from ..services import TimeArbitrageStrategy, strategy_manager
+from ..schemas import TimeArbitrageSummary
+from ..services import (
+    TimeArbitrageStrategyDependency,
+    TimeArbitrageStrategyService,
+    strategy_manager,
+)
 
 time_arbitrage_router = APIRouter(
     prefix="/time_arbitrage", tags=["Strategies - Time Arbitrage"]
@@ -41,7 +45,7 @@ async def start_time_arbitrage(
     if strategy_name in strategy_manager.list_active():
         raise HTTPException(status_code=400, detail="La estrategia ya está corriendo")
 
-    strategy = TimeArbitrageStrategy(market_data_service=service)
+    strategy = TimeArbitrageStrategyService(market_data_service=service)
     strategy_manager.register(strategy_name, strategy)
     await strategy_manager.start_strategy(strategy_name, credentials)
 
@@ -78,3 +82,21 @@ async def stop_time_arbitrage():
     strategy_name = "time_arbitrage"
     strategy_manager.stop_strategy(strategy_name)
     return {"status": "stopped", "strategy": strategy_name}
+
+
+@time_arbitrage_router.post("/reset", response_model=dict)
+async def reset_strategy_data(
+    service: TimeArbitrageStrategyDependency,
+):
+    service.reset_dataframe()
+    return {"message": "DataFrame reseteado correctamente."}
+
+
+@time_arbitrage_router.get("/dataframe", response_model=list[TimeArbitrageSummary])
+async def get_strategy_data(
+    service: TimeArbitrageStrategyDependency,
+):
+    df = service.get_dataframe()
+    if df.empty:
+        raise HTTPException(status_code=404, detail="No hay datos disponibles")
+    return [TimeArbitrageSummary(**row.to_dict()) for _, row in df.iterrows()]
