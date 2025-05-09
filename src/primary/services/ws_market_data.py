@@ -239,10 +239,6 @@ class WSMarketDataService:
     # -------------------------------------------------
     def get_dataframe(self) -> pd.DataFrame:
         """Devuelve los datos como un DataFrame"""
-        if self.market_data_df.empty:
-            # raise ValueError("El DataFrame está vacío")
-            return None
-
         df = self.market_data_df.copy()
         df = df.reset_index()  # ⬅️ Asegura que 'instrument' sea una columna
         df = df.rename(columns={"index": "instrument"})  # 👈 renombrar
