@@ -42,7 +42,7 @@ def _init_summary_strategy_df():
 class TimeArbitrageStrategyService:
     market_data_service: WSMarketDataService
     _task: Optional[asyncio.Task] = None
-    _running: bool = False
+    is_running: bool = False
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     summary_stratetgy_df: pd.DataFrame = field(
         default_factory=_init_summary_strategy_df
@@ -51,13 +51,13 @@ class TimeArbitrageStrategyService:
     # -------------------------------------------------
     async def start(self, credentials: PrimaryCredentials):
         if self._task is None or self._task.done():
-            self._running = True
+            self.is_running = True
 
             self._task = asyncio.create_task(self._run(credentials=credentials))
 
     # -------------------------------------------------
     def stop(self):
-        self._running = False
+        self.is_running = False
         if self._task:
             self._task.cancel()
 
@@ -73,7 +73,7 @@ class TimeArbitrageStrategyService:
         await self.market_data_service.connect(credentials, params=params)
         logger.info("[TimeArbitrageStrategy] Conexión al WebSocket iniciada")
 
-        while self._running:
+        while self.is_running:
             try:
                 async with self.market_data_service.lock:
                     df = self.market_data_service.get_dataframe()
