@@ -15,7 +15,6 @@ from ...primary.services import (
 )
 from ..schemas import TimeArbitrageSummary
 from ..services import (
-    TimeArbitrageStrategyDependency,
     TimeArbitrageStrategyService,
     strategy_manager,
 )
@@ -51,10 +50,14 @@ async def start_time_arbitrage(
 
     return {"message": f"Estrategia '{strategy_name}' iniciada"}
 
+
 @time_arbitrage_router.get("/status", response_model=dict)
 async def get_strategy_status():
     is_running = "time_arbitrage" in strategy_manager.list_active()
-    return {"strategy": "time_arbitrage", "status": "running" if is_running else "stopped"}
+    return {
+        "strategy": "time_arbitrage",
+        "status": "running" if is_running else "stopped",
+    }
 
 
 @time_arbitrage_router.post("/stop")
@@ -69,7 +72,7 @@ async def reset_strategy_data():
     strategy = strategy_manager.get("time_arbitrage")
     if not strategy:
         raise HTTPException(status_code=404, detail="La estrategia no está activa")
-    
+
     strategy.reset_dataframe()
     return {"message": "DataFrame reseteado correctamente."}
 
@@ -85,4 +88,3 @@ async def get_strategy_data():
         raise HTTPException(status_code=404, detail="No hay datos disponibles")
 
     return [TimeArbitrageSummary(**row.to_dict()) for _, row in df.iterrows()]
-
