@@ -199,8 +199,10 @@ class WSMarketDataService:
                         # Reemplazamos toda la fila
                         self.market_data_df.loc[instrument] = new_row.loc[instrument]
                 else:
-                    # Lo agregamos normalmente
-                    self.market_data_df = pd.concat([self.market_data_df, new_row])
+                    self.market_data_df = pd.concat(
+                        [df for df in [self.market_data_df, new_row] if not df.empty]
+                    )
+                    # self.market_data_df = pd.concat([self.market_data_df, new_row])
 
         except Exception as e:
             print(f"⚠️ Mensaje inválido: {md}")
