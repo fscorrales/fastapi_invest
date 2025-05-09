@@ -242,8 +242,9 @@ class WSMarketDataService:
         df = self.market_data_df.copy()
         df = df.reset_index()  # ⬅️ Asegura que 'instrument' sea una columna
         df = df.rename(columns={"index": "instrument"})  # 👈 renombrar
-        df["symbol"] = df["instrument"].str.split(" - ").str[-2]
-        df["settlement"] = df["instrument"].str.split(" - ").str[-1]
+        if not df.empty:
+            df["symbol"] = df["instrument"].str.split(" - ").str[-2]
+            df["settlement"] = df["instrument"].str.split(" - ").str[-1]
         return df
 
     # -------------------------------------------------

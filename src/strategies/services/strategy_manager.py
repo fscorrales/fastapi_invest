@@ -24,7 +24,7 @@ class StrategyManager:
         return name in self.strategies
 
     def list_active(self):
-        return [name for name, strat in self.strategies.items() if strat.is_running()]
+        return [name for name, strat in self.strategies.items() if strat.is_running]
 
 
 strategy_manager = StrategyManager()
