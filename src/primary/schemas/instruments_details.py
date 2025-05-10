@@ -3,8 +3,10 @@ __all__ = [
     "InstrumentDetailsParams",
     "InstrumentDetailsDocument",
     "InstrumentsDetailsFilter",
+    "CurrencySettlement",
 ]
 
+from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, RootModel
@@ -18,6 +20,7 @@ from .common import (
     MarketSegmentID,
     OrderTimeInForce,
     OrderType,
+    SettlementTerm,
 )
 
 
@@ -39,9 +42,27 @@ class TickPriceRanges(RootModel[dict[str, TickPriceRange]]):
     pass
 
 
+# -------------------------------------------------
+class CurrencySettlement(str, Enum):
+    ars_ci = "ars_ci"
+    ars_24hs = "ars_24hs"
+    ars_48hs = "ars_48hs"
+    ars_72hs = "ars_72hs"
+    mep_ci = "mep_ci"
+    mep_24hs = "mep_24hs"
+    mep_48hs = "mep_48hs"
+    mep_72hs = "mep_72hs"
+    ccl_ci = "ccl_ci"
+    ccl_24hs = "ccl_24hs"
+    ccl_48hs = "ccl_48hs"
+    ccl_72hs = "ccl_72hs"
+
+
 # --------------------------------------------------
 class InstrumentDetails(BaseModel):
     symbol: str
+    ticker: Optional[str]
+    settlement: Optional[SettlementTerm]
     marketId: MarketID
     marketSegmentId: MarketSegmentID
     lowLimitPrice: float | None
@@ -55,6 +76,7 @@ class InstrumentDetails(BaseModel):
     priceConvertionFactor: float
     maturityDate: int | None
     currency: str
+    currency_settlement: Optional[CurrencySettlement]
     orderTypes: List[OrderType]
     timesInForce: List[OrderTimeInForce]
     securityType: str | None
@@ -66,7 +88,7 @@ class InstrumentDetails(BaseModel):
     securityDescription: str
     tickPriceRanges: TickPriceRanges
     strike: float | None
-    underlying: str
+    underlying: Optional[str]
     cficode: CFICode
     enviroment: Enviroment
 
