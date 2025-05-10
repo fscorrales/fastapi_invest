@@ -53,13 +53,13 @@ class CFICode(str, Enum):
     call_futuro = "OCAFXS"
     cedear = "EMXXXX"
     on = "DBXXFR"
-    mrixxx = "MRIXXX"
-    lrstxh = "LRSTXH"
-    fxxxxx = "FXXXXX"
-    dyxtxr = "DYXTXR"
-    ocefxs = "OCEFXS"
-    rpxxxx = "RPXXXX"
-    mxxxxx = "MXXXXX"
+    indice = "MRIXXX"
+    futuro_otro = "FXXXXX"
+    letra = "DYXTXR"
+    caucion = "RPXXXX"
+    test_1 = "LRSTXH"
+    test_2 = "OCEFXS"
+    test_3 = "MXXXXX"
 
 
 # -------------------------------------------------
@@ -136,6 +136,7 @@ class Depth(int, Enum):
 class SettlementTerm(str, Enum):
     t24 = "24hs"
     t48 = "48hs"
+    t72 = "72hs"
     ci = "CI"
 
 
