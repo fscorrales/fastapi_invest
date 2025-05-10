@@ -14,15 +14,17 @@ __all__ = ["get_instruments_details"]
 
 import argparse
 import asyncio
-from typing import List
+from typing import List, Literal, Optional
 
 from httpx import AsyncClient
 
 from ..schemas import (
     ConnectPrimary,
+    CurrencySettlement,
     InstrumentDetails,
     InstrumentDetailsParams,
     MarketID,
+    SettlementTerm,
 )
 from .connect_primary import get_token
 
@@ -125,6 +127,38 @@ def get_args():
 
 
 # --------------------------------------------------
+def get_currency_settlement(settlement: str, ticker: str) -> CurrencySettlement:
+    if settlement is None or ticker is None:
+        return None
+
+    settlement_lower = settlement.lower()
+    if ticker.endswith("D"):
+        return CurrencySettlement[f"mep_{settlement_lower}"]
+    elif ticker.endswith("C"):
+        return CurrencySettlement[f"ccl_{settlement_lower}"]
+    else:
+        return CurrencySettlement[f"ars_{settlement_lower}"]
+
+
+# --------------------------------------------------
+def get_symbol_parts(
+    symbol: str, get: Literal["ticker", "settlement"]
+) -> Optional[str]:
+    symbol_parts = symbol.split(" - ")
+    if len(symbol_parts) >= 2:
+        if get == "ticker":
+            return symbol_parts[-2]
+        elif get == "settlement":
+            settlement = symbol_parts[-1]
+            # Verifica si settlement es un valor válido de SettlementTerm
+            if settlement in SettlementTerm._value2member_map_:
+                return settlement
+            else:
+                return None
+    return None
+
+
+# --------------------------------------------------
 async def get_instruments_details(
     primary: ConnectPrimary,
     url: str = None,
@@ -167,6 +201,12 @@ async def get_instruments_details(
             instrumentos = [
                 InstrumentDetails(
                     symbol=instrumento["instrumentId"]["symbol"],
+                    ticker=get_symbol_parts(
+                        instrumento["instrumentId"]["symbol"], get="ticker"
+                    ),
+                    settlement=get_symbol_parts(
+                        instrumento["instrumentId"]["symbol"], get="settlement"
+                    ),
                     marketId=instrumento["instrumentId"]["marketId"],
                     marketSegmentId=instrumento["segment"]["marketSegmentId"],
                     lowLimitPrice=instrumento["lowLimitPrice"],
@@ -180,6 +220,14 @@ async def get_instruments_details(
                     priceConvertionFactor=instrumento["priceConvertionFactor"],
                     maturityDate=instrumento["maturityDate"],
                     currency=instrumento["currency"],
+                    currency_settlement=get_currency_settlement(
+                        ticker=get_symbol_parts(
+                            instrumento["instrumentId"]["symbol"], get="ticker"
+                        ),
+                        settlement=get_symbol_parts(
+                            instrumento["instrumentId"]["symbol"], get="settlement"
+                        ),
+                    ),
                     orderTypes=instrumento["orderTypes"],
                     timesInForce=instrumento["timesInForce"],
                     securityType=instrumento["securityType"],
