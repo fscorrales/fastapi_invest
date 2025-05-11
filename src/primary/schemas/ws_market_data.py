@@ -24,8 +24,17 @@ from .common import (
 
 # --------------------------------------------------
 class WSProductSubscription(BaseModel):
-    symbol: str
+    symbol: str  # For example "MERV - XMEV - GGAL - CI"
     marketId: MarketID = MarketID.rofex
+
+
+# --------------------------------------------------
+class WSMarketDataSubscription(BaseModel):
+    type: str = "smd"
+    level: int = 1
+    entries: List[Entry] = ["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"]
+    products: List[WSProductSubscription]
+    depth: Depth = Depth.level_1
 
 
 # --------------------------------------------------
