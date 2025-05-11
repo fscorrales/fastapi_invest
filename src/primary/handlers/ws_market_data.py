@@ -204,7 +204,7 @@ async def process_messages():
 def format_params(params: WSMarketDataParams) -> WSMarketDataParams:
     """Format parameters for the subscription message"""
     formatted_instruments = format_instruments(
-        symbols=params.symbols, settlement_terms=params.settlement_terms
+        symbols=params.tickers, settlement_terms=params.settlement_terms
     )
     # params.products = [
     #     WSProductSubscription(symbol=s, marketId=params.marketId)
@@ -309,7 +309,7 @@ async def main():
     args = get_args()
 
     msg_subscription = WSMarketDataParams(
-        symbols=args.symbols,
+        tickers=args.symbols,
         settlement_terms=args.terms,
         marketId=args.market_id,
         entries=args.entries,

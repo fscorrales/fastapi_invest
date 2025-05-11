@@ -64,7 +64,7 @@ class TimeArbitrageStrategyService:
     # -------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
         params = WSMarketDataParams(
-            symbols=["GGAL"],
+            tickers=["GGAL"],
             settlement_terms=["CI", "24hs"],
             marketId="ROFX",
             entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
