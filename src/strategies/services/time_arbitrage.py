@@ -11,7 +11,8 @@ from fastapi import Depends
 
 from ...config import logger
 from ...primary.schemas import PrimaryCredentials, WSMarketDataParams
-from ...primary.services import WSMarketDataService
+from ...primary.services import WSMarketDataService, InstrumentsDetailsService
+from ...primary.repositories import InstrumentsDetailsRepository
 
 
 def _init_summary_strategy_df():
@@ -63,6 +64,8 @@ class TimeArbitrageStrategyService:
 
     # -------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
+        # instrument_service = InstrumentsDetailsService(instruments=InstrumentsDetailsRepository())
+        # instruments = await instrument_service.get_instruments_details_from_db()
         params = WSMarketDataParams(
             tickers=["GGAL"],
             settlement_terms=["CI", "24hs"],
