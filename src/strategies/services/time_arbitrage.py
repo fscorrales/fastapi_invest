@@ -10,9 +10,14 @@ import pandas as pd
 from fastapi import Depends
 
 from ...config import logger
-from ...primary.schemas import PrimaryCredentials, WSMarketDataParams
-from ...primary.services import WSMarketDataService, InstrumentsDetailsService
 from ...primary.repositories import InstrumentsDetailsRepository
+from ...primary.schemas import (
+    PrimaryCredentials,
+    WSMarketDataSubscription,
+    WSProductSubscription,
+)
+from ...primary.services import InstrumentsDetailsService, WSMarketDataService
+from ...utils import BaseFilterParams
 
 
 def _init_summary_strategy_df():
@@ -64,15 +69,34 @@ class TimeArbitrageStrategyService:
 
     # -------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
-        # instrument_service = InstrumentsDetailsService(instruments=InstrumentsDetailsRepository())
-        # instruments = await instrument_service.get_instruments_details_from_db()
-        params = WSMarketDataParams(
-            tickers=["GGAL"],
-            settlement_terms=["CI", "24hs"],
-            marketId="ROFX",
+        instrument_service = InstrumentsDetailsService(
+            instruments=InstrumentsDetailsRepository()
+        )
+        instruments = await instrument_service.get_instruments_details_from_db(
+            params=BaseFilterParams(limit=10)
+        )
+        params = WSMarketDataSubscription(
             entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
+            products=[
+                WSProductSubscription(
+                    symbol=i["symbol"], marketId=i["marketId"]
+                ).model_dump()
+                for i in instruments
+            ],
             depth=1,
         )
+        # params = WSMarketDataSubscription(
+        #     entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
+        #     products=[
+        #         WSProductSubscription(
+        #             symbol="MERV - XMEV - GGAL - CI", marketId="ROFX"
+        #         ).model_dump(),
+        #         WSProductSubscription(
+        #             symbol="MERV - XMEV - GGAL - 24hs", marketId="ROFX"
+        #         ).model_dump(),
+        #     ],
+        #     depth=1,
+        # )
         await self.market_data_service.connect(credentials, params=params)
         logger.info("[TimeArbitrageStrategy] Conexión al WebSocket iniciada")
 
