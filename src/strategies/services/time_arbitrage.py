@@ -75,7 +75,9 @@ class TimeArbitrageStrategyService:
         #     params=BaseFilterParams(limit=10)
         # )
         instruments_repository = InstrumentsDetailsRepository()
-        instruments = await instruments_repository.get_all(limit=10)
+        instruments = await instruments_repository.find_by_filter(
+            limit=10, filters={"ticker": "GGAL"}
+        )
         params = WSMarketDataSubscription(
             entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
             products=[
