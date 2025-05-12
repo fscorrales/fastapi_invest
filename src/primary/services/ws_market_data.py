@@ -12,6 +12,7 @@ from httpx import AsyncClient
 from pydantic import ValidationError
 
 from ...config import logger
+from ...utils import safe_get, safe_list_get
 from ..handlers import format_params, get_token
 from ..schemas import (
     PrimaryCredentials,
@@ -21,28 +22,28 @@ from ..schemas import (
 
 
 def _init_market_data_df():
-    df = pd.DataFrame(
-        columns=[
-            "timestamp",
-            "last_price",
-            "last_size",
-            "bid_price",
-            "bid_size",
-            "offer_price",
-            "offer_size",
-            "notional_value",
-            "effective_value",
-            "open",
-            "close_prev",
-            "high",
-            "low",
-            "tv",
-            "se",
-            "oi",
-            "iv",
-            "acp",
-        ]
-    )
+    dtypes = {
+        "timestamp": "int64",
+        "last_price": "float64",
+        "last_size": "float64",
+        "bid_price": "float64",
+        "bid_size": "float64",
+        "offer_price": "float64",
+        "offer_size": "float64",
+        "notional_value": "float64",
+        "effective_value": "float64",
+        "open": "float64",
+        "close_prev": "float64",
+        "high": "float64",
+        "low": "float64",
+        "tv": "float64",
+        "se": "float64",
+        "oi": "float64",
+        "iv": "float64",
+        "acp": "float64",
+    }
+
+    df = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in dtypes.items()})
     df.index.name = "instrument"
     return df
 
@@ -61,14 +62,18 @@ class WSMarketDataService:
 
     # -------------------------------------------------
     async def stream_market_data(
-        self, credentials: PrimaryCredentials, params: Union[WSMarketDataSubscription, WSMarketDataParams] = None
+        self,
+        credentials: PrimaryCredentials,
+        params: Union[WSMarketDataSubscription, WSMarketDataParams] = None,
     ):
         self.task = asyncio.create_task(self.connect(credentials, params))
         return {"message": "WebSocket conectado."}
 
     # -------------------------------------------------
     async def connect(
-        self, credentials: PrimaryCredentials, params: Union[WSMarketDataSubscription, WSMarketDataParams] = None
+        self,
+        credentials: PrimaryCredentials,
+        params: Union[WSMarketDataSubscription, WSMarketDataParams] = None,
     ):
         async with AsyncClient() as c:
             try:
@@ -178,7 +183,7 @@ class WSMarketDataService:
                 "notional_value": md.get("NV"),
                 "effective_value": md.get("EV"),
                 "open": md.get("OP"),
-                "close_prev": md.get("CL", {}).get("price"),
+                "close_prev": safe_get(md.get("CL"), ["price"]),
                 "high": md.get("HI"),
                 "low": md.get("LO"),
                 "tv": md.get("TV"),
@@ -188,12 +193,12 @@ class WSMarketDataService:
                 "acp": md.get("ACP"),
                 # "last_price": md.get("LA", {}).get("price"),
                 # "last_size": md.get("LA", {}).get("size"),
-                "last_price": (md.get("LA") or {}).get("price"),
-                "last_size": (md.get("LA") or {}).get("size"),
-                "bid_price": md.get("BI", [{}])[0].get("price"),
-                "bid_size": md.get("BI", [{}])[0].get("size"),
-                "offer_price": md.get("OF", [{}])[0].get("price"),
-                "offer_size": md.get("OF", [{}])[0].get("size"),
+                "last_price": safe_get(md.get("LA"), ["price"]),
+                "last_size": safe_get(md.get("LA"), ["size"]),
+                "bid_price": safe_list_get(md.get("BI"), 0, "price"),
+                "bid_size": safe_list_get(md.get("BI"), 0, "size"),
+                "offer_price": safe_list_get(md.get("OF"), 0, "price"),
+                "offer_size": safe_list_get(md.get("OF"), 0, "size"),
             }
 
             async with self.lock:
@@ -205,9 +210,11 @@ class WSMarketDataService:
                         # Reemplazamos toda la fila
                         self.market_data_df.loc[instrument] = new_row.loc[instrument]
                 else:
-                    self.market_data_df = pd.concat(
-                        [df for df in [self.market_data_df, new_row] if not df.empty]
-                    )
+                    if not new_row.isna().all(axis=1).all():
+                        self.market_data_df.loc[instrument] = new_row.loc[instrument]
+                    # self.market_data_df = pd.concat(
+                    #     [df for df in [self.market_data_df, new_row] if not df.empty]
+                    # )
                     # self.market_data_df = pd.concat([self.market_data_df, new_row])
 
         except Exception as e:
