@@ -193,3 +193,40 @@ class BaseRepository(Generic[ModelType]):
     # -------------------------------------------------
     async def count_by_fields(self, filters: dict) -> int:
         return await self.collection.count_documents(filters)
+
+    # -------------------------------------------------
+    async def find_by_filter(
+        self,
+        filters: dict,
+        skip: int = 0,
+        limit: Optional[int] = None,
+        sort_by: Optional[str] = None,
+        sort_dir: str = "asc",
+    ) -> List[ModelType]:
+        """
+        Buscar documentos que coincidan con un filtro dinámico.
+
+        Args:
+            filters (dict): Filtros de búsqueda (ej: {"categoria": "guitarras"}).
+            skip (int): Cuántos documentos omitir.
+            limit (Optional[int]): Máximo de documentos a devolver.
+            sort_by (Optional[str]): Campo por el cual ordenar.
+            sort_dir (str): Dirección de orden ("asc" o "desc").
+
+        Returns:
+            List[ModelType]: Lista de documentos encontrados.
+        """
+        if not filters:
+            filters = {}
+
+        query = self.collection.find(filters).skip(skip)
+        if limit:
+            query = query.limit(limit)
+
+        if sort_by:
+            direction = 1 if sort_dir == "asc" else -1
+            query = query.sort(sort_by, direction)
+
+        docs = await query.to_list(length=limit or 100)
+        # return [self.model(**doc) for doc in docs]
+        return docs
