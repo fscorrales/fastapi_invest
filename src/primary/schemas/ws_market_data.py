@@ -2,7 +2,7 @@ __all__ = [
     "WSMarketDataParams",
     "WSMarketData",
     "WSProductSubscription",
-    "WSProductSubscription",
+    "WSMarketDataSubscription",
     "WSFullMessage",
     "WSMarketDataDF",
 ]

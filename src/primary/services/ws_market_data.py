@@ -2,7 +2,7 @@ __all__ = ["WSMarketDataService", "WSMarketDataServiceDependency"]
 
 import asyncio
 from dataclasses import dataclass, field
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Union
 
 import orjson
 import pandas as pd
@@ -16,6 +16,7 @@ from ..handlers import format_params, get_token
 from ..schemas import (
     PrimaryCredentials,
     WSMarketDataParams,
+    WSMarketDataSubscription,
 )
 
 
@@ -60,14 +61,14 @@ class WSMarketDataService:
 
     # -------------------------------------------------
     async def stream_market_data(
-        self, credentials: PrimaryCredentials, params: WSMarketDataParams = None
+        self, credentials: PrimaryCredentials, params: Union[WSMarketDataSubscription, WSMarketDataParams] = None
     ):
         self.task = asyncio.create_task(self.connect(credentials, params))
         return {"message": "WebSocket conectado."}
 
     # -------------------------------------------------
     async def connect(
-        self, credentials: PrimaryCredentials, params: WSMarketDataParams = None
+        self, credentials: PrimaryCredentials, params: Union[WSMarketDataSubscription, WSMarketDataParams] = None
     ):
         async with AsyncClient() as c:
             try:
@@ -80,7 +81,10 @@ class WSMarketDataService:
                     httpxAsyncClient=c,
                 )
 
-                msg_dict = format_params(params)
+                if isinstance(params, WSMarketDataParams):
+                    params = format_params(params)
+
+                msg_dict = params.model_dump(mode="json", exclude_none=True)
                 headers = {"X-Auth-Token": connect_primary.x_auth_token}
 
                 self.ws = await websockets.connect(
@@ -182,8 +186,10 @@ class WSMarketDataService:
                 "oi": md.get("OI"),
                 "iv": md.get("IV"),
                 "acp": md.get("ACP"),
-                "last_price": md.get("LA", {}).get("price"),
-                "last_size": md.get("LA", {}).get("size"),
+                # "last_price": md.get("LA", {}).get("price"),
+                # "last_size": md.get("LA", {}).get("size"),
+                "last_price": (md.get("LA") or {}).get("price"),
+                "last_size": (md.get("LA") or {}).get("size"),
                 "bid_price": md.get("BI", [{}])[0].get("price"),
                 "bid_size": md.get("BI", [{}])[0].get("size"),
                 "offer_price": md.get("OF", [{}])[0].get("price"),

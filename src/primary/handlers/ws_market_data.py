@@ -28,6 +28,7 @@ from ..schemas import (
     SettlementTerm,
     WSMarketDataParams,
     WSProductSubscription,
+    WSMarketDataSubscription,
 )
 from ..services.format import format_instruments
 from .connect_primary import get_token
@@ -201,7 +202,7 @@ async def process_messages():
 
 
 # --------------------------------------------------
-def format_params(params: WSMarketDataParams) -> WSMarketDataParams:
+def format_params(params: WSMarketDataParams) -> WSMarketDataSubscription:
     """Format parameters for the subscription message"""
     formatted_instruments = format_instruments(
         symbols=params.tickers, settlement_terms=params.settlement_terms
@@ -214,22 +215,30 @@ def format_params(params: WSMarketDataParams) -> WSMarketDataParams:
     # params.symbols = None
     # params.marketId = None
     # return params
-    return {
-        "type": "smd",
-        "level": 1,
-        "entries": params.entries,
-        "products": [
+    # return {
+    #     "type": "smd",
+    #     "level": 1,
+    #     "entries": params.entries,
+    #     "products": [
+    #         WSProductSubscription(symbol=s, marketId=params.marketId).model_dump()
+    #         for s in formatted_instruments
+    #     ],
+    #     "depth": params.depth,
+    # }
+    return WSMarketDataSubscription(
+        entries=params.entries,         
+        products= [
             WSProductSubscription(symbol=s, marketId=params.marketId).model_dump()
             for s in formatted_instruments
         ],
-        "depth": params.depth,
-    }
+        depth= params.depth,
+    )
 
 
 # --------------------------------------------------
 async def stream_market_data(
     primary: ConnectPrimary,
-    params: WSMarketDataParams,
+    params: WSMarketDataSubscription,
     url: str = None,
     # seconds_delay: int = 5,
 ) -> List[MarketData]:
@@ -240,8 +249,8 @@ async def stream_market_data(
     h = {"X-Auth-Token": primary.x_auth_token}
 
     # Params para el mensaje de suscripción
-    msg_dict = format_params(params)
-    # msg_dict = params.model_dump(mode="json", exclude_none=True)
+    # msg_dict = format_params(params)
+    msg_dict = params.model_dump(mode="json", exclude_none=True)
     print(f"📡 Suscribiendo a {msg_dict}")
 
     async with websockets.connect(url, extra_headers=h) as ws:
@@ -327,7 +336,7 @@ async def main():
         try:
             await stream_market_data(
                 primary=connect_primary,
-                params=msg_subscription,
+                params=format_params(msg_subscription),  # msg_subscription,
             )
         except Exception as e:
             print(f"Error al obtener instrumentos: {e}")
