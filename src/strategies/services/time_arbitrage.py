@@ -16,8 +16,7 @@ from ...primary.schemas import (
     WSMarketDataSubscription,
     WSProductSubscription,
 )
-from ...primary.services import InstrumentsDetailsService, WSMarketDataService
-from ...utils import BaseFilterParams
+from ...primary.services import WSMarketDataService
 
 
 def _init_summary_strategy_df():
@@ -69,12 +68,14 @@ class TimeArbitrageStrategyService:
 
     # -------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
-        instrument_service = InstrumentsDetailsService(
-            instruments=InstrumentsDetailsRepository()
-        )
-        instruments = await instrument_service.get_instruments_details_from_db(
-            params=BaseFilterParams(limit=10)
-        )
+        # instrument_service = InstrumentsDetailsService(
+        #     instruments=InstrumentsDetailsRepository()
+        # )
+        # instruments = await instrument_service.get_instruments_details_from_db(
+        #     params=BaseFilterParams(limit=10)
+        # )
+        instruments_repository = InstrumentsDetailsRepository()
+        instruments = await instruments_repository.get_all(limit=10)
         params = WSMarketDataSubscription(
             entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
             products=[
