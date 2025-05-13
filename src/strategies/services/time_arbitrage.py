@@ -52,6 +52,7 @@ class TimeArbitrageStrategyService:
     summary_stratetgy_df: pd.DataFrame = field(
         default_factory=_init_summary_strategy_df
     )
+    instruments_details_df: pd.DataFrame = field(default_factory=pd.DataFrame)
 
     # -------------------------------------------------
     async def start(self, credentials: PrimaryCredentials):
@@ -75,8 +76,8 @@ class TimeArbitrageStrategyService:
         #     params=BaseFilterParams(limit=10)
         # )
         instruments_repository = InstrumentsDetailsRepository()
-        instruments = await instruments_repository.find_by_filter(
-            limit=10, filters={"ticker": "GGAL"}
+        self.instruments_details_df = await instruments_repository.find_by_filter(
+            limit=10, filters={"enviroment": credentials.enviroment}
         )
         params = WSMarketDataSubscription(
             entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
@@ -84,7 +85,7 @@ class TimeArbitrageStrategyService:
                 WSProductSubscription(
                     symbol=i["symbol"], marketId=i["marketId"]
                 ).model_dump()
-                for i in instruments
+                for i in self.instruments_details_df
             ],
             depth=1,
         )
