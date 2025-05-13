@@ -12,6 +12,7 @@ from fastapi import Depends
 from ...config import logger
 from ...primary.repositories import InstrumentsDetailsRepository
 from ...primary.schemas import (
+    CFICode,
     PrimaryCredentials,
     WSMarketDataSubscription,
     WSProductSubscription,
@@ -133,7 +134,16 @@ class TimeArbitrageStrategyService:
             return pd.DataFrame()
 
         try:
-            # Filtramos los instrumentos que terminan en "CI" y "24hs"
+            # Add cficode to WSMarketData DF and then filter with it
+            df = df.merge(
+                self.instruments_details_df.loc[:, ["symbol", "cficode"]],
+                how="left",
+                on="symbol",
+            )
+            df = df.loc[
+                df["cficode"].isin([CFICode.accion.value, CFICode.cedear.value])
+            ]
+            # Filter by settlement
             df_from = df.loc[df["settlement"] == from_settlement]
             df_to = df.loc[df["settlement"] == to_settlement]
 
@@ -194,6 +204,17 @@ class TimeArbitrageStrategyService:
             # )
             # df["P&L"] = np.where(df["cficode"] != "ESXXXX", df["P&L"] / 100, df["P&L"])
             # df["P&L"] = df["P&L"] * df["q_max"]
+
+            # df["cficode"] = np.select(
+            #     [
+            #         df["cficode"] == "ESXXXX",  # Stock
+            #         df["cficode"] == "EMXXXX",  # CEDEAR
+            #         df["cficode"] == "DBXXXX",  # Bond
+            #         df["cficode"] == "DYXTXR",  # Letter
+            #         df["cficode"] == "DBXXFR",  # ON
+            #     ],
+            #     ["Acción", "Cedear", "Bono", "Letra", "ON"],
+            # )
 
             df["days"] = days
             cols = [
