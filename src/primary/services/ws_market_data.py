@@ -44,7 +44,7 @@ def _init_market_data_df():
     }
 
     df = pd.DataFrame({col: pd.Series(dtype=typ) for col, typ in dtypes.items()})
-    df.index.name = "instrument"
+    df.index.name = "symbol"
     return df
 
 
@@ -173,7 +173,7 @@ class WSMarketDataService:
             if data.get("type") != "Md":
                 return  # Solo procesamos Market Data
 
-            instrument = data["instrumentId"]["symbol"]
+            symbol = data["instrumentId"]["symbol"]
             timestamp = data.get("timestamp")
             md = data.get("marketData", {})
 
@@ -202,16 +202,16 @@ class WSMarketDataService:
             }
 
             async with self.lock:
-                new_row = pd.DataFrame([record], index=[instrument])
+                new_row = pd.DataFrame([record], index=[symbol])
 
-                if instrument in self.market_data_df.index:
-                    existing_timestamp = self.market_data_df.at[instrument, "timestamp"]
+                if symbol in self.market_data_df.index:
+                    existing_timestamp = self.market_data_df.at[symbol, "timestamp"]
                     if timestamp > existing_timestamp:
                         # Reemplazamos toda la fila
-                        self.market_data_df.loc[instrument] = new_row.loc[instrument]
+                        self.market_data_df.loc[symbol] = new_row.loc[symbol]
                 else:
                     if not new_row.isna().all(axis=1).all():
-                        self.market_data_df.loc[instrument] = new_row.loc[instrument]
+                        self.market_data_df.loc[symbol] = new_row.loc[symbol]
                     # self.market_data_df = pd.concat(
                     #     [df for df in [self.market_data_df, new_row] if not df.empty]
                     # )
@@ -255,11 +255,11 @@ class WSMarketDataService:
     def get_dataframe(self) -> pd.DataFrame:
         """Devuelve los datos como un DataFrame"""
         df = self.market_data_df.copy()
-        df = df.reset_index()  # ⬅️ Asegura que 'instrument' sea una columna
-        df = df.rename(columns={"index": "instrument"})  # 👈 renombrar
+        df = df.reset_index()  # ⬅️ Asegura que 'symbol' sea una columna
+        df = df.rename(columns={"index": "symbol"})  # 👈 renombrar
         if not df.empty:
-            df["symbol"] = df["instrument"].str.split(" - ").str[-2]
-            df["settlement"] = df["instrument"].str.split(" - ").str[-1]
+            df["ticker"] = df["symbol"].str.split(" - ").str[-2]
+            df["settlement"] = df["symbol"].str.split(" - ").str[-1]
         return df
 
     # -------------------------------------------------
