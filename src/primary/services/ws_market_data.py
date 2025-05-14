@@ -70,6 +70,28 @@ class WSMarketDataService:
         return {"message": "WebSocket conectado."}
 
     # -------------------------------------------------
+    async def _send_subscription_chunks(self, params: WSMarketDataSubscription):
+        """
+        Divide la lista de productos y envía múltiples suscripciones al WebSocket si exceden el límite.
+        """
+        max_per_msg = 1000
+        all_products = params.products
+
+        for i in range(0, len(all_products), max_per_msg):
+            chunk = all_products[i : i + max_per_msg]
+            sub_params = WSMarketDataSubscription(
+                entries=params.entries,
+                products=chunk,
+                level=params.level,
+                depth=params.depth,
+            )
+            msg = orjson.dumps(
+                sub_params.model_dump(mode="json", exclude_none=True)
+            ).decode()
+            await self.ws.send(msg)
+            logger.info(f"📡 Suscripción enviada con {len(chunk)} productos")
+
+    # -------------------------------------------------
     async def connect(
         self,
         credentials: PrimaryCredentials,
@@ -86,17 +108,21 @@ class WSMarketDataService:
                     httpxAsyncClient=c,
                 )
 
-                if isinstance(params, WSMarketDataParams):
-                    params = format_params(params)
-
-                msg_dict = params.model_dump(mode="json", exclude_none=True)
                 headers = {"X-Auth-Token": connect_primary.x_auth_token}
 
                 self.ws = await websockets.connect(
                     connect_primary.websocket_url, extra_headers=headers
                 )
-                await self.ws.send(orjson.dumps(msg_dict).decode())
-                print("📡 Suscripción enviada correctamente")
+
+                if isinstance(params, WSMarketDataParams):
+                    params = format_params(params)
+
+                # Dividir en múltiples suscripciones si hay más de 1000 productos
+                await self._send_subscription_chunks(params)
+
+                # msg_dict = params.model_dump(mode="json", exclude_none=True)
+                # await self.ws.send(orjson.dumps(msg_dict).decode())
+                # print("📡 Suscripción enviada correctamente")
 
                 # Guardamos las tareas para posible cancelación luego
                 self.is_running = True
