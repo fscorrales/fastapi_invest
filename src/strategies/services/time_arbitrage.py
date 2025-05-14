@@ -4,10 +4,11 @@ __all__ = ["TimeArbitrageStrategyService", "TimeArbitrageStrategyDependency"]
 
 import asyncio
 from dataclasses import dataclass, field
-from typing import Annotated, Optional
+from typing import Annotated, Optional, List, Union
 
 import pandas as pd
 from fastapi import Depends
+import numpy as np
 
 from ...config import logger
 from ...primary.repositories import InstrumentsDetailsRepository
@@ -68,6 +69,20 @@ class TimeArbitrageStrategyService:
         if self._task:
             self._task.cancel()
 
+    # --------------------------------------------------
+    def get_tna_caucion(
+            self, df: pd.DataFrame, plazo:int, 
+            currency:Union[List[str], str] = ['PESOS', 'DOLAR']
+    ) -> pd.DataFrame:
+        if not isinstance(currency, list):
+            currency = [currency]
+        symbol = [c + " - " + str(plazo) + 'D' for c in currency]
+        df = df.loc[
+            (df['symbol'].isin(symbol)),
+            ['symbol', 'ticker', 'last_price']
+        ]
+        return df
+
     # -------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
         # instrument_service = InstrumentsDetailsService(
@@ -77,8 +92,8 @@ class TimeArbitrageStrategyService:
         #     params=BaseFilterParams(limit=10)
         # )
         instruments_repository = InstrumentsDetailsRepository()
-        self.instruments_details_df = await instruments_repository.find_by_filter(
-            limit=10, filters={"enviroment": credentials.enviroment}
+        instruments_details = await instruments_repository.find_by_filter(
+            filters={"enviroment": credentials.enviroment}
         )
         params = WSMarketDataSubscription(
             entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
@@ -86,10 +101,11 @@ class TimeArbitrageStrategyService:
                 WSProductSubscription(
                     symbol=i["symbol"], marketId=i["marketId"]
                 ).model_dump()
-                for i in self.instruments_details_df
+                for i in instruments_details
             ],
             depth=1,
         )
+        self.instruments_details_df = pd.DataFrame(instruments_details)
         # params = WSMarketDataSubscription(
         #     entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
         #     products=[
@@ -134,125 +150,140 @@ class TimeArbitrageStrategyService:
             return pd.DataFrame()
 
         try:
-            # Add cficode to WSMarketData DF and then filter with it
+            # tna_caucion = self.get_tna_caucion(df.copy(), plazo=days, currency=['PESOS'])
+            # logger.info(f"[TimeArbitrageStrategy] TNA Caución: {tna_caucion}")
+            # caucion_pesos = (
+            #     cauciones.loc[cauciones['symbol'] == 'PESOS', ['last']].values[0][0] -
+            #     gtos_iva['caucion_pesos']
+            # ) / 100
+            # df['tna_caucion'] = df['currency'].apply(
+            #     lambda x: caucion_pesos
+            #     if x == 'ars' 
+            #     else caucion_dolares
+            # )
+            # Add cficode and currency to WSMarketData DF and then filter with them
             df = df.merge(
-                self.instruments_details_df.loc[:, ["symbol", "cficode"]],
+                self.instruments_details_df.loc[:, ["symbol", "cficode", "currency"]],
                 how="left",
                 on="symbol",
             )
-            df = df.loc[
-                df["cficode"].isin([CFICode.accion.value, CFICode.cedear.value])
-            ]
+            # df = df.loc[df["currency"] == "ARS"] # Only ARS
+            # df = df.loc[
+            #     df["cficode"].isin([CFICode.accion.value, CFICode.cedear.value])
+            # ]
+            logger.info(
+                df.loc[
+                    df["ticker"].isin(["GGAL", "YPFD", "BYMA", "TXAR"]) 
+                ]
+            )
             # Filter by settlement
             df_from = df.loc[df["settlement"] == from_settlement]
             df_to = df.loc[df["settlement"] == to_settlement]
 
             # Buy CI and Sell 24hs
             ## Buy CI
-            df_buy = df_from.loc[:, ["symbol", "offer_size", "offer_price"]]
-            df_buy["symbol_buy"] = df_buy["symbol"] + " - " + from_settlement
+            df_buy = df_from.loc[:, ["ticker", "offer_size", "offer_price", "cficode"]]
+            df_buy["ticker_buy"] = df_buy["ticker"] + " - " + from_settlement
             ## Sell 24hs
-            df_sell = df_to.loc[:, ["symbol", "bid_size", "bid_price"]]
-            df_sell["symbol_sell"] = df_sell["symbol"] + " - " + to_settlement
+            df_sell = df_to.loc[:, ["ticker", "bid_size", "bid_price", "cficode"]]
+            df_sell["ticker_sell"] = df_sell["ticker"] + " - " + to_settlement
             df_from_to = pd.merge(
                 left=df_buy,
                 right=df_sell,
                 how="outer",
-                on=["symbol"],
+                on=["ticker", "cficode"],
                 copy=False,
             )
             df_from_to["buy_sell"] = from_settlement + " / " + to_settlement
 
             # Buy 24hs and Sell CI
             ## Buy 24hs
-            df_buy = df_to.loc[:, ["symbol", "offer_size", "offer_price"]]
-            df_buy["symbol_buy"] = df_buy["symbol"] + " - " + to_settlement
+            df_buy = df_to.loc[:, ["ticker", "offer_size", "offer_price", "cficode"]]
+            df_buy["ticker_buy"] = df_buy["ticker"] + " - " + to_settlement
             ## Sell CI
-            df_sell = df_from.loc[:, ["symbol", "bid_size", "bid_price"]]
-            df_sell["symbol_sell"] = df_sell["symbol"] + " - " + from_settlement
+            df_sell = df_from.loc[:, ["ticker", "bid_size", "bid_price", "cficode"]]
+            df_sell["ticker_sell"] = df_sell["ticker"] + " - " + from_settlement
             df_to_from = pd.merge(
                 left=df_buy,
                 right=df_sell,
                 how="outer",
-                on=["symbol"],
+                on=["ticker", "cficode"],
                 copy=False,
             )
             df_to_from["buy_sell"] = to_settlement + " / " + from_settlement
 
             # Concat both DataFrames
-            df = pd.concat([df_from_to.reset_index(), df_to_from.reset_index()], axis=0)
+            df = pd.concat([df_from_to, df_to_from], axis=0, ignore_index=True)
+            # df = df.dropna(subset=["ticker_buy", "ticker_sell"])
             df = df.loc[df["offer_size"] > 0]
             df = df.loc[df["bid_size"] > 0]
 
-            # Rate
-            # df["rate"] = df["adj_sell"] / df["adj_buy"] - 1
-            df["rate"] = df["bid_price"] / df["offer_price"] - 1
-            df["tna"] = df["rate"] / days * 365
+            if not df.empty:
+                # Rate
+                # df["rate"] = df["adj_sell"] / df["adj_buy"] - 1
+                df["rate"] = df["bid_price"] / df["offer_price"] - 1
+                df["tna"] = df["rate"] / days * 365
 
-            # Max Quantity
-            df["q_max"] = df.apply(
-                lambda row: min(row["offer_size"], row["bid_size"]), axis=1
-            )
+                # Max Quantity
+                df["q_max"] = df.apply(
+                    lambda row: min(row["offer_size"], row["bid_size"]), axis=1
+                )
 
-            # P&L
-            # df["P&L"] = np.where(
-            #     df["compra_venta"] == from_plazo + " / " + to_plazo,
-            #     (df["adj_sell"] - df["adj_buy"])
-            #     - (df["compra"] * df["tna_caucion"] / 365 * days),
-            #     (df["adj_sell"] - df["adj_buy"])
-            #     + (df["adj_sell"] * df["tna_caucion"] / 365 * days),
-            # )
-            # df["P&L"] = np.where(df["cficode"] != "ESXXXX", df["P&L"] / 100, df["P&L"])
-            # df["P&L"] = df["P&L"] * df["q_max"]
+                # P&L
+                # df["P&L"] = np.where(
+                #     df["compra_venta"] == from_plazo + " / " + to_plazo,
+                #     (df["adj_sell"] - df["adj_buy"])
+                #     - (df["compra"] * df["tna_caucion"] / 365 * days),
+                #     (df["adj_sell"] - df["adj_buy"])
+                #     + (df["adj_sell"] * df["tna_caucion"] / 365 * days),
+                # )
+                # df["P&L"] = np.where(df["cficode"] != "ESXXXX", df["P&L"] / 100, df["P&L"])
+                # df["P&L"] = df["P&L"] * df["q_max"]
 
-            # df["cficode"] = np.select(
-            #     [
-            #         df["cficode"] == "ESXXXX",  # Stock
-            #         df["cficode"] == "EMXXXX",  # CEDEAR
-            #         df["cficode"] == "DBXXXX",  # Bond
-            #         df["cficode"] == "DYXTXR",  # Letter
-            #         df["cficode"] == "DBXXFR",  # ON
-            #     ],
-            #     ["Acción", "Cedear", "Bono", "Letra", "ON"],
-            # )
+                # df["cficode"] = np.select(
+                #     [
+                #         df["cficode"] == CFICode.accion.value,  # Stock
+                #         df["cficode"] == CFICode.cedear.value,  # CEDEAR
+                #         df["cficode"] == CFICode.bono.value,  # Bond
+                #         df["cficode"] == CFICode.letra.value,  # Letter
+                #         df["cficode"] == CFICode.on.value,  # ON
+                #     ],
+                #     [
+                #         CFICode.accion.name, 
+                #         CFICode.cedear.name,
+                #         CFICode.bono.name, 
+                #         CFICode.letra.name, 
+                #         CFICode.on.name
+                #     ],
+                # )
 
-            df["days"] = days
-            cols = [
-                "buy_sell",
-                "symbol_buy",
-                "symbol_sell",
-                # "cficode",
-                # "currency",
-                # "compra",
-                # "venta",
-                "q_max",
-                # "P&L",
-                "tna",
-                # "tna_operacion",
-                # "tna_caucion",
-                "days",
-                # "var_pe",
-                # "min_invest",
-            ]
-            df = df[cols]
-            df = df.sort_values(by="tna", ascending=False)
+                cficode_map = {code.value: code.name for code in CFICode}
+                df["cficode"] = df["cficode"].map(cficode_map)
+                df["days"] = days
+                cols = [
+                    "buy_sell",
+                    "cficode",
+                    "ticker_buy",
+                    "ticker_sell",
+                    # "currency",
+                    # "compra",
+                    # "venta",
+                    "q_max",
+                    # "P&L",
+                    "tna",
+                    # "tna_operacion",
+                    # "tna_caucion",
+                    "days",
+                    # "var_pe",
+                    # "min_invest",
+                ]
+                df = df[cols]
+                # df = df.loc[df["tna"] > 0]
+                df = df.sort_values(by="tna", ascending=False)
 
-            async with self.lock:
-                self.summary_stratetgy_df = df.copy()
+                async with self.lock:
+                    self.summary_stratetgy_df = df.copy()
 
-            # for symbol in df_ci["symbol"].unique():
-            #     ci_row = df_ci.loc[df_ci["symbol"] == symbol]
-            #     hs24_row = df_24.loc[df_24["symbol"] == symbol]
-
-            #     if not ci_row.empty and not hs24_row.empty:
-            #         ci_price = ci_row.iloc[0].get("last_price")
-            #         hs24_price = hs24_row.iloc[0].get("last_price")
-
-            #         if ci_price and hs24_price:
-            #             spread = hs24_price - ci_price
-            #             logger.info(
-            #                 f"[Time Arbitrage] {symbol}: 24hs={hs24_price}, CI={ci_price}, Spread={spread:.2f}"
-            #             )
         except Exception as e:
             logger.error(f"[TimeArbitrageStrategy] Error en evaluación: {e}")
 
