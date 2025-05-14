@@ -4,11 +4,10 @@ __all__ = ["TimeArbitrageStrategyService", "TimeArbitrageStrategyDependency"]
 
 import asyncio
 from dataclasses import dataclass, field
-from typing import Annotated, Optional, List, Union
+from typing import Annotated, List, Optional, Union
 
 import pandas as pd
 from fastapi import Depends
-import numpy as np
 
 from ...config import logger
 from ...primary.repositories import InstrumentsDetailsRepository
@@ -71,16 +70,15 @@ class TimeArbitrageStrategyService:
 
     # --------------------------------------------------
     def get_tna_caucion(
-            self, df: pd.DataFrame, plazo:int, 
-            currency:Union[List[str], str] = ['PESOS', 'DOLAR']
+        self,
+        df: pd.DataFrame,
+        plazo: int,
+        currency: Union[List[str], str] = ["PESOS", "DOLAR"],
     ) -> pd.DataFrame:
         if not isinstance(currency, list):
             currency = [currency]
-        symbol = [c + " - " + str(plazo) + 'D' for c in currency]
-        df = df.loc[
-            (df['symbol'].isin(symbol)),
-            ['symbol', 'ticker', 'last_price']
-        ]
+        symbol = [c + " - " + str(plazo) + "D" for c in currency]
+        df = df.loc[(df["symbol"].isin(symbol)), ["symbol", "ticker", "last_price"]]
         return df
 
     # -------------------------------------------------
@@ -106,6 +104,7 @@ class TimeArbitrageStrategyService:
             depth=1,
         )
         self.instruments_details_df = pd.DataFrame(instruments_details)
+
         # params = WSMarketDataSubscription(
         #     entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
         #     products=[
@@ -118,6 +117,16 @@ class TimeArbitrageStrategyService:
         #     ],
         #     depth=1,
         # )
+
+        # num_parts = len(self.instruments_formatted) // 1000 + 1
+        # part_size = len(self.instruments_formatted) // num_parts
+        # parts = [
+        #     self.instruments_formatted[i : i + part_size]
+        #     for i in range(0, len(self.instruments_formatted), part_size)
+        # ]
+        # for x in parts:
+        #     self.pyrofex.market_data_subscription(tickers=x, entries=entries)
+
         await self.market_data_service.connect(credentials, params=params)
         logger.info("[TimeArbitrageStrategy] Conexión al WebSocket iniciada")
 
@@ -158,7 +167,7 @@ class TimeArbitrageStrategyService:
             # ) / 100
             # df['tna_caucion'] = df['currency'].apply(
             #     lambda x: caucion_pesos
-            #     if x == 'ars' 
+            #     if x == 'ars'
             #     else caucion_dolares
             # )
             # Add cficode and currency to WSMarketData DF and then filter with them
@@ -167,15 +176,10 @@ class TimeArbitrageStrategyService:
                 how="left",
                 on="symbol",
             )
-            # df = df.loc[df["currency"] == "ARS"] # Only ARS
-            # df = df.loc[
-            #     df["cficode"].isin([CFICode.accion.value, CFICode.cedear.value])
-            # ]
-            logger.info(
-                df.loc[
-                    df["ticker"].isin(["GGAL", "YPFD", "BYMA", "TXAR"]) 
-                ]
-            )
+            df = df.loc[df["currency"] == "ARS"]  # Only ARS
+            df = df.loc[
+                df["cficode"].isin([CFICode.accion.value, CFICode.cedear.value])
+            ]
             # Filter by settlement
             df_from = df.loc[df["settlement"] == from_settlement]
             df_to = df.loc[df["settlement"] == to_settlement]
@@ -249,10 +253,10 @@ class TimeArbitrageStrategyService:
                 #         df["cficode"] == CFICode.on.value,  # ON
                 #     ],
                 #     [
-                #         CFICode.accion.name, 
+                #         CFICode.accion.name,
                 #         CFICode.cedear.name,
-                #         CFICode.bono.name, 
-                #         CFICode.letra.name, 
+                #         CFICode.bono.name,
+                #         CFICode.letra.name,
                 #         CFICode.on.name
                 #     ],
                 # )
@@ -278,7 +282,7 @@ class TimeArbitrageStrategyService:
                     # "min_invest",
                 ]
                 df = df[cols]
-                # df = df.loc[df["tna"] > 0]
+                df = df.loc[df["tna"] > 0]
                 df = df.sort_values(by="tna", ascending=False)
 
                 async with self.lock:
