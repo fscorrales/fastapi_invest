@@ -209,7 +209,7 @@ class BaseRepository(Generic[ModelType]):
         Args:
             filters (dict): Filtros de búsqueda (ej: {"categoria": "guitarras"}).
             skip (int): Cuántos documentos omitir.
-            limit (Optional[int]): Máximo de documentos a devolver.
+            limit (Optional[int]): Máximo de documentos a devolver. Si es None, trae todos.
             sort_by (Optional[str]): Campo por el cual ordenar.
             sort_dir (str): Dirección de orden ("asc" o "desc").
 
@@ -219,14 +219,13 @@ class BaseRepository(Generic[ModelType]):
         if not filters:
             filters = {}
 
-        query = self.collection.find(filters).skip(skip)
-        if limit:
-            query = query.limit(limit)
+        cursor = self.collection.find(filters).skip(skip)
 
         if sort_by:
             direction = 1 if sort_dir == "asc" else -1
-            query = query.sort(sort_by, direction)
+            cursor = cursor.sort(sort_by, direction)
 
-        docs = await query.to_list(length=limit or 100)
+        # Si limit es None, usamos length=None para traer todos los documentos
+        docs = await cursor.to_list(length=limit)
         # return [self.model(**doc) for doc in docs]
         return docs
