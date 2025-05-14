@@ -2,15 +2,19 @@
 
 __all__ = ["strategy_manager"]
 
+from typing import Dict
+
+from .base_strategy import BaseStrategy
+
 
 # -------------------------------------------------
 class StrategyManager:
     # -------------------------------------------------
     def __init__(self):
-        self.strategies = {}
+        self.strategies: Dict[str, BaseStrategy] = {}
 
     # -------------------------------------------------
-    def register(self, name: str, strategy):
+    def register(self, name: str, strategy: BaseStrategy):
         self.strategies[name] = strategy
 
     # -------------------------------------------------
