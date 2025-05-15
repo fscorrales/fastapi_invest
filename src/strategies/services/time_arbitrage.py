@@ -2,23 +2,15 @@
 
 __all__ = ["TimeArbitrageStrategyService", "TimeArbitrageStrategyDependency"]
 
-import asyncio
-from dataclasses import dataclass, field
-from typing import Annotated, List, Optional, Union
+from typing import Annotated, List, Union
 
 import pandas as pd
 from fastapi import Depends
 
 from ...config import logger
-from ...primary.repositories import InstrumentsDetailsRepository
 from ...primary.schemas import (
     CFICode,
-    PrimaryCredentials,
-    WSMarketDataSubscription,
-    WSProductSubscription,
 )
-from ...primary.services import WSMarketDataService
-
 from .base_strategy import BaseStrategy
 
 
@@ -49,23 +41,25 @@ def _init_summary_strategy_df():
 class TimeArbitrageStrategyService(BaseStrategy):
     def __init__(self, market_data_service):
         super().__init__(market_data_service=market_data_service)
-        self.summary_strategy_df = pd.DataFrame(columns=[
-            "buy_sell",
-            "symbol_buy",
-            "symbol_sell",
-            # "cficode",
-            # "currency",
-            # "compra",
-            # "venta",
-            "q_max",
-            # "P&L",
-            "tna",
-            # "tna_operacion",
-            # "tna_caucion",
-            "days",
-            # "var_pe",
-            # "min_invest",
-        ])
+        self.summary_strategy_df = pd.DataFrame(
+            columns=[
+                "buy_sell",
+                "symbol_buy",
+                "symbol_sell",
+                # "cficode",
+                # "currency",
+                # "compra",
+                # "venta",
+                "q_max",
+                # "P&L",
+                "tna",
+                # "tna_operacion",
+                # "tna_caucion",
+                "days",
+                # "var_pe",
+                # "min_invest",
+            ]
+        )
 
     # --------------------------------------------------
     def get_tna_caucion(
