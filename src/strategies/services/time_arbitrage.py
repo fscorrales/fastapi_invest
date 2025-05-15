@@ -19,6 +19,8 @@ from ...primary.schemas import (
 )
 from ...primary.services import WSMarketDataService
 
+from .base_strategy import BaseStrategy
+
 
 def _init_summary_strategy_df():
     df = pd.DataFrame(
@@ -44,29 +46,26 @@ def _init_summary_strategy_df():
 
 
 # -------------------------------------------------
-@dataclass
-class TimeArbitrageStrategyService:
-    market_data_service: WSMarketDataService
-    _task: Optional[asyncio.Task] = None
-    is_running: bool = False
-    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-    summary_stratetgy_df: pd.DataFrame = field(
-        default_factory=_init_summary_strategy_df
-    )
-    instruments_details_df: pd.DataFrame = field(default_factory=pd.DataFrame)
-
-    # -------------------------------------------------
-    async def start(self, credentials: PrimaryCredentials):
-        if self._task is None or self._task.done():
-            self.is_running = True
-
-            self._task = asyncio.create_task(self._run(credentials=credentials))
-
-    # -------------------------------------------------
-    def stop(self):
-        self.is_running = False
-        if self._task:
-            self._task.cancel()
+class TimeArbitrageStrategyService(BaseStrategy):
+    def __init__(self, market_data_service):
+        super().__init__(market_data_service=market_data_service)
+        self.summary_strategy_df = pd.DataFrame(columns=[
+            "buy_sell",
+            "symbol_buy",
+            "symbol_sell",
+            # "cficode",
+            # "currency",
+            # "compra",
+            # "venta",
+            "q_max",
+            # "P&L",
+            "tna",
+            # "tna_operacion",
+            # "tna_caucion",
+            "days",
+            # "var_pe",
+            # "min_invest",
+        ])
 
     # --------------------------------------------------
     def get_tna_caucion(
@@ -80,67 +79,6 @@ class TimeArbitrageStrategyService:
         symbol = [c + " - " + str(plazo) + "D" for c in currency]
         df = df.loc[(df["symbol"].isin(symbol)), ["symbol", "ticker", "last_price"]]
         return df
-
-    # -------------------------------------------------
-    async def _run(self, credentials: PrimaryCredentials):
-        # instrument_service = InstrumentsDetailsService(
-        #     instruments=InstrumentsDetailsRepository()
-        # )
-        # instruments = await instrument_service.get_instruments_details_from_db(
-        #     params=BaseFilterParams(limit=10)
-        # )
-        instruments_repository = InstrumentsDetailsRepository()
-        instruments_details = await instruments_repository.find_by_filter(
-            filters={"enviroment": credentials.enviroment}
-        )
-        params = WSMarketDataSubscription(
-            entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
-            products=[
-                WSProductSubscription(
-                    symbol=i["symbol"], marketId=i["marketId"]
-                ).model_dump()
-                for i in instruments_details
-            ],
-            depth=1,
-        )
-        self.instruments_details_df = pd.DataFrame(instruments_details)
-
-        # params = WSMarketDataSubscription(
-        #     entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
-        #     products=[
-        #         WSProductSubscription(
-        #             symbol="MERV - XMEV - GGAL - CI", marketId="ROFX"
-        #         ).model_dump(),
-        #         WSProductSubscription(
-        #             symbol="MERV - XMEV - GGAL - 24hs", marketId="ROFX"
-        #         ).model_dump(),
-        #     ],
-        #     depth=1,
-        # )
-
-        # num_parts = len(self.instruments_formatted) // 1000 + 1
-        # part_size = len(self.instruments_formatted) // num_parts
-        # parts = [
-        #     self.instruments_formatted[i : i + part_size]
-        #     for i in range(0, len(self.instruments_formatted), part_size)
-        # ]
-        # for x in parts:
-        #     self.pyrofex.market_data_subscription(tickers=x, entries=entries)
-
-        await self.market_data_service.connect(credentials, params=params)
-        logger.info("[TimeArbitrageStrategy] Conexión al WebSocket iniciada")
-
-        while self.is_running:
-            try:
-                async with self.market_data_service.lock:
-                    df = self.market_data_service.get_dataframe()
-                    if not df.empty:
-                        await self.evaluate(df)
-                await asyncio.sleep(1)
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"[TimeArbitrageStrategy] Error: {e}")
 
     # -------------------------------------------------
     async def evaluate(
@@ -301,10 +239,10 @@ class TimeArbitrageStrategyService:
         df = self.summary_stratetgy_df.copy()
         return df
 
-    # -------------------------------------------------
-    def reset_dataframe(self):
-        """Limpia el DataFrame y la lista de datos acumulados"""
-        self.market_data_df = _init_summary_strategy_df()
+    # # -------------------------------------------------
+    # def reset_dataframe(self):
+    #     """Limpia el DataFrame y la lista de datos acumulados"""
+    #     self.market_data_df = _init_summary_strategy_df()
 
 
 TimeArbitrageStrategyDependency = Annotated[TimeArbitrageStrategyService, Depends()]
