@@ -1,6 +1,9 @@
 __all__ = ["Comisiones", "DerechosDeMercado"]
 
+import math
 from enum import Enum
+
+from pydantic import BaseModel
 
 
 # -------------------------------------------------
@@ -9,7 +12,12 @@ class Comisiones(float, Enum):
     These rates are used to calculate the transaction commission or fees charged by the market or broker,
     depending on the instrument and operation type."""
 
-    all = 0.0015
+    accion = 0.0015
+    cedear = 0.0015
+    opcion = 0.0015
+    bono = 0.0015
+    on = 0.0015
+    letra = 0.0015
     caucion_pesos_colocador = 0.015  # anual (monto_final × 0,015 ÷ 365 × dias)
     caucion_pesos_tomador = 0.03  # anual (monto_final × 0,03 ÷ 365 × dias)
     caucion_dolar_colocador = 0.002  # anual (monto_final × 0,002 ÷ 365 × dias)
@@ -29,4 +37,46 @@ class DerechosDeMercado(float, Enum):
     letra = 0.002  # sin IVA
     caucion = (
         0.0018  # 0,045% prorrateados c/ 90 días. (monto_final × 0,0018 ÷ 360 × dias)
+    )
+
+
+# -------------------------------------------------
+class GastosConIVA(BaseModel):
+    accion: float = (Comisiones.accion.value + DerechosDeMercado.accion.value) * 1.21
+    cedear: float = (Comisiones.cedear.value + DerechosDeMercado.cedear.value) * 1.21
+    opcion: float = (Comisiones.opcion.value + DerechosDeMercado.opcion.value) * 1.21
+    bono: float = Comisiones.bono.value + DerechosDeMercado.bono.value
+    on: float = Comisiones.on.value + DerechosDeMercado.on.value
+    letra: float = Comisiones.letra.value + DerechosDeMercado.letra.value
+    caucion_pesos_colocador: float = (
+        math.ceil(
+            (Comisiones.caucion_pesos_colocador.value + DerechosDeMercado.caucion.value)
+            * 1.21
+            * 1000
+        )
+        / 1000
+    )
+    caucion_pesos_tomador: float = (
+        math.ceil(
+            (Comisiones.caucion_pesos_tomador.value + DerechosDeMercado.caucion.value)
+            * 1.21
+            * 1000
+        )
+        / 1000
+    )
+    caucion_dolar_colocador: float = (
+        math.ceil(
+            (Comisiones.caucion_dolar_colocador.value + DerechosDeMercado.caucion.value)
+            * 1.21
+            * 1000
+        )
+        / 1000
+    )
+    caucion_dolar_tomador: float = (
+        math.ceil(
+            (Comisiones.caucion_dolar_tomador.value + DerechosDeMercado.caucion.value)
+            * 1.21
+            * 1000
+        )
+        / 1000
     )
