@@ -15,7 +15,9 @@ from ...primary.schemas import (
 from ...primary.services import WSMarketDataService
 
 
+# --------------------------------------------------
 class BaseStrategy(ABC):
+    # --------------------------------------------------
     def __init__(self, market_data_service: WSMarketDataService):
         self.market_data_service = market_data_service
         self._task = None
@@ -24,16 +26,19 @@ class BaseStrategy(ABC):
         self.instruments_details_df = pd.DataFrame()
         # self.summary_stratetgy_df = _init_summary_strategy_df()
 
+    # --------------------------------------------------
     async def start(self, credentials: PrimaryCredentials):
         if self._task is None or self._task.done():
             self.is_running = True
             self._task = asyncio.create_task(self._run(credentials))
 
+    # --------------------------------------------------
     def stop(self):
         self.is_running = False
         if self._task:
             self._task.cancel()
 
+    # --------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
         repo = InstrumentsDetailsRepository()
         instruments_details = await repo.find_by_filter(
@@ -66,6 +71,7 @@ class BaseStrategy(ABC):
             except Exception as e:
                 logger.error(f"[{self.__class__.__name__}] Error: {e}")
 
+    # --------------------------------------------------
     @abstractmethod
     async def evaluate(self, df: pd.DataFrame):
         pass
