@@ -8,9 +8,7 @@ import pandas as pd
 from fastapi import Depends
 
 from ...config import logger
-from ...primary.schemas import (
-    CFICode,
-)
+from ...primary.schemas import CFICode
 from .base_strategy import BaseStrategy
 
 
