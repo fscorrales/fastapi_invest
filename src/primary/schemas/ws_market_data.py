@@ -5,12 +5,14 @@ __all__ = [
     "WSMarketDataSubscription",
     "WSFullMessage",
     "WSMarketDataDF",
+    "WSMarketDataFilter",
 ]
 
 from typing import List, Optional
 
 from pydantic import BaseModel
 
+from ...utils import BaseFilterParams
 from .common import (
     Depth,
     Entry,
@@ -105,3 +107,8 @@ class WSMarketDataDF(BaseModel):
 
     class Config:
         from_attributes = True  # Permite la conversión de modelos ORM a Pydantic
+
+
+# --------------------------------------------------
+class WSMarketDataFilter(BaseFilterParams):
+    ticker: Optional[str] = None

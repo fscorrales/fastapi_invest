@@ -6,12 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
+from ...utils import apply_auto_filter
 from ..schemas import (
     PrimaryCredentials,
     WSMarketDataDF,
-    # RestMarketDataDocument,
-    # RestMarketDataFilter,
-    # SyncResult,
+    WSMarketDataFilter,
     WSMarketDataParams,
 )
 from ..services import (
@@ -74,8 +73,28 @@ async def reset_market_data(
 @ws_market_data_router.get("/dataframe", response_model=list[WSMarketDataDF])
 async def get_market_data(
     service: WSMarketDataServiceDependency,
+    params: Annotated[WSMarketDataFilter, Depends()],
 ):
     df = service.get_dataframe()
     if df.empty:
         raise HTTPException(status_code=404, detail="No hay datos disponibles")
+
+    # Aplicar filtros
+    apply_auto_filter(params)
+    query = params.get_full_filter()
+
+    # --- Aplicamos el filtro al DataFrame ---
+    if query:
+        for key, condition in query.items():
+            if "$eq" in condition:
+                df = df[df[key] == condition["$eq"]]
+
+    # Ordenamiento
+    if params.sort_by in df.columns:
+        ascending = params.sort_dir == "asc"
+        df = df.sort_values(by=params.sort_by, ascending=ascending)
+
+    # Paginación
+    df = df.iloc[params.offset : params.offset + params.limit]
+
     return [WSMarketDataDF(**row.to_dict()) for _, row in df.iterrows()]
