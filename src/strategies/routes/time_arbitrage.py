@@ -13,7 +13,8 @@ from ...primary.services import (
     WSMarketDataServiceDependency,
     prepare_primary_credentials,
 )
-from ..schemas import TimeArbitrageSummary
+from ...utils import apply_auto_filter
+from ..schemas import TimeArbitrageFilter, TimeArbitrageSummary
 from ..services import (
     TimeArbitrageStrategyService,
     strategy_manager,
@@ -78,7 +79,9 @@ async def reset_strategy_data():
 
 
 @time_arbitrage_router.get("/dataframe", response_model=list[TimeArbitrageSummary])
-async def get_strategy_data():
+async def get_strategy_data(
+    params: Annotated[TimeArbitrageFilter, Depends()],
+):
     strategy = strategy_manager.get("time_arbitrage")
     if not strategy:
         raise HTTPException(status_code=404, detail="La estrategia no está activa")
@@ -86,5 +89,23 @@ async def get_strategy_data():
     df = strategy.get_dataframe()
     if df is None or df.empty:
         raise HTTPException(status_code=404, detail="No hay datos disponibles")
+
+    # Aplicar filtros
+    apply_auto_filter(params)
+    query = params.get_full_filter()
+
+    # --- Aplicamos el filtro al DataFrame ---
+    if query:
+        for key, condition in query.items():
+            if "$eq" in condition:
+                df = df[df[key] == condition["$eq"]]
+
+    # Ordenamiento
+    if params.sort_by in df.columns:
+        ascending = params.sort_dir == "asc"
+        df = df.sort_values(by=params.sort_by, ascending=ascending)
+
+    # Paginación
+    df = df.iloc[params.offset : params.offset + params.limit]
 
     return [TimeArbitrageSummary(**row.to_dict()) for _, row in df.iterrows()]

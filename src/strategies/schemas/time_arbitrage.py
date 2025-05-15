@@ -1,14 +1,24 @@
-__all__ = ["TimeArbitrageSummary"]
+__all__ = ["TimeArbitrageSummary", "TimeArbitrageFilter"]
+
+from typing import Optional
 
 from pydantic import BaseModel
+
+from ...utils import BaseFilterParams
 
 
 # --------------------------------------------------
 class TimeArbitrageSummary(BaseModel):
     buy_sell: str
     cficode: str
+    ticker: str
     ticker_buy: str
     ticker_sell: str
-    q_max: int
+    q_max: float
     tna: float
     days: int
+
+
+# --------------------------------------------------
+class TimeArbitrageFilter(BaseFilterParams):
+    ticker: Optional[str] = None

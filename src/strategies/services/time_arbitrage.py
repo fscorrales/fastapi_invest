@@ -16,25 +16,25 @@ from .base_strategy import BaseStrategy
 class TimeArbitrageStrategyService(BaseStrategy):
     def __init__(self, market_data_service):
         super().__init__(market_data_service=market_data_service)
-        self.summary_strategy_df = pd.DataFrame(
-            columns=[
-                "buy_sell",
-                "symbol_buy",
-                "symbol_sell",
-                # "cficode",
-                # "currency",
-                # "compra",
-                # "venta",
-                "q_max",
-                # "P&L",
-                "tna",
-                # "tna_operacion",
-                # "tna_caucion",
-                "days",
-                # "var_pe",
-                # "min_invest",
-            ]
-        )
+        self.summary_cols = [
+            "buy_sell",
+            "ticker",
+            "cficode",
+            "ticker_buy",
+            "ticker_sell",
+            # "currency",
+            # "compra",
+            # "venta",
+            "q_max",
+            # "P&L",
+            "tna",
+            # "tna_operacion",
+            # "tna_caucion",
+            "days",
+            # "var_pe",
+            # "min_invest",
+        ]
+        self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
 
     # --------------------------------------------------
     def get_tna_caucion(
@@ -171,24 +171,7 @@ class TimeArbitrageStrategyService(BaseStrategy):
                 cficode_map = {code.value: code.name for code in CFICode}
                 df["cficode"] = df["cficode"].map(cficode_map)
                 df["days"] = days
-                cols = [
-                    "buy_sell",
-                    "cficode",
-                    "ticker_buy",
-                    "ticker_sell",
-                    # "currency",
-                    # "compra",
-                    # "venta",
-                    "q_max",
-                    # "P&L",
-                    "tna",
-                    # "tna_operacion",
-                    # "tna_caucion",
-                    "days",
-                    # "var_pe",
-                    # "min_invest",
-                ]
-                df = df[cols]
+                df = df[self.summary_cols]
                 df = df.loc[df["tna"] > 0]
                 df = df.sort_values(by="tna", ascending=False)
 
