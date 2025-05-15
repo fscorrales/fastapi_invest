@@ -41,5 +41,10 @@ class StrategyManager:
     def list_active(self):
         return [name for name, strat in self.strategies.items() if strat.is_running]
 
+    # -------------------------------------------------
+    @property
+    def summary(self):
+        return self.summary_strategy_df
+
 
 strategy_manager = StrategyManager()
