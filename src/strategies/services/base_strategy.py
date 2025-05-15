@@ -1,3 +1,5 @@
+__all__ = ["BaseStrategy"]
+
 import asyncio
 from abc import ABC, abstractmethod
 
