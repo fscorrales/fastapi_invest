@@ -14,29 +14,6 @@ from ...primary.schemas import (
 from .base_strategy import BaseStrategy
 
 
-def _init_summary_strategy_df():
-    df = pd.DataFrame(
-        columns=[
-            "buy_sell",
-            "symbol_buy",
-            "symbol_sell",
-            # "cficode",
-            # "currency",
-            # "compra",
-            # "venta",
-            "q_max",
-            # "P&L",
-            "tna",
-            # "tna_operacion",
-            # "tna_caucion",
-            "days",
-            # "var_pe",
-            # "min_invest",
-        ]
-    )
-    return df
-
-
 # -------------------------------------------------
 class TimeArbitrageStrategyService(BaseStrategy):
     def __init__(self, market_data_service):
