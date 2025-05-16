@@ -159,8 +159,8 @@ class WSMarketDataService:
                     raw = await asyncio.wait_for(ws.recv(), timeout=10)
                     self._message_counter += 1
 
-                    # Mostrar el mensaje completo solo cada 50 veces
-                    if self._message_counter % 50 == 0:
+                    # Mostrar el mensaje completo solo cada 1000 veces
+                    if self._message_counter % 1000 == 0:
                         logger.debug(
                             f"📥 Recibido mensaje #{self._message_counter}: {raw[:300]}..."
                         )
@@ -236,8 +236,15 @@ class WSMarketDataService:
                         # Reemplazamos toda la fila
                         self.market_data_df.loc[symbol] = new_row.loc[symbol]
                 else:
-                    if not new_row.isna().all(axis=1).all():
-                        self.market_data_df.loc[symbol] = new_row.loc[symbol]
+                    row = new_row.loc[symbol]
+                    if not row.isna().all():
+                        self.market_data_df.loc[symbol] = row
+                    else:
+                        logger.warning(
+                            f"⛔ Se descartó mensaje para {symbol} por estar vacío o con todos los campos NaN"
+                        )
+                    # if not new_row.isna().all(axis=1).all():
+                    #     self.market_data_df.loc[symbol] = new_row.loc[symbol]
                     # self.market_data_df = pd.concat(
                     #     [df for df in [self.market_data_df, new_row] if not df.empty]
                     # )
