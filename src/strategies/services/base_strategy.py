@@ -2,10 +2,10 @@ __all__ = ["BaseStrategy"]
 
 import asyncio
 from abc import ABC, abstractmethod
-
-import pandas as pd
-import numpy as np
 from typing import List, Union
+
+import numpy as np
+import pandas as pd
 
 from ...config import logger
 from ...primary.repositories import InstrumentsDetailsRepository
@@ -15,6 +15,7 @@ from ...primary.schemas import (
     WSProductSubscription,
 )
 from ...primary.services import WSMarketDataService
+from ..schemas import GastosConIVA
 
 
 # --------------------------------------------------
@@ -31,23 +32,35 @@ class BaseStrategy(ABC):
     # --------------------------------------------------
     def get_tna_caucion(
         self,
-        df: pd.DataFrame,
         plazo: int,
         currency: Union[List[str], str] = ["PESOS", "DOLAR"],
     ) -> pd.DataFrame:
         if not isinstance(currency, list):
             currency = [currency]
-        symbol = [c + " - " + str(plazo) + "D" for c in currency]
+        symbol = ["MERV - XMEV - " + c + " - " + str(plazo) + "D" for c in currency]
+        ticker = currency  # ticker es igual a currency en tu formato
+        df = self.market_data_service.get_dataframe()
         df = df.loc[(df["symbol"].isin(symbol)), ["symbol", "ticker", "last_price"]]
-        df['tna_colocador'] = np.where(
-            df['ticker'] == 'PESOS',
-            (df['last_price'] - GastosConIVA.caucion_pesos_colocador) / 100,
-            (df['last_price'] - GastosConIVA.caucion_dolar_colocador) / 100
+        # Asegurar que haya un registro por cada currency
+
+        rows = []
+        for s, t in zip(symbol, ticker):
+            row = df[df["symbol"] == s]
+            if not row.empty:
+                rows.append(row.iloc[0])
+            else:
+                # Si no existe, agrega una fila con last_price = 0
+                rows.append({"symbol": s, "ticker": t, "last_price": 0})
+
+        df["tna_colocador"] = np.where(
+            df["ticker"] == "PESOS",
+            (df["last_price"] - GastosConIVA.caucion_pesos_colocador) / 100,
+            (df["last_price"] - GastosConIVA.caucion_dolar_colocador) / 100,
         )
-        df['tna_tomador'] = np.where(
-            df['ticker'] == 'PESOS',
-            (df['last_price'] + GastosConIVA.caucion_pesos_tomador) / 100,
-            (df['last_price'] + GastosConIVA.caucion_dolar_tomador) / 100
+        df["tna_tomador"] = np.where(
+            df["ticker"] == "PESOS",
+            (df["last_price"] + GastosConIVA.caucion_pesos_tomador) / 100,
+            (df["last_price"] + GastosConIVA.caucion_dolar_tomador) / 100,
         )
         return df
 
