@@ -4,6 +4,7 @@ import asyncio
 from abc import ABC, abstractmethod
 
 import pandas as pd
+import numpy as np
 
 from ...config import logger
 from ...primary.repositories import InstrumentsDetailsRepository
@@ -25,6 +26,29 @@ class BaseStrategy(ABC):
         self.lock = asyncio.Lock()
         self.instruments_details_df = pd.DataFrame()
         # self.summary_stratetgy_df = _init_summary_strategy_df()
+
+    # --------------------------------------------------
+    def get_tna_caucion(
+        self,
+        df: pd.DataFrame,
+        plazo: int,
+        currency: Union[List[str], str] = ["PESOS", "DOLAR"],
+    ) -> pd.DataFrame:
+        if not isinstance(currency, list):
+            currency = [currency]
+        symbol = [c + " - " + str(plazo) + "D" for c in currency]
+        df = df.loc[(df["symbol"].isin(symbol)), ["symbol", "ticker", "last_price"]]
+        df['tna_colocador'] = np.where(
+            df['ticker'] == 'PESOS',
+            (df['last_price'] - GastosConIVA.caucion_pesos_colocador) / 100,
+            (df['last_price'] - GastosConIVA.caucion_dolar_colocador) / 100
+        )
+        df['tna_tomador'] = np.where(
+            df['ticker'] == 'PESOS',
+            (df['last_price'] + GastosConIVA.caucion_pesos_tomador) / 100,
+            (df['last_price'] + GastosConIVA.caucion_dolar_tomador) / 100
+        )
+        return df
 
     # --------------------------------------------------
     async def start(self, credentials: PrimaryCredentials):
