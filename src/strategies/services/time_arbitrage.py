@@ -4,14 +4,14 @@ __all__ = ["TimeArbitrageStrategyService", "TimeArbitrageStrategyDependency"]
 
 from typing import Annotated, List, Union
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from fastapi import Depends
 
 from ...config import logger
 from ...primary.schemas import CFICode
-from .base_strategy import BaseStrategy
 from ..schemas import GastosConIVA
+from .base_strategy import BaseStrategy
 
 
 # -------------------------------------------------
@@ -71,10 +71,14 @@ class TimeArbitrageStrategyService(BaseStrategy):
 
             # Buy CI and Sell 24hs
             ## Buy CI
-            df_buy = df_from.loc[:, ["ticker", "offer_size", "offer_price", "cficode", "currency"]]
+            df_buy = df_from.loc[
+                :, ["ticker", "offer_size", "offer_price", "cficode", "currency"]
+            ]
             df_buy["ticker_buy"] = df_buy["ticker"] + " - " + from_settlement
             ## Sell 24hs
-            df_sell = df_to.loc[:, ["ticker", "bid_size", "bid_price", "cficode", "currency"]]
+            df_sell = df_to.loc[
+                :, ["ticker", "bid_size", "bid_price", "cficode", "currency"]
+            ]
             df_sell["ticker_sell"] = df_sell["ticker"] + " - " + to_settlement
             df_from_to = pd.merge(
                 left=df_buy,
@@ -87,10 +91,14 @@ class TimeArbitrageStrategyService(BaseStrategy):
 
             # Buy 24hs and Sell CI
             ## Buy 24hs
-            df_buy = df_to.loc[:, ["ticker", "offer_size", "offer_price", "cficode", "currency"]]
+            df_buy = df_to.loc[
+                :, ["ticker", "offer_size", "offer_price", "cficode", "currency"]
+            ]
             df_buy["ticker_buy"] = df_buy["ticker"] + " - " + to_settlement
             ## Sell CI
-            df_sell = df_from.loc[:, ["ticker", "bid_size", "bid_price", "cficode", "currency"]]
+            df_sell = df_from.loc[
+                :, ["ticker", "bid_size", "bid_price", "cficode", "currency"]
+            ]
             df_sell["ticker_sell"] = df_sell["ticker"] + " - " + from_settlement
             df_to_from = pd.merge(
                 left=df_buy,
@@ -113,26 +121,44 @@ class TimeArbitrageStrategyService(BaseStrategy):
                     CFICode.cedear.value: GastosConIVA.cedear,
                     CFICode.bono.value: GastosConIVA.bono,
                     CFICode.letra.value: GastosConIVA.letra,
-                    CFICode.on.value: GastosConIVA.on
+                    CFICode.on.value: GastosConIVA.on,
                 }
-                df['adj_buy'] = df['offer_price'] * (1 + df['cficode'].map(gastos_dict))
-                df['adj_sell'] = df['bid_price'] * (1 - df['cficode'].map(gastos_dict))
+                df["adj_buy"] = df["offer_price"] * (1 + df["cficode"].map(gastos_dict))
+                df["adj_sell"] = df["bid_price"] * (1 - df["cficode"].map(gastos_dict))
                 # Rate
                 df["rate"] = df["adj_sell"] / df["adj_buy"] - 1
                 df["tna_operacion"] = df["rate"] / days * 365
+
                 # TNA Caución
-                # tna_caucion = self.get_tna_caucion(df.copy(), plazo=days)
-                # df['tna_caucion'] = df['currency'].apply(
-                #     lambda x: tna_caucion.loc[tna_caucion["ticker"] == "PESOS"]["tna_colocador"].values[0][0]
-                #     if x == 'ars' 
-                #     else tna_caucion.loc[tna_caucion["ticker"] == "DOLAR"]["tna_colocador"].values[0][0]
+                tna_caucion = self.get_tna_caucion(plazo=days)
+
+                def get_tna_caucion_by_currency(currency):
+                    if currency == "ARS":
+                        vals = tna_caucion.loc[tna_caucion["ticker"] == "PESOS"][
+                            "tna_colocador"
+                        ].values
+                    else:
+                        vals = tna_caucion.loc[tna_caucion["ticker"] == "DOLAR"][
+                            "tna_colocador"
+                        ].values
+                    return vals[0] if len(vals) > 0 else 0
+
+                df["tna_caucion"] = df["currency"].apply(get_tna_caucion_by_currency)
+                # df["tna_caucion"] = df["currency"].apply(
+                #     lambda x: tna_caucion.loc[tna_caucion["ticker"] == "PESOS"][
+                #         "tna_colocador"
+                #     ].values[0]
+                #     if x == "ARS"
+                #     else tna_caucion.loc[tna_caucion["ticker"] == "DOLAR"][
+                #         "tna_colocador"
+                #     ].values[0]
                 # )
 
                 # TNA
-                df['tna'] = np.where(
-                    df['buy_sell'] == from_settlement + " / " + to_settlement, 
-                    df['tna_operacion'], 
-                    df['tna_operacion']
+                df["tna"] = np.where(
+                    df["buy_sell"] == from_settlement + " / " + to_settlement,
+                    df["tna_operacion"],
+                    df["tna_operacion"],
                     # df['tna_operacion'] + df['tna_caucion']
                 )
 
@@ -152,14 +178,15 @@ class TimeArbitrageStrategyService(BaseStrategy):
                 # df["P&L"] = np.where(df["cficode"] != "ESXXXX", df["P&L"] / 100, df["P&L"])
                 # df["P&L"] = df["P&L"] * df["q_max"]
 
-
                 cficode_map = {code.value: code.name for code in CFICode}
                 df["cficode"] = df["cficode"].map(cficode_map)
                 df["days"] = days
-                df = df.rename(columns={
-                        'offer_price':'buy_price', 
-                        'bid_price':'sell_price', 
-                        })
+                df = df.rename(
+                    columns={
+                        "offer_price": "buy_price",
+                        "bid_price": "sell_price",
+                    }
+                )
                 df = df[self.summary_cols]
                 df = df.loc[df["tna"] > 0]
                 df = df.sort_values(by="tna", ascending=False)
