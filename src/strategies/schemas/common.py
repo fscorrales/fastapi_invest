@@ -1,4 +1,4 @@
-__all__ = ["Comisiones", "DerechosDeMercado"]
+__all__ = ["Comisiones", "DerechosDeMercado", "GastosConIVA"]
 
 import math
 from enum import Enum
@@ -41,42 +41,33 @@ class DerechosDeMercado(float, Enum):
 
 
 # -------------------------------------------------
-class GastosConIVA(BaseModel):
-    accion: float = (Comisiones.accion.value + DerechosDeMercado.accion.value) * 1.21
-    cedear: float = (Comisiones.cedear.value + DerechosDeMercado.cedear.value) * 1.21
-    opcion: float = (Comisiones.opcion.value + DerechosDeMercado.opcion.value) * 1.21
-    bono: float = Comisiones.bono.value + DerechosDeMercado.bono.value
-    on: float = Comisiones.on.value + DerechosDeMercado.on.value
-    letra: float = Comisiones.letra.value + DerechosDeMercado.letra.value
-    caucion_pesos_colocador: float = (
-        math.ceil(
-            (Comisiones.caucion_pesos_colocador.value + DerechosDeMercado.caucion.value)
-            * 1.21
-            * 1000
-        )
-        / 1000
+class GastosConIVA:
+    """Gastos totales con IVA incluidos, según tipo de instrumento."""
+
+    accion = (Comisiones.accion.value + DerechosDeMercado.accion.value) * 1.21
+    cedear = (Comisiones.cedear.value + DerechosDeMercado.cedear.value) * 1.21
+    opcion = (Comisiones.opcion.value + DerechosDeMercado.opcion.value) * 1.21
+    bono = Comisiones.bono.value + DerechosDeMercado.bono.value
+    on = Comisiones.on.value + DerechosDeMercado.on.value
+    letra = Comisiones.letra.value + DerechosDeMercado.letra.value
+
+    caucion_pesos_colocador = round(
+        (Comisiones.caucion_pesos_colocador.value + DerechosDeMercado.caucion.value)
+        * 1.21,
+        3,
     )
-    caucion_pesos_tomador: float = (
-        math.ceil(
-            (Comisiones.caucion_pesos_tomador.value + DerechosDeMercado.caucion.value)
-            * 1.21
-            * 1000
-        )
-        / 1000
+    caucion_pesos_tomador = round(
+        (Comisiones.caucion_pesos_tomador.value + DerechosDeMercado.caucion.value)
+        * 1.21,
+        3,
     )
-    caucion_dolar_colocador: float = (
-        math.ceil(
-            (Comisiones.caucion_dolar_colocador.value + DerechosDeMercado.caucion.value)
-            * 1.21
-            * 1000
-        )
-        / 1000
+    caucion_dolar_colocador = round(
+        (Comisiones.caucion_dolar_colocador.value + DerechosDeMercado.caucion.value)
+        * 1.21,
+        3,
     )
-    caucion_dolar_tomador: float = (
-        math.ceil(
-            (Comisiones.caucion_dolar_tomador.value + DerechosDeMercado.caucion.value)
-            * 1.21
-            * 1000
-        )
-        / 1000
+    caucion_dolar_tomador = round(
+        (Comisiones.caucion_dolar_tomador.value + DerechosDeMercado.caucion.value)
+        * 1.21,
+        3,
     )
