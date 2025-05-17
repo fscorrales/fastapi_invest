@@ -92,6 +92,15 @@ class WSMarketDataService:
             logger.info(f"📡 Suscripción enviada con {len(chunk)} productos")
 
     # -------------------------------------------------
+    async def _send_pings(self):
+        try:
+            while self.is_running:
+                await self.ws.ping()
+                await asyncio.sleep(30)
+        except asyncio.CancelledError:
+            logger.info("🛑 Ping task cancelado")
+
+    # -------------------------------------------------
     async def connect(
         self,
         credentials: PrimaryCredentials,
@@ -126,6 +135,7 @@ class WSMarketDataService:
 
                 # Guardamos las tareas para posible cancelación luego
                 self.is_running = True
+                self.ping_task = asyncio.create_task(self._send_pings())
                 self.consumer_task = asyncio.create_task(self._process_messages())
                 self.producer_task = asyncio.create_task(
                     self._receive_messages(self.ws)
