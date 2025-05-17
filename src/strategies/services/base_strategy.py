@@ -10,6 +10,7 @@ import pandas as pd
 from ...config import logger
 from ...primary.repositories import InstrumentsDetailsRepository
 from ...primary.schemas import (
+    CFICode,
     PrimaryCredentials,
     WSMarketDataSubscription,
     WSProductSubscription,
@@ -79,9 +80,26 @@ class BaseStrategy(ABC):
     # --------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
         repo = InstrumentsDetailsRepository()
-        instruments_details = await repo.find_by_filter(
-            filters={"enviroment": credentials.enviroment}
+        acciones = await repo.find_by_filter(
+            filters={
+                "enviroment": credentials.enviroment,
+                "cficode": CFICode.accion.value,
+            }
         )
+        cedears = await repo.find_by_filter(
+            filters={
+                "enviroment": credentials.enviroment,
+                "cficode": CFICode.cedear.value,
+            }
+        )
+        cauciones = await repo.find_by_filter(
+            filters={
+                "enviroment": credentials.enviroment,
+                "cficode": CFICode.caucion.value,
+            }
+        )
+
+        instruments_details = acciones + cedears + cauciones
         self.instruments_details_df = pd.DataFrame(instruments_details)
 
         params = WSMarketDataSubscription(
