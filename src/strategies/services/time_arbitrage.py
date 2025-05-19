@@ -38,7 +38,7 @@ class TimeArbitrageStrategyService(BaseStrategy):
             "buy_price",
             "sell_price",
             "q_max",
-            # "P&L",
+            "p_and_l",
             "tna",
             # "tna_operacion",
             # "tna_caucion",
@@ -123,6 +123,13 @@ class TimeArbitrageStrategyService(BaseStrategy):
             df = df.loc[df["bid_size"] > 0]
 
             if not df.empty:
+                # Renema offer_price and bid_price
+                df = df.rename(
+                    columns={
+                        "offer_price": "buy_price",
+                        "bid_price": "sell_price",
+                    }
+                )
                 gastos_dict = {
                     CFICode.accion.value: GastosConIVA.accion,
                     CFICode.cedear.value: GastosConIVA.cedear,
@@ -130,8 +137,9 @@ class TimeArbitrageStrategyService(BaseStrategy):
                     CFICode.letra.value: GastosConIVA.letra,
                     CFICode.on.value: GastosConIVA.on,
                 }
-                df["adj_buy"] = df["offer_price"] * (1 + df["cficode"].map(gastos_dict))
-                df["adj_sell"] = df["bid_price"] * (1 - df["cficode"].map(gastos_dict))
+                df["adj_buy"] = df["buy_price"] * (1 + df["cficode"].map(gastos_dict))
+                df["adj_sell"] = df["sell_price"] * (1 - df["cficode"].map(gastos_dict))
+
                 # Rate
                 df["rate"] = df["adj_sell"] / df["adj_buy"] - 1
                 df["tna_operacion"] = df["rate"] / self.days * 365
@@ -151,22 +159,12 @@ class TimeArbitrageStrategyService(BaseStrategy):
                     return vals[0] if len(vals) > 0 else 0
 
                 df["tna_caucion"] = df["currency"].apply(get_tna_caucion_by_currency)
-                # df["tna_caucion"] = df["currency"].apply(
-                #     lambda x: tna_caucion.loc[tna_caucion["ticker"] == "PESOS"][
-                #         "tna_colocador"
-                #     ].values[0]
-                #     if x == "ARS"
-                #     else tna_caucion.loc[tna_caucion["ticker"] == "DOLAR"][
-                #         "tna_colocador"
-                #     ].values[0]
-                # )
 
                 # TNA
                 df["tna"] = np.where(
                     df["buy_sell"] == self.from_settlement + " / " + self.to_settlement,
                     df["tna_operacion"],
-                    df["tna_operacion"],
-                    # df['tna_operacion'] + df['tna_caucion']
+                    df["tna_operacion"] + df["tna_caucion"],
                 )
 
                 # Max Quantity
@@ -174,26 +172,27 @@ class TimeArbitrageStrategyService(BaseStrategy):
                     lambda row: min(row["offer_size"], row["bid_size"]), axis=1
                 )
 
-                # P&L
-                # df["P&L"] = np.where(
-                #     df["compra_venta"] == from_plazo + " / " + to_plazo,
-                #     (df["adj_sell"] - df["adj_buy"])
-                #     - (df["compra"] * df["tna_caucion"] / 365 * days),
-                #     (df["adj_sell"] - df["adj_buy"])
-                #     + (df["adj_sell"] * df["tna_caucion"] / 365 * days),
-                # )
-                # df["P&L"] = np.where(df["cficode"] != "ESXXXX", df["P&L"] / 100, df["P&L"])
-                # df["P&L"] = df["P&L"] * df["q_max"]
-
+                # Rename cficode
                 cficode_map = {code.value: code.name for code in CFICode}
                 df["cficode"] = df["cficode"].map(cficode_map)
-                df["days"] = self.days
-                df = df.rename(
-                    columns={
-                        "offer_price": "buy_price",
-                        "bid_price": "sell_price",
-                    }
+
+                # P&L
+                df["p_and_l"] = np.where(
+                    df["buy_sell"] == self.from_settlement + " / " + self.to_settlement,
+                    (df["adj_sell"] - df["adj_buy"])
+                    - (df["buy_price"] * df["tna_caucion"] / 365 * self.days),
+                    (df["adj_sell"] - df["adj_buy"])
+                    + (df["adj_sell"] * df["tna_caucion"] / 365 * self.days),
                 )
+                df["p_and_l"] = np.where(
+                    df["cficode"] != CFICode.accion.name,
+                    df["p_and_l"] / 100,
+                    df["p_and_l"],
+                )
+                df["p_and_l"] = df["p_and_l"] * df["q_max"]
+
+                df["days"] = self.days
+
                 df = df[self.summary_cols]
                 df = df.loc[df["tna"] > 0]
                 df = df.sort_values(by="tna", ascending=False)

@@ -19,6 +19,7 @@ class TimeArbitrageSummary(BaseModel):
     sell_price: float
     q_max: float
     tna: float
+    p_and_l: float
     days: int
 
 
