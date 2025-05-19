@@ -204,22 +204,21 @@ class BaseRepository(Generic[ModelType]):
         sort_dir: str = "asc",
     ) -> List[ModelType]:
         """
-        Buscar documentos que coincidan con un filtro dinámico.
+        Buscar documentos que coincidan con un filtro dinámico con operadores tipo __ne, __gt, etc.
 
         Args:
-            filters (dict): Filtros de búsqueda (ej: {"categoria": "guitarras"}).
+            filters (dict): Filtros de búsqueda (ej: {"estado__ne": "inactivo"}).
             skip (int): Cuántos documentos omitir.
-            limit (Optional[int]): Máximo de documentos a devolver. Si es None, trae todos.
+            limit (Optional[int]): Máximo de documentos a devolver.
             sort_by (Optional[str]): Campo por el cual ordenar.
             sort_dir (str): Dirección de orden ("asc" o "desc").
 
         Returns:
-            List[ModelType]: Lista de documentos encontrados.
+            List[]: Lista de documentos encontrados.
         """
-        if not filters:
-            filters = {}
+        mongo_filter = _parse_filter_keys(filters or {})
 
-        cursor = self.collection.find(filters).skip(skip)
+        cursor = self.collection.find(mongo_filter).skip(skip)
 
         if sort_by:
             direction = 1 if sort_dir == "asc" else -1
