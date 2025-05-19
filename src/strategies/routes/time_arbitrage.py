@@ -16,7 +16,7 @@ from ...primary.services import (
 from ...utils import apply_auto_filter
 from ..schemas import TimeArbitrageFilter, TimeArbitrageSummary
 from ..services import (
-    TimeArbitrageStrategyService,
+    TimeArbitrageService,
     strategy_manager,
 )
 
@@ -46,7 +46,7 @@ async def start_time_arbitrage(
     if STRATEGY_NAME in strategy_manager.list_active():
         raise HTTPException(status_code=400, detail="La estrategia ya está corriendo")
 
-    strategy = TimeArbitrageStrategyService(market_data_service=service, days=days)
+    strategy = TimeArbitrageService(market_data_service=service, days=days)
     strategy_manager.register(STRATEGY_NAME, strategy)
     await strategy_manager.start_strategy(STRATEGY_NAME, credentials)
 
