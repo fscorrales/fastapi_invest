@@ -10,14 +10,24 @@ from fastapi import Depends
 
 from ...config import logger
 from ...primary.schemas import CFICode
+from ...primary.services import WSMarketDataService
 from ..schemas import GastosConIVA
 from .base_strategy import BaseStrategy
 
 
 # -------------------------------------------------
 class TimeArbitrageStrategyService(BaseStrategy):
-    def __init__(self, market_data_service):
+    def __init__(
+        self,
+        market_data_service: WSMarketDataService,
+        days: int = 1,
+        from_settlement: str = "CI",
+        to_settlement: str = "24hs",
+    ):
         super().__init__(market_data_service=market_data_service)
+        self.days = days
+        self.from_settlement = from_settlement
+        self.to_settlement = to_settlement
         self.summary_cols = [
             "buy_sell",
             "ticker",
@@ -42,9 +52,6 @@ class TimeArbitrageStrategyService(BaseStrategy):
     async def evaluate(
         self,
         df: pd.DataFrame,
-        days: int = 1,
-        from_settlement: str = "CI",
-        to_settlement: str = "24hs",
     ) -> pd.DataFrame:
         """ ""
         Evaluates the time arbitrage strategy between two settlements.
@@ -66,20 +73,20 @@ class TimeArbitrageStrategyService(BaseStrategy):
                 df["cficode"].isin([CFICode.accion.value, CFICode.cedear.value])
             ]
             # Filter by settlement
-            df_from = df.loc[df["settlement"] == from_settlement]
-            df_to = df.loc[df["settlement"] == to_settlement]
+            df_from = df.loc[df["settlement"] == self.from_settlement]
+            df_to = df.loc[df["settlement"] == self.to_settlement]
 
             # Buy CI and Sell 24hs
             ## Buy CI
             df_buy = df_from.loc[
                 :, ["ticker", "offer_size", "offer_price", "cficode", "currency"]
             ]
-            df_buy["ticker_buy"] = df_buy["ticker"] + " - " + from_settlement
+            df_buy["ticker_buy"] = df_buy["ticker"] + " - " + self.from_settlement
             ## Sell 24hs
             df_sell = df_to.loc[
                 :, ["ticker", "bid_size", "bid_price", "cficode", "currency"]
             ]
-            df_sell["ticker_sell"] = df_sell["ticker"] + " - " + to_settlement
+            df_sell["ticker_sell"] = df_sell["ticker"] + " - " + self.to_settlement
             df_from_to = pd.merge(
                 left=df_buy,
                 right=df_sell,
@@ -87,19 +94,19 @@ class TimeArbitrageStrategyService(BaseStrategy):
                 on=["ticker", "cficode", "currency"],
                 copy=False,
             )
-            df_from_to["buy_sell"] = from_settlement + " / " + to_settlement
+            df_from_to["buy_sell"] = self.from_settlement + " / " + self.to_settlement
 
             # Buy 24hs and Sell CI
             ## Buy 24hs
             df_buy = df_to.loc[
                 :, ["ticker", "offer_size", "offer_price", "cficode", "currency"]
             ]
-            df_buy["ticker_buy"] = df_buy["ticker"] + " - " + to_settlement
+            df_buy["ticker_buy"] = df_buy["ticker"] + " - " + self.to_settlement
             ## Sell CI
             df_sell = df_from.loc[
                 :, ["ticker", "bid_size", "bid_price", "cficode", "currency"]
             ]
-            df_sell["ticker_sell"] = df_sell["ticker"] + " - " + from_settlement
+            df_sell["ticker_sell"] = df_sell["ticker"] + " - " + self.from_settlement
             df_to_from = pd.merge(
                 left=df_buy,
                 right=df_sell,
@@ -107,7 +114,7 @@ class TimeArbitrageStrategyService(BaseStrategy):
                 on=["ticker", "cficode", "currency"],
                 copy=False,
             )
-            df_to_from["buy_sell"] = to_settlement + " / " + from_settlement
+            df_to_from["buy_sell"] = self.to_settlement + " / " + self.from_settlement
 
             # Concat both DataFrames
             df = pd.concat([df_from_to, df_to_from], axis=0, ignore_index=True)
@@ -127,10 +134,10 @@ class TimeArbitrageStrategyService(BaseStrategy):
                 df["adj_sell"] = df["bid_price"] * (1 - df["cficode"].map(gastos_dict))
                 # Rate
                 df["rate"] = df["adj_sell"] / df["adj_buy"] - 1
-                df["tna_operacion"] = df["rate"] / days * 365
+                df["tna_operacion"] = df["rate"] / self.days * 365
 
                 # TNA Caución
-                tna_caucion = self.get_tna_caucion(plazo=days)
+                tna_caucion = self.get_tna_caucion(plazo=self.days)
 
                 def get_tna_caucion_by_currency(currency):
                     if currency == "ARS":
@@ -156,7 +163,7 @@ class TimeArbitrageStrategyService(BaseStrategy):
 
                 # TNA
                 df["tna"] = np.where(
-                    df["buy_sell"] == from_settlement + " / " + to_settlement,
+                    df["buy_sell"] == self.from_settlement + " / " + self.to_settlement,
                     df["tna_operacion"],
                     df["tna_operacion"],
                     # df['tna_operacion'] + df['tna_caucion']
@@ -180,7 +187,7 @@ class TimeArbitrageStrategyService(BaseStrategy):
 
                 cficode_map = {code.value: code.name for code in CFICode}
                 df["cficode"] = df["cficode"].map(cficode_map)
-                df["days"] = days
+                df["days"] = self.days
                 df = df.rename(
                     columns={
                         "offer_price": "buy_price",
@@ -196,21 +203,6 @@ class TimeArbitrageStrategyService(BaseStrategy):
 
         except Exception as e:
             logger.error(f"[TimeArbitrageStrategy] Error en evaluación: {e}")
-
-    # -------------------------------------------------
-    def get_dataframe(self) -> pd.DataFrame:
-        """Devuelve los datos como un DataFrame"""
-        if self.summary_stratetgy_df.empty:
-            # raise ValueError("El DataFrame está vacío")
-            return None
-
-        df = self.summary_stratetgy_df.copy()
-        return df
-
-    # # -------------------------------------------------
-    # def reset_dataframe(self):
-    #     """Limpia el DataFrame y la lista de datos acumulados"""
-    #     self.market_data_df = _init_summary_strategy_df()
 
 
 TimeArbitrageStrategyDependency = Annotated[TimeArbitrageStrategyService, Depends()]

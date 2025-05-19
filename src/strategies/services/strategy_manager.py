@@ -44,7 +44,7 @@ class StrategyManager:
     # -------------------------------------------------
     @property
     def summary(self):
-        return self.summary_strategy_df
+        return self.summary_strategy_df.copy()
 
 
 strategy_manager = StrategyManager()

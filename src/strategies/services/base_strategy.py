@@ -28,7 +28,7 @@ class BaseStrategy(ABC):
         self.is_running = False
         self.lock = asyncio.Lock()
         self.instruments_details_df = pd.DataFrame()
-        # self.summary_stratetgy_df = _init_summary_strategy_df()
+        self.summary_cols = []
 
     # --------------------------------------------------
     def get_tna_caucion(
@@ -132,12 +132,12 @@ class BaseStrategy(ABC):
     async def evaluate(self, df: pd.DataFrame):
         pass
 
-    # def get_dataframe(self) -> pd.DataFrame:
-    #     return (
-    #         self.summary_stratetgy_df.copy()
-    #         if not self.summary_stratetgy_df.empty
-    #         else None
-    #     )
+    def get_dataframe(self) -> pd.DataFrame:
+        return (
+            self.summary_stratetgy_df.copy()
+            if not self.summary_stratetgy_df.empty
+            else None
+        )
 
-    # def reset_dataframe(self):
-    #     self.summary_stratetgy_df = _init_summary_strategy_df()
+    def reset_dataframe(self):
+        self.summary_stratetgy_df = pd.DataFrame(columns=self.summary_cols)
