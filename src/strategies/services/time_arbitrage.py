@@ -42,7 +42,7 @@ class TimeArbitrageStrategyService(BaseStrategy):
     async def evaluate(
         self,
         df: pd.DataFrame,
-        days: int = 3,
+        days: int = 1,
         from_settlement: str = "CI",
         to_settlement: str = "24hs",
     ) -> pd.DataFrame:
