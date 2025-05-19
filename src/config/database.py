@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 
-from ..utils import BaseFilterParams
+from ..utils import BaseFilterParams, parse_filter_keys
 from .__base_config import settings
 
 ModelType = TypeVar("ModelType", bound=BaseModel)
@@ -216,7 +216,7 @@ class BaseRepository(Generic[ModelType]):
         Returns:
             List[]: Lista de documentos encontrados.
         """
-        mongo_filter = _parse_filter_keys(filters or {})
+        mongo_filter = parse_filter_keys(filters or {})
 
         cursor = self.collection.find(mongo_filter).skip(skip)
 
