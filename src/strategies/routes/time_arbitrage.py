@@ -30,6 +30,7 @@ async def start_time_arbitrage(
     auth: OptionalAuthorizationDependency,
     service: WSMarketDataServiceDependency,
     credentials: Annotated[PrimaryCredentials, Depends()],
+    days: int = 1,
 ):
     if service.task and not service.task.done():
         raise HTTPException(status_code=400, detail="WebSocket stream already running.")
@@ -45,7 +46,7 @@ async def start_time_arbitrage(
     if strategy_name in strategy_manager.list_active():
         raise HTTPException(status_code=400, detail="La estrategia ya está corriendo")
 
-    strategy = TimeArbitrageStrategyService(market_data_service=service)
+    strategy = TimeArbitrageStrategyService(market_data_service=service, days=days)
     strategy_manager.register(strategy_name, strategy)
     await strategy_manager.start_strategy(strategy_name, credentials)
 
