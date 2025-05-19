@@ -66,7 +66,7 @@ class WSMarketDataService:
         credentials: PrimaryCredentials,
         params: Union[WSMarketDataSubscription, WSMarketDataParams] = None,
     ):
-        self.task = asyncio.create_task(self.connect(credentials, params))
+        self.task = asyncio.create_task(self.connect_with_retries(credentials, params))
         return {"message": "WebSocket conectado."}
 
     # -------------------------------------------------
@@ -158,6 +158,19 @@ class WSMarketDataService:
                 )
 
             return {"message": "WebSocket conectado."}
+
+    # -------------------------------------------------
+    async def connect_with_retries(self, credentials, params, retries=3):
+        for attempt in range(retries):
+            try:
+                await self.connect(credentials, params)
+                return
+            except Exception as e:
+                logger.error(f"🔁 Falló intento {attempt + 1}: {e}")
+                await asyncio.sleep(5)
+        raise HTTPException(
+            status_code=500, detail="No se pudo conectar después de varios intentos."
+        )
 
     # -------------------------------------------------
     async def _receive_messages(self, ws):
