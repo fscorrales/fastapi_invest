@@ -20,8 +20,10 @@ from ..services import (
     strategy_manager,
 )
 
+STRATEGY_NAME = "time_arbitrage"
+
 time_arbitrage_router = APIRouter(
-    prefix="/time_arbitrage", tags=["Strategies - Time Arbitrage"]
+    prefix="/" + STRATEGY_NAME, tags=["Strategies - Time Arbitrage"]
 )
 
 
@@ -41,32 +43,29 @@ async def start_time_arbitrage(
         f"Syncing {credentials.enviroment.value} instruments details from Primary API with url: {credentials.url}"
     )
 
-    strategy_name = "time_arbitrage"
-
-    if strategy_name in strategy_manager.list_active():
+    if STRATEGY_NAME in strategy_manager.list_active():
         raise HTTPException(status_code=400, detail="La estrategia ya está corriendo")
 
     strategy = TimeArbitrageStrategyService(market_data_service=service, days=days)
-    strategy_manager.register(strategy_name, strategy)
-    await strategy_manager.start_strategy(strategy_name, credentials)
+    strategy_manager.register(STRATEGY_NAME, strategy)
+    await strategy_manager.start_strategy(STRATEGY_NAME, credentials)
 
-    return {"message": f"Estrategia '{strategy_name}' iniciada"}
+    return {"message": f"Estrategia '{STRATEGY_NAME}' iniciada"}
 
 
 @time_arbitrage_router.get("/status", response_model=dict)
 async def get_strategy_status():
-    is_running = "time_arbitrage" in strategy_manager.list_active()
+    is_running = STRATEGY_NAME in strategy_manager.list_active()
     return {
-        "strategy": "time_arbitrage",
+        "strategy": STRATEGY_NAME,
         "status": "running" if is_running else "stopped",
     }
 
 
 @time_arbitrage_router.post("/stop")
 async def stop_time_arbitrage():
-    strategy_name = "time_arbitrage"
-    strategy_manager.stop_strategy(strategy_name)
-    return {"status": "stopped", "strategy": strategy_name}
+    strategy_manager.stop_strategy(STRATEGY_NAME)
+    return {"status": "stopped", "strategy": STRATEGY_NAME}
 
 
 @time_arbitrage_router.post("/reset", response_model=dict)
