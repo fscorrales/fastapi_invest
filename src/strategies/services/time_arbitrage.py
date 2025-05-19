@@ -1,6 +1,6 @@
 # src/strategies/services/time_arbitrage.py
 
-__all__ = ["TimeArbitrageStrategyService", "TimeArbitrageStrategyDependency"]
+__all__ = ["TimeArbitrageService", "TimeArbitrageDependency"]
 
 from typing import Annotated
 
@@ -16,7 +16,7 @@ from .base_strategy import BaseStrategy
 
 
 # -------------------------------------------------
-class TimeArbitrageStrategyService(BaseStrategy):
+class TimeArbitrageService(BaseStrategy):
     def __init__(
         self,
         market_data_service: WSMarketDataService,
@@ -58,7 +58,7 @@ class TimeArbitrageStrategyService(BaseStrategy):
         It filters the DataFrame for the specified settlements and calculates the rate, TNA, and maximum quantity.
         """
         if df.empty:
-            logger.warning("[TimeArbitrageStrategy] DataFrame is empty")
+            logger.warning("[TimeArbitrage] DataFrame is empty")
             return pd.DataFrame()
 
         try:
@@ -201,7 +201,7 @@ class TimeArbitrageStrategyService(BaseStrategy):
                     self.summary_stratetgy_df = df.copy()
 
         except Exception as e:
-            logger.error(f"[TimeArbitrageStrategy] Error en evaluación: {e}")
+            logger.error(f"[TimeArbitrage] Error en evaluación: {e}")
 
 
-TimeArbitrageStrategyDependency = Annotated[TimeArbitrageStrategyService, Depends()]
+TimeArbitrageDependency = Annotated[TimeArbitrageService, Depends()]
