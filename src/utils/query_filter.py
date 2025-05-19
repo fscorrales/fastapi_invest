@@ -1,4 +1,4 @@
-__all__ = ["BaseFilterParams", "apply_auto_filter"]
+__all__ = ["BaseFilterParams", "apply_auto_filter", "parse_filter_keys"]
 
 from typing import Literal, Optional
 
@@ -101,3 +101,18 @@ def apply_auto_filter(params: BaseFilterParams) -> None:
             params.set_extra_filter(
                 {field: {"$eq": value.value if hasattr(value, "value") else value}}
             )
+
+# -------------------------------------------------
+def parse_filter_keys(filters: dict) -> dict:
+    """
+    Convierte claves tipo 'campo__operador' en filtros MongoDB.
+    Ej: {"edad__gt": 30} => {"edad": {"$gt": 30}}
+    """
+    mongo_filters = {}
+    for key, value in filters.items():
+        if "__" in key:
+            field, op = key.split("__", 1)
+            mongo_filters.setdefault(field, {})[f"${op}"] = value
+        else:
+            mongo_filters[key] = value
+    return mongo_filters
