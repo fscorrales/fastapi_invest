@@ -2,7 +2,7 @@
 
 __all__ = ["TimeArbitrageStrategyService", "TimeArbitrageStrategyDependency"]
 
-from typing import Annotated, List, Union
+from typing import Annotated
 
 import numpy as np
 import pandas as pd
