@@ -1,9 +1,6 @@
 __all__ = ["Comisiones", "DerechosDeMercado", "GastosConIVA"]
 
-import math
 from enum import Enum
-
-from pydantic import BaseModel
 
 
 # -------------------------------------------------
