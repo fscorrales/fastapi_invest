@@ -1,6 +1,8 @@
-__all__ = ["Comisiones", "DerechosDeMercado", "GastosConIVA"]
+__all__ = ["Comisiones", "DerechosDeMercado", "GastosConIVA", "cficode_fees_dict"]
 
 from enum import Enum
+
+from ...primary.schemas import CFICode
 
 
 # -------------------------------------------------
@@ -68,3 +70,13 @@ class GastosConIVA:
         * 1.21,
         3,
     )
+
+
+# -------------------------------------------------
+cficode_fees_dict = {
+    CFICode.accion.value: GastosConIVA.accion,
+    CFICode.cedear.value: GastosConIVA.cedear,
+    CFICode.bono.value: GastosConIVA.bono,
+    CFICode.letra.value: GastosConIVA.letra,
+    CFICode.on.value: GastosConIVA.on,
+}
