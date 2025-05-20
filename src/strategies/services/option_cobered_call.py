@@ -20,14 +20,14 @@ class OptionCoberedCallService(BaseStrategy):
     def __init__(
         self,
         market_data_service: WSMarketDataService,
-        days: int = 1,
-        from_settlement: str = "CI",
-        to_settlement: str = "24hs",
+        # days: int = 1,
+        # from_settlement: str = "CI",
+        # to_settlement: str = "24hs",
     ):
         super().__init__(market_data_service=market_data_service)
-        self.days = days
-        self.from_settlement = from_settlement
-        self.to_settlement = to_settlement
+        # self.days = days
+        # self.from_settlement = from_settlement
+        # self.to_settlement = to_settlement
         self.summary_cols = [
             #     "underlying",
             #     "days_expire",
@@ -67,63 +67,70 @@ class OptionCoberedCallService(BaseStrategy):
         try:
             # Add cficode and currency to WSMarketData DF and then filter with them
             df = df.merge(
-                self.instruments_details_df.loc[:, ["symbol", "cficode", "currency"]],
+                self.instruments_details_df.loc[
+                    :,
+                    [
+                        "symbol",
+                        "cficode",
+                        "currency",
+                        "underlying",
+                        "maturityDate",
+                        "strike",
+                    ],
+                ],
                 how="left",
                 on="symbol",
             )
             df = df.loc[df["currency"].isin(["ARS"])]  # Only ARS
-            df = df.loc[
-                (df["cficode"].isin([CFICode.call_accion.value, CFICode.put_accion.value])) or 
-                (df["cficode"] == CFICode.accion.value and df["ticker"].isin(["GGAL", "COME", "YPFD"]) and df["settlement"] == "24hs")
-            ]
-            # Filter by settlement
-            df_from = df.loc[df["settlement"] == self.from_settlement]
-            df_to = df.loc[df["settlement"] == self.to_settlement]
 
-            # Buy CI and Sell 24hs
-            ## Buy CI
-            df_buy = df_from.loc[
-                :, ["ticker", "offer_size", "offer_price", "cficode", "currency"]
+            # Filter in two dfs
+            df_opt = df.loc[
+                (
+                    df["cficode"].isin(
+                        [CFICode.call_accion.value, CFICode.put_accion.value]
+                    )
+                )
             ]
-            df_buy["ticker_buy"] = df_buy["ticker"] + " - " + self.from_settlement
-            ## Sell 24hs
-            df_sell = df_to.loc[
-                :, ["ticker", "bid_size", "bid_price", "cficode", "currency"]
+            df_sub = df.loc[
+                (
+                    df["cficode"] == CFICode.accion.value
+                    and df["ticker"].isin(["GGAL", "COME", "YPFD"])
+                    and df["settlement"] == "24hs"
+                )
             ]
-            df_sell["ticker_sell"] = df_sell["ticker"] + " - " + self.to_settlement
-            df_from_to = pd.merge(
-                left=df_buy,
-                right=df_sell,
-                how="outer",
-                on=["ticker", "cficode", "currency"],
+            df_sub = df_sub.loc[:, ["ticker", "underlying", "last_price"]]
+            df_sub = df_sub.rename(
+                columns={
+                    "last_price": "underlying_close",
+                    "ticker": "underlying_ticker",
+                }
+            )
+
+            # Merge both DataFrames
+            df = pd.merge(
+                left=df_opt,
+                right=df_sub,
+                how="left",
+                on=["underlying"],
                 copy=False,
             )
-            df_from_to["buy_sell"] = self.from_settlement + " / " + self.to_settlement
 
-            # Buy 24hs and Sell CI
-            ## Buy 24hs
-            df_buy = df_to.loc[
-                :, ["ticker", "offer_size", "offer_price", "cficode", "currency"]
-            ]
-            df_buy["ticker_buy"] = df_buy["ticker"] + " - " + self.to_settlement
-            ## Sell CI
-            df_sell = df_from.loc[
-                :, ["ticker", "bid_size", "bid_price", "cficode", "currency"]
-            ]
-            df_sell["ticker_sell"] = df_sell["ticker"] + " - " + self.from_settlement
-            df_to_from = pd.merge(
-                left=df_buy,
-                right=df_sell,
-                how="outer",
-                on=["ticker", "cficode", "currency"],
-                copy=False,
+            # Add Expire
+            df["maturityDate"] = pd.to_datetime(
+                df["maturityDate"],
+                format="%Y-%m-%d %H:%M:%S.%f",
+                errors="coerce",
+                # df_opt["maturityDate"], format="%Y%m%d", errors="coerce"
             )
-            df_to_from["buy_sell"] = self.to_settlement + " / " + self.from_settlement
-
-            # Concat both DataFrames
-            df = pd.concat([df_from_to, df_to_from], axis=0, ignore_index=True)
-            # df = df.dropna(subset=["ticker_buy", "ticker_sell"])
-            df = df.loc[df["offer_size"] > 0]
+            df = df.rename(
+                columns={
+                    "maturityDate": "expire",
+                }
+            )
+            # df_opt["month_expire"] = df_opt["expire"].dt.strftime("%m/%Y")
+            df["days_expire"] = (df["expire"] - pd.Timestamp.now()).dt.days
+            df["days_expire"] = df["days_expire"].astype(int) + 5
+            df["expire"] = df["expire"].dt.strftime("%d-%m-%Y")
             df = df.loc[df["bid_size"] > 0]
 
             if not df.empty:
@@ -213,30 +220,11 @@ class OptionCoberedCallService(BaseStrategy):
     # ):
     # #   'adj_strike', 'adj_close', 'adj_prima', 'class',
     # try:
-        # df['month_expire'] = df['expire'].dt.strftime('%m/%Y')
-        # df['days_expire'] = (df['expire'] - pd.Timestamp.now()).dt.days
-        # symbols = self.instruments.copy()
-        # symbols = symbols.loc[
-        #     (symbols['currency'] == 'ARS') & 
-        #     symbols['cficode'].isin(['ESXXXX', 'DBXXXX', 'EMXXXX'])
-        # ]
-        # symbols = symbols.loc[
-        #     ((symbols['cficode'] == 'ESXXXX') &
-        #     (~symbols['symbol'].str.endswith('X')) |
-        #     (symbols['symbol'] == 'CAPX')) |
-        #     (symbols['cficode'] != 'ESXXXX')
-        # ]
-        # symbols = symbols.drop_duplicates(subset=(['symbol', 'underlying'])).loc[:,['symbol', 'underlying']]
-        # symbols = symbols.rename(columns={
-        #     'symbol': 'symbol_underlying',
-        # })
-        # df = df.merge(symbols, on='underlying', how='left', copy=False)
-        # df['underlying'] = df['symbol_underlying']
-        # # print(temp)
-        # df = df.loc[:,[
-        #     'underlying', 'symbol', 'type', 'strike',
-        #     'expire', 'month_expire', 'days_expire',
-        # ]]
+
+    # df = df.loc[:,[
+    #     'underlying', 'symbol', 'type', 'strike',
+    #     'expire', 'month_expire', 'days_expire',
+    # ]]
     #     gtos_iva = self.getGtosConIVA()
     #     df = securities_df.copy()
     #     df = df.loc[df["bid"] > 0]
