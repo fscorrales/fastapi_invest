@@ -29,22 +29,25 @@ class OptionCoberedCallService(BaseStrategy):
         self.from_settlement = from_settlement
         self.to_settlement = to_settlement
         self.summary_cols = [
-            "buy_sell",
-            "ticker",
-            "cficode",
-            "ticker_buy",
-            "ticker_sell",
-            "currency",
-            "buy_price",
-            "sell_price",
-            "q_max",
-            "p_and_l",
-            "tna",
-            # "tna_operacion",
-            # "tna_caucion",
-            "days",
-            # "var_pe",
-            # "min_invest",
+            #     "underlying",
+            #     "days_expire",
+            #     "symbol",
+            #     "tna_total",
+            #     "min_invest",
+            #     "protection%",
+            #     "tna",
+            #     "tna_extra",
+            #     "var_tna_extra",
+            #     "pe",
+            #     "var_pe",
+            #     "ve%",
+            #     "bid_size",
+            #     "bid",
+            #     "last",
+            #     "strike",
+            #     "underlying_close",
+            #     "vi",
+            #     "ve",
         ]
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
 
@@ -68,9 +71,10 @@ class OptionCoberedCallService(BaseStrategy):
                 how="left",
                 on="symbol",
             )
-            df = df.loc[df["currency"].isin(["ARS", "MEP"])]  # Only ARS and MEP
+            df = df.loc[df["currency"].isin(["ARS"])]  # Only ARS
             df = df.loc[
-                df["cficode"].isin([CFICode.accion.value, CFICode.cedear.value])
+                (df["cficode"].isin([CFICode.call_accion.value, CFICode.put_accion.value])) or 
+                (df["cficode"] == CFICode.accion.value and df["ticker"].isin(["GGAL", "COME", "YPFD"]) and df["settlement"] == "24hs")
             ]
             # Filter by settlement
             df_from = df.loc[df["settlement"] == self.from_settlement]
@@ -207,29 +211,32 @@ class OptionCoberedCallService(BaseStrategy):
     # def applyStrategy(
     #         self, securities_df:pd.DataFrame, days:int
     # ):
-    # cols = [
-    #     "underlying",
-    #     "days_expire",
-    #     "symbol",
-    #     "tna_total",
-    #     "min_invest",
-    #     "protection%",
-    #     "tna",
-    #     "tna_extra",
-    #     "var_tna_extra",
-    #     "pe",
-    #     "var_pe",
-    #     "ve%",
-    #     "bid_size",
-    #     "bid",
-    #     "last",
-    #     "strike",
-    #     "underlying_close",
-    #     "vi",
-    #     "ve",
-    # ]
     # #   'adj_strike', 'adj_close', 'adj_prima', 'class',
     # try:
+        # df['month_expire'] = df['expire'].dt.strftime('%m/%Y')
+        # df['days_expire'] = (df['expire'] - pd.Timestamp.now()).dt.days
+        # symbols = self.instruments.copy()
+        # symbols = symbols.loc[
+        #     (symbols['currency'] == 'ARS') & 
+        #     symbols['cficode'].isin(['ESXXXX', 'DBXXXX', 'EMXXXX'])
+        # ]
+        # symbols = symbols.loc[
+        #     ((symbols['cficode'] == 'ESXXXX') &
+        #     (~symbols['symbol'].str.endswith('X')) |
+        #     (symbols['symbol'] == 'CAPX')) |
+        #     (symbols['cficode'] != 'ESXXXX')
+        # ]
+        # symbols = symbols.drop_duplicates(subset=(['symbol', 'underlying'])).loc[:,['symbol', 'underlying']]
+        # symbols = symbols.rename(columns={
+        #     'symbol': 'symbol_underlying',
+        # })
+        # df = df.merge(symbols, on='underlying', how='left', copy=False)
+        # df['underlying'] = df['symbol_underlying']
+        # # print(temp)
+        # df = df.loc[:,[
+        #     'underlying', 'symbol', 'type', 'strike',
+        #     'expire', 'month_expire', 'days_expire',
+        # ]]
     #     gtos_iva = self.getGtosConIVA()
     #     df = securities_df.copy()
     #     df = df.loc[df["bid"] > 0]
