@@ -88,23 +88,25 @@ class BaseStrategy(ABC):
             }
         )
 
-        # subyacentes = await repo.find_by_filter(
-        #     filters={
-        #         "enviroment": credentials.enviroment,
-        #         "cficode": CFICode.accion.value,
-        #         "currency__ne": "CCL",
-        #         "ticker__in": ["GGAL", "COME", "YPFD"],
-        #         "settlement": "24hs",
-        #     }
-        # )
+        subyacentes = await repo.find_by_filter(
+            filters={
+                "enviroment": credentials.enviroment,
+                "cficode": CFICode.accion.value,
+                "currency__ne": "CCL",
+                "ticker__in": ["GGAL", "COME", "YPFD"],
+                "settlement": "24hs",
+            }
+        )
 
-        # opciones = await repo.find_by_filter(
-        #     filters={
-        #         "enviroment": credentials.enviroment,
-        #         "cficode__in": [CFICode.call_accion.value, CFICode.put_accion.value],
-        #         "underlying__in": [subyacente["underlying"] for subyacente in subyacentes],
-        #     }
-        # )
+        opciones = await repo.find_by_filter(
+            filters={
+                "enviroment": credentials.enviroment,
+                "cficode__in": [CFICode.call_accion.value, CFICode.put_accion.value],
+                "underlying__in": [
+                    subyacente["underlying"] for subyacente in subyacentes
+                ],
+            }
+        )
 
         cedears = await repo.find_by_filter(
             filters={
@@ -115,17 +117,13 @@ class BaseStrategy(ABC):
         )
         cauciones = await repo.find_by_filter(
             filters={
-                # "symbol": {
-                #     "$regex": "-\\s[1-7]D$",
-                #     "$options": "i"
-                # },
+                "symbol": {"$regex": "-\\s[1-7]D$", "$options": "i"},
                 "enviroment": credentials.enviroment,
-                "cficode": CFICode.caucion.value
+                "cficode": CFICode.caucion.value,
             }
         )
 
-
-        instruments_details = acciones + cedears + cauciones
+        instruments_details = acciones + cedears + cauciones + opciones
         self.instruments_details_df = pd.DataFrame(instruments_details)
 
         params = WSMarketDataSubscription(
