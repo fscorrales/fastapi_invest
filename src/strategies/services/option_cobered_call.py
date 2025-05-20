@@ -134,26 +134,42 @@ class OptionCoberedCallService(BaseStrategy):
             df = df.loc[df["bid_size"] > 0]
 
             if not df.empty:
-                # Renema offer_price and bid_price
-                df = df.rename(
-                    columns={
-                        "offer_price": "buy_price",
-                        "bid_price": "sell_price",
-                    }
-                )
-                gastos_dict = {
-                    CFICode.accion.value: GastosConIVA.accion,
-                    CFICode.cedear.value: GastosConIVA.cedear,
-                    CFICode.bono.value: GastosConIVA.bono,
-                    CFICode.letra.value: GastosConIVA.letra,
-                    CFICode.on.value: GastosConIVA.on,
-                }
-                df["adj_buy"] = df["buy_price"] * (1 + df["cficode"].map(gastos_dict))
-                df["adj_sell"] = df["sell_price"] * (1 - df["cficode"].map(gastos_dict))
+                df["adj_strike"] = df["strike"] * (1 - GastosConIVA.accion)
+                df["adj_close"] = df["underlying_close"] * (1 + GastosConIVA.accion)
+                df["adj_prima"] = df["bid"] * (1 - GastosConIVA.opcion)
+                df["class"] = "OTM"
+                df.loc[df["adj_close"] > df["adj_strike"], ["class"]] = "ITM"
+                df["pe"] = df["adj_close"] - df["adj_prima"]
+                df["var_pe"] = df["pe"] / df["underlying_close"] - 1
 
-                # Rate
-                df["rate"] = df["adj_sell"] / df["adj_buy"] - 1
-                df["tna_operacion"] = df["rate"] / self.days * 365
+                df["tna"] = np.where(
+                    df["class"] == "ITM",
+                    ((df["adj_strike"] / df["pe"]) - 1) / df["days_expire"] * 365,
+                    ((df["adj_close"] / df["pe"]) - 1) / df["days_expire"] * 365,
+                )
+                df["tna_extra"] = np.where(
+                    df["class"] == "OTM",
+                    ((df["adj_strike"] / df["adj_close"]) - 1)
+                    / df["days_expire"]
+                    * 365,
+                    0,
+                )
+                df["var_tna_extra"] = np.where(
+                    df["class"] == "OTM",
+                    ((df["adj_strike"] / df["underlying_close"]) - 1),
+                    0,
+                )
+                df["tna_total"] = df["tna"] + df["tna_extra"]
+                df["protection%"] = df["adj_prima"] / df["adj_close"]
+
+                df["min_invest"] = df["adj_close"] * 100
+                df["vi"] = np.where(
+                    df["class"] == "ITM", (df["adj_close"] - df["adj_strike"]), 0
+                )
+                df["ve"] = df["adj_prima"] - df["vi"]
+                df["ve%"] = df["ve"] / df["adj_close"]
+
+                df["days_expire"] = df["days_expire"].astype(int) - 4
 
                 # TNA Caución
                 tna_caucion = self.get_tna_caucion(plazo=self.days)
@@ -171,42 +187,13 @@ class OptionCoberedCallService(BaseStrategy):
 
                 df["tna_caucion"] = df["currency"].apply(get_tna_caucion_by_currency)
 
-                # TNA
-                df["tna"] = np.where(
-                    df["buy_sell"] == self.from_settlement + " / " + self.to_settlement,
-                    df["tna_operacion"],
-                    df["tna_operacion"] + df["tna_caucion"],
-                )
-
-                # Max Quantity
-                df["q_max"] = df.apply(
-                    lambda row: min(row["offer_size"], row["bid_size"]), axis=1
-                )
-
-                # Rename cficode
-                cficode_map = {code.value: code.name for code in CFICode}
-                df["cficode"] = df["cficode"].map(cficode_map)
-
-                # P&L
-                df["p_and_l"] = np.where(
-                    df["buy_sell"] == self.from_settlement + " / " + self.to_settlement,
-                    (df["adj_sell"] - df["adj_buy"])
-                    - (df["buy_price"] * df["tna_caucion"] / 365 * self.days),
-                    (df["adj_sell"] - df["adj_buy"])
-                    + (df["adj_sell"] * df["tna_caucion"] / 365 * self.days),
-                )
-                df["p_and_l"] = np.where(
-                    df["cficode"] != CFICode.accion.name,
-                    df["p_and_l"] / 100,
-                    df["p_and_l"],
-                )
-                df["p_and_l"] = df["p_and_l"] * df["q_max"]
-
-                df["days"] = self.days
-
-                df = df[self.summary_cols]
-                df = df.loc[df["tna"] > 0]
+                # TNA o TNA TOTAL, qué debo usar?
+                if self.base_strategy.tna_requerida is None:
+                    df = df.loc[df["tna_total"] > tna_caucion]
+                else:
+                    df = df.loc[df["tna_total"] > self.base_strategy.tna_requerida]
                 df = df.sort_values(by="tna", ascending=False)
+                df = df[self.summary_cols]
 
                 async with self.lock:
                     self.summary_stratetgy_df = df.copy()
@@ -226,41 +213,9 @@ class OptionCoberedCallService(BaseStrategy):
     #     'expire', 'month_expire', 'days_expire',
     # ]]
     #     gtos_iva = self.getGtosConIVA()
-    #     df = securities_df.copy()
     #     df = df.loc[df["bid"] > 0]
     #     tna_caucion = self.getTNACaucion(df, days, currency=["PESOS"])
     #     tna_caucion = int(tna_caucion["last"].values) / 100
-    #     options_details = self.options_details.copy()
-    #     options_details = options_details.loc[
-    #         (options_details["symbol"].isin(df["symbol"].values.tolist()))
-    #         & (options_details["type"] == "Call")
-    #     ]
-    #     df_underlying = df.loc[
-    #         (df["time"] == "24hs")
-    #         &
-    #         # (df['time'] == '48hs') &
-    #         (df["symbol"].isin(options_details["underlying"].values.tolist())),
-    #         ["symbol", "last"],
-    #     ].copy()
-    #     df_underlying = df_underlying.rename(
-    #         columns={"last": "underlying_close", "symbol": "underlying"}
-    #     )
-    #     df_underlying = pd.merge(
-    #         left=df_underlying,
-    #         right=options_details,
-    #         on="underlying",
-    #         how="left",
-    #         copy=False,
-    #     )
-    #     df = df.loc[df["time"] == "24hs"]
-    #     df = pd.merge(
-    #         left=df_underlying, right=df, on="symbol", how="left", copy=False
-    #     )
-    #     df["expire"] = pd.to_datetime(df["expire"], format="%Y-%m-%d %H:%M:%S.%f")
-    #     df["days_expire"] = (df["expire"] - pd.Timestamp.now()).dt.days
-    #     df["days_expire"] = df["days_expire"].astype(int) + 5
-    #     df["expire"] = df["expire"].dt.strftime("%d-%m-%Y")
-    #     df = df.loc[df["bid"] > 0]
 
     #     if len(df) > 0:
     #         df["adj_strike"] = df["strike"] * (1 - gtos_iva["stock"])
