@@ -3,11 +3,11 @@
 __all__ = ["TimeArbitrageService", "TimeArbitrageDependency"]
 
 from typing import Annotated, Type
-from pydantic import BaseModel
 
 import numpy as np
 import pandas as pd
 from fastapi import Depends
+from pydantic import BaseModel
 
 from ...config import logger
 from ...primary.schemas import CFICode
@@ -30,7 +30,7 @@ class TimeArbitrageService(BaseStrategy):
         self.days = days
         self.from_settlement = from_settlement
         self.to_settlement = to_settlement
-        self.summary_cols = list(summary_model.__fields__.keys())
+        self.summary_cols = list(summary_model.model_fields.keys())
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
 
     # -------------------------------------------------
