@@ -22,12 +22,13 @@ class OptionCoberedCallSummary(BaseModel):
     var_pe: float
     ve_pct: float
     bid_size: float
-    bid: float
-    last: float
+    bid_price: float
+    last_price: Optional[float] = None
     strike: float
     underlying_close: float
     vi: float
     ve: float
+    tna_caucion: float
 
 
 # --------------------------------------------------
