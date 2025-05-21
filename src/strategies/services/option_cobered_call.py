@@ -3,11 +3,11 @@
 __all__ = ["OptionCoberedCallService", "OptionCoberedCallDependency"]
 
 from typing import Annotated, Type
-from pydantic import BaseModel
 
 import numpy as np
 import pandas as pd
 from fastapi import Depends
+from pydantic import BaseModel
 
 from ...config import logger
 from ...primary.schemas import CFICode
@@ -22,15 +22,11 @@ class OptionCoberedCallService(BaseStrategy):
         self,
         market_data_service: WSMarketDataService,
         summary_model: Type[BaseModel] = OptionCoberedCallSummary,
-        # days: int = 1,
-        # from_settlement: str = "CI",
-        # to_settlement: str = "24hs",
+        days: int = 1,
     ):
         super().__init__(market_data_service=market_data_service)
-        # self.days = days
-        # self.from_settlement = from_settlement
-        # self.to_settlement = to_settlement
-        self.summary_cols = list(summary_model.__fields__.keys())
+        self.days = days
+        self.summary_cols = list(summary_model.model_fields.keys())
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
 
     # -------------------------------------------------
@@ -66,18 +62,12 @@ class OptionCoberedCallService(BaseStrategy):
             df = df.loc[df["currency"].isin(["ARS"])]  # Only ARS
 
             # Filter in two dfs
-            df_opt = df.loc[
-                (
-                    df["cficode"].isin(
-                        [CFICode.call_accion.value]
-                    )
-                )
-            ]
+            df_opt = df.loc[(df["cficode"].isin([CFICode.call_accion.value]))]
             df_sub = df.loc[
                 (
-                    df["cficode"] == CFICode.accion.value
-                    and df["ticker"].isin(["GGAL", "COME", "YPFD"])
-                    and df["settlement"] == "24hs"
+                    (df["cficode"] == CFICode.accion.value)
+                    & (df["ticker"].isin(["GGAL", "COME", "YPFD"]))
+                    & (df["settlement"] == "24hs")
                 )
             ]
             df_sub = df_sub.loc[:, ["ticker", "underlying", "last_price"]]
@@ -97,28 +87,30 @@ class OptionCoberedCallService(BaseStrategy):
                 copy=False,
             )
 
-            # Add Expire
-            df["maturityDate"] = pd.to_datetime(
-                df["maturityDate"],
-                format="%Y-%m-%d %H:%M:%S.%f",
-                errors="coerce",
-                # df_opt["maturityDate"], format="%Y%m%d", errors="coerce"
-            )
-            df = df.rename(
-                columns={
-                    "maturityDate": "expire",
-                }
-            )
-            # df_opt["month_expire"] = df_opt["expire"].dt.strftime("%m/%Y")
-            df["days_expire"] = (df["expire"] - pd.Timestamp.now()).dt.days
-            df["days_expire"] = df["days_expire"].astype(int) + 5
-            df["expire"] = df["expire"].dt.strftime("%d-%m-%Y")
             df = df.loc[df["bid_size"] > 0]
 
             if not df.empty:
+                # Add Expire
+                df = df.rename(
+                    columns={
+                        "maturityDate": "expire",
+                    }
+                )
+                df["expire"] = df["expire"].astype(int)
+                df["expire"] = pd.to_datetime(
+                    # df["expire"],
+                    # format="%Y-%m-%d %H:%M:%S.%f",
+                    # errors="coerce",
+                    df["expire"],
+                    format="%Y%m%d",
+                    errors="coerce",
+                )
+                # df_opt["month_expire"] = df_opt["expire"].dt.strftime("%m/%Y")
+                df["days_expire"] = (df["expire"] - pd.Timestamp.now()).dt.days
+                df["days_expire"] = df["days_expire"].astype(int) + 5
                 df["adj_strike"] = df["strike"] * (1 - GastosConIVA.accion)
                 df["adj_close"] = df["underlying_close"] * (1 + GastosConIVA.accion)
-                df["adj_prima"] = df["bid"] * (1 - GastosConIVA.opcion)
+                df["adj_prima"] = df["bid_price"] * (1 - GastosConIVA.opcion)
                 df["class"] = "OTM"
                 df.loc[df["adj_close"] > df["adj_strike"], ["class"]] = "ITM"
                 df["pe"] = df["adj_close"] - df["adj_prima"]
@@ -168,14 +160,14 @@ class OptionCoberedCallService(BaseStrategy):
                     return vals[0] if len(vals) > 0 else 0
 
                 df["tna_caucion"] = df["currency"].apply(get_tna_caucion_by_currency)
+                df = df[self.summary_cols]
 
                 # TNA o TNA TOTAL, qué debo usar?
                 if self.tna_requiered is None:
-                    df = df.loc[df["tna_total"] > tna_caucion]
+                    df = df.loc[df["tna_total"] > df["tna_caucion"]]
                 else:
                     df = df.loc[df["tna_total"] > self.tna_requiered]
                 df = df.sort_values(by="tna", ascending=False)
-                df = df[self.summary_cols]
 
                 async with self.lock:
                     self.summary_stratetgy_df = df.copy()
