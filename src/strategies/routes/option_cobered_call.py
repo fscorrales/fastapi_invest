@@ -14,9 +14,9 @@ from ...primary.services import (
     prepare_primary_credentials,
 )
 from ...utils import apply_auto_filter
-from ..schemas import TimeArbitrageFilter, TimeArbitrageSummary
+from ..schemas import OptionCoberedCallFilter, OptionCoberedCallSummary
 from ..services import (
-    TimeArbitrageService,
+    OptionCoberedCallService,
     strategy_manager,
 )
 
@@ -46,7 +46,7 @@ async def start_option_cobered_call(
     if STRATEGY_NAME in strategy_manager.list_active():
         raise HTTPException(status_code=400, detail="La estrategia ya está corriendo")
 
-    strategy = TimeArbitrageService(market_data_service=service, days=days)
+    strategy = OptionCoberedCallService(market_data_service=service, days=days)
     strategy_manager.register(STRATEGY_NAME, strategy)
     await strategy_manager.start_strategy(STRATEGY_NAME, credentials)
 
@@ -78,11 +78,11 @@ async def reset_strategy_data():
     return {"message": "DataFrame reseteado correctamente."}
 
 
-@option_cobered_call_router.get("/dataframe", response_model=list[TimeArbitrageSummary])
+@option_cobered_call_router.get("/dataframe", response_model=list[OptionCoberedCallSummary])
 async def get_strategy_data(
-    params: Annotated[TimeArbitrageFilter, Depends()],
+    params: Annotated[OptionCoberedCallFilter, Depends()],
 ):
-    strategy = strategy_manager.get("time_arbitrage")
+    strategy = strategy_manager.get(STRATEGY_NAME)
     if not strategy:
         raise HTTPException(status_code=404, detail="La estrategia no está activa")
 
@@ -108,4 +108,4 @@ async def get_strategy_data(
     # Paginación
     df = df.iloc[params.offset : params.offset + params.limit]
 
-    return [TimeArbitrageSummary(**row.to_dict()) for _, row in df.iterrows()]
+    return [OptionCoberedCallSummary(**row.to_dict()) for _, row in df.iterrows()]

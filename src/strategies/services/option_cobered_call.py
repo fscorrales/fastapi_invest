@@ -11,7 +11,7 @@ from fastapi import Depends
 from ...config import logger
 from ...primary.schemas import CFICode
 from ...primary.services import WSMarketDataService
-from ..schemas import GastosConIVA
+from ..schemas import GastosConIVA, OptionCoberedCallSummary
 from .base_strategy import BaseStrategy
 
 
@@ -20,6 +20,7 @@ class OptionCoberedCallService(BaseStrategy):
     def __init__(
         self,
         market_data_service: WSMarketDataService,
+        summary_model: Type[BaseModel] = OptionCoberedCallSummary,
         # days: int = 1,
         # from_settlement: str = "CI",
         # to_settlement: str = "24hs",
@@ -28,27 +29,7 @@ class OptionCoberedCallService(BaseStrategy):
         # self.days = days
         # self.from_settlement = from_settlement
         # self.to_settlement = to_settlement
-        self.summary_cols = [
-            #     "underlying",
-            #     "days_expire",
-            #     "symbol",
-            #     "tna_total",
-            #     "min_invest",
-            #     "protection%",
-            #     "tna",
-            #     "tna_extra",
-            #     "var_tna_extra",
-            #     "pe",
-            #     "var_pe",
-            #     "ve%",
-            #     "bid_size",
-            #     "bid",
-            #     "last",
-            #     "strike",
-            #     "underlying_close",
-            #     "vi",
-            #     "ve",
-        ]
+        self.summary_cols = list(summary_model.__fields__.keys())
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
 
     # -------------------------------------------------
@@ -87,7 +68,7 @@ class OptionCoberedCallService(BaseStrategy):
             df_opt = df.loc[
                 (
                     df["cficode"].isin(
-                        [CFICode.call_accion.value, CFICode.put_accion.value]
+                        [CFICode.call_accion.value]
                     )
                 )
             ]
@@ -160,14 +141,14 @@ class OptionCoberedCallService(BaseStrategy):
                     0,
                 )
                 df["tna_total"] = df["tna"] + df["tna_extra"]
-                df["protection%"] = df["adj_prima"] / df["adj_close"]
+                df["protection_pct"] = df["adj_prima"] / df["adj_close"]
 
                 df["min_invest"] = df["adj_close"] * 100
                 df["vi"] = np.where(
                     df["class"] == "ITM", (df["adj_close"] - df["adj_strike"]), 0
                 )
                 df["ve"] = df["adj_prima"] - df["vi"]
-                df["ve%"] = df["ve"] / df["adj_close"]
+                df["ve_pct"] = df["ve"] / df["adj_close"]
 
                 df["days_expire"] = df["days_expire"].astype(int) - 4
 
@@ -188,10 +169,10 @@ class OptionCoberedCallService(BaseStrategy):
                 df["tna_caucion"] = df["currency"].apply(get_tna_caucion_by_currency)
 
                 # TNA o TNA TOTAL, qué debo usar?
-                if self.base_strategy.tna_requerida is None:
+                if self.tna_requiered is None:
                     df = df.loc[df["tna_total"] > tna_caucion]
                 else:
-                    df = df.loc[df["tna_total"] > self.base_strategy.tna_requerida]
+                    df = df.loc[df["tna_total"] > self.tna_requiered]
                 df = df.sort_values(by="tna", ascending=False)
                 df = df[self.summary_cols]
 
@@ -200,71 +181,6 @@ class OptionCoberedCallService(BaseStrategy):
 
         except Exception as e:
             logger.error(f"[OptionCoberedCall] Error en evaluación: {e}")
-
-    # --------------------------------------------------
-    # def applyStrategy(
-    #         self, securities_df:pd.DataFrame, days:int
-    # ):
-    # #   'adj_strike', 'adj_close', 'adj_prima', 'class',
-    # try:
-
-    # df = df.loc[:,[
-    #     'underlying', 'symbol', 'type', 'strike',
-    #     'expire', 'month_expire', 'days_expire',
-    # ]]
-    #     gtos_iva = self.getGtosConIVA()
-    #     df = df.loc[df["bid"] > 0]
-    #     tna_caucion = self.getTNACaucion(df, days, currency=["PESOS"])
-    #     tna_caucion = int(tna_caucion["last"].values) / 100
-
-    #     if len(df) > 0:
-    #         df["adj_strike"] = df["strike"] * (1 - gtos_iva["stock"])
-    #         df["adj_close"] = df["underlying_close"] * (1 + gtos_iva["stock"])
-    #         df["adj_prima"] = df["bid"] * (1 - gtos_iva["option"])
-    #         df["class"] = "OTM"
-    #         df.loc[df["adj_close"] > df["adj_strike"], ["class"]] = "ITM"
-    #         df["pe"] = df["adj_close"] - df["adj_prima"]
-    #         df["var_pe"] = df["pe"] / df["underlying_close"] - 1
-
-    #         df["tna"] = np.where(
-    #             df["class"] == "ITM",
-    #             ((df["adj_strike"] / df["pe"]) - 1) / df["days_expire"] * 365,
-    #             ((df["adj_close"] / df["pe"]) - 1) / df["days_expire"] * 365,
-    #         )
-    #         df["tna_extra"] = np.where(
-    #             df["class"] == "OTM",
-    #             ((df["adj_strike"] / df["adj_close"]) - 1)
-    #             / df["days_expire"]
-    #             * 365,
-    #             0,
-    #         )
-    #         df["var_tna_extra"] = np.where(
-    #             df["class"] == "OTM",
-    #             ((df["adj_strike"] / df["underlying_close"]) - 1),
-    #             0,
-    #         )
-    #         df["tna_total"] = df["tna"] + df["tna_extra"]
-    #         df["protection%"] = df["adj_prima"] / df["adj_close"]
-
-    #         df["min_invest"] = df["adj_close"] * 100
-    #         df["vi"] = np.where(
-    #             df["class"] == "ITM", (df["adj_close"] - df["adj_strike"]), 0
-    #         )
-    #         df["ve"] = df["adj_prima"] - df["vi"]
-    #         df["ve%"] = df["ve"] / df["adj_close"]
-
-    #         df["days_expire"] = df["days_expire"].astype(int) - 4
-
-    #         df = df[cols]
-    #         # TNA o TNA TOTAL, qué debo usar?
-    #         if self.base_strategy.tna_requerida is None:
-    #             df = df.loc[df["tna_total"] > tna_caucion]
-    #         else:
-    #             df = df.loc[df["tna_total"] > self.base_strategy.tna_requerida]
-    #         df = df.sort_values(by="tna", ascending=False)
-    #     return df
-    # except Exception as e:
-    #     print(f"Ocurrió un error: {e}, {type(e)}")
 
 
 OptionCoberedCallDependency = Annotated[OptionCoberedCallService, Depends()]

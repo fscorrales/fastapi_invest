@@ -29,6 +29,7 @@ class BaseStrategy(ABC):
         self.lock = asyncio.Lock()
         self.instruments_details_df = pd.DataFrame()
         self.summary_cols = []
+        self.tna_requiered = None
 
     # --------------------------------------------------
     def get_tna_caucion(
