@@ -94,7 +94,7 @@ class BaseStrategy(ABC):
                 "enviroment": credentials.enviroment,
                 "cficode": CFICode.accion.value,
                 "currency__ne": "CCL",
-                "ticker__in": ["GGAL", "COME", "YPFD"],
+                "ticker__in": ["GGAL"],
                 "settlement": "24hs",
             }
         )

@@ -82,7 +82,7 @@ async def reset_strategy_data():
 async def get_strategy_data(
     params: Annotated[TimeArbitrageFilter, Depends()],
 ):
-    strategy = strategy_manager.get("time_arbitrage")
+    strategy = strategy_manager.get(STRATEGY_NAME)
     if not strategy:
         raise HTTPException(status_code=404, detail="La estrategia no está activa")
 

@@ -2,7 +2,8 @@
 
 __all__ = ["OptionCoberedCallService", "OptionCoberedCallDependency"]
 
-from typing import Annotated
+from typing import Annotated, Type
+from pydantic import BaseModel
 
 import numpy as np
 import pandas as pd

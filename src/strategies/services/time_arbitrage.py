@@ -2,7 +2,8 @@
 
 __all__ = ["TimeArbitrageService", "TimeArbitrageDependency"]
 
-from typing import Annotated
+from typing import Annotated, Type
+from pydantic import BaseModel
 
 import numpy as np
 import pandas as pd
@@ -11,7 +12,7 @@ from fastapi import Depends
 from ...config import logger
 from ...primary.schemas import CFICode
 from ...primary.services import WSMarketDataService
-from ..schemas import GastosConIVA
+from ..schemas import GastosConIVA, TimeArbitrageSummary
 from .base_strategy import BaseStrategy
 
 
@@ -23,29 +24,13 @@ class TimeArbitrageService(BaseStrategy):
         days: int = 1,
         from_settlement: str = "CI",
         to_settlement: str = "24hs",
+        summary_model: Type[BaseModel] = TimeArbitrageSummary,
     ):
         super().__init__(market_data_service=market_data_service)
         self.days = days
         self.from_settlement = from_settlement
         self.to_settlement = to_settlement
-        self.summary_cols = [
-            "buy_sell",
-            "ticker",
-            "cficode",
-            "ticker_buy",
-            "ticker_sell",
-            "currency",
-            "buy_price",
-            "sell_price",
-            "q_max",
-            "p_and_l",
-            "tna",
-            # "tna_operacion",
-            # "tna_caucion",
-            "days",
-            # "var_pe",
-            # "min_invest",
-        ]
+        self.summary_cols = list(summary_model.__fields__.keys())
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
 
     # -------------------------------------------------
