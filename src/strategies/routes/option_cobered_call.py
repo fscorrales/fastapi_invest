@@ -16,9 +16,9 @@ from ...primary.services import (
 from ...utils import apply_auto_filter
 from ..schemas import OptionCoberedCallFilter, OptionCoberedCallSummary
 from ..services import (
+    OPTION_COBERED_CALL_NAME,
     OptionCoberedCallService,
     strategy_manager,
-    OPTION_COBERED_CALL_NAME
 )
 
 STRATEGY_NAME = OPTION_COBERED_CALL_NAME
@@ -79,7 +79,9 @@ async def reset_strategy_data():
     return {"message": "DataFrame reseteado correctamente."}
 
 
-@option_cobered_call_router.get("/dataframe", response_model=list[OptionCoberedCallSummary])
+@option_cobered_call_router.get(
+    "/dataframe", response_model=list[OptionCoberedCallSummary]
+)
 async def get_strategy_data(
     params: Annotated[OptionCoberedCallFilter, Depends()],
 ):
