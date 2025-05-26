@@ -27,6 +27,4 @@ def safe_list_get_dict(lst, index, key, default=None):
 
 # -------------------------------------------------
 def safe_json_df(df: pd.DataFrame):
-    return df.replace({np.nan: None, np.inf: None, -np.inf: None}).to_dict(
-        orient="records"
-    )
+    return df.replace({np.nan: None, np.inf: None, -np.inf: None})
