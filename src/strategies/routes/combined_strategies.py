@@ -1,4 +1,4 @@
-# src/stretegies/routes/option_cobered_call.py
+# src/stretegies/routes/combined_strategies.py
 
 from typing import Annotated
 
@@ -16,6 +16,10 @@ from ...primary.services import (
 
 from ..services import (
     strategy_manager,
+    TimeArbitrageService,
+    OptionCoberedCallService,
+    TIME_ARBITRAGE_NAME,
+    OPTION_COBERED_CALL_NAME,
 )
 
 STRATEGY_NAME = "combined_strategies"
@@ -26,7 +30,24 @@ combined_strategies_router = APIRouter(
 
 
 @combined_strategies_router.post("/start_all")
-async def start_all():
+async def start_all(
+    auth: OptionalAuthorizationDependency,
+    service: WSMarketDataServiceDependency,
+    credentials: Annotated[PrimaryCredentials, Depends()],
+    days: int = 1,
+):
+
+    credentials = prepare_primary_credentials(auth, credentials)
+
+    logger.info(
+        f"Syncing {credentials.enviroment.value} instruments details from Primary API with url: {credentials.url}"
+    )
+
+    strategy = TimeArbitrageService(market_data_service=service, days=days)
+    strategy_manager.register(TIME_ARBITRAGE_NAME, strategy)
+    strategy = OptionCoberedCallService(market_data_service=service, days=days)
+    strategy_manager.register(OPTION_COBERED_CALL_NAME, strategy)
+
     await strategy_manager.start_all()
     return {"status": "Todas las estrategias iniciadas"}
 
