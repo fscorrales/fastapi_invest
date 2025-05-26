@@ -48,12 +48,12 @@ async def start_all(
     strategy = OptionCoberedCallService(market_data_service=service, days=days)
     strategy_manager.register(OPTION_COBERED_CALL_NAME, strategy)
 
-    await strategy_manager.start_all()
+    await strategy_manager.start_all(credentials)
     return {"status": "Todas las estrategias iniciadas"}
 
 @combined_strategies_router.post("/stop_all")
 async def stop_all():
-    await strategy_manager.stop_all()
+    strategy_manager.stop_all()
     return {"status": "Todas las estrategias detenidas"}
 
 @combined_strategies_router.get("/status")

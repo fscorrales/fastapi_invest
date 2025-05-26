@@ -30,10 +30,10 @@ class StrategyManager:
             del self.strategies[name]
 
     # -------------------------------------------------
-    async def start_all(self):
+    async def start_all(self, *args, **kwargs):
         for strategy in self.strategies.values():
-            await strategy.start()
-            
+            await strategy.start(*args, **kwargs)
+
     # -------------------------------------------------
     def stop_all(self):
         for strategy in self.strategies.values():
