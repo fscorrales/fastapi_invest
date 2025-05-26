@@ -13,7 +13,7 @@ from ...primary.services import (
     WSMarketDataServiceDependency,
     prepare_primary_credentials,
 )
-from ...utils import apply_auto_filter
+from ...utils import apply_auto_filter, safe_json_df
 from ..schemas import OptionCoberedCallFilter, OptionCoberedCallSummary
 from ..services import (
     OPTION_COBERED_CALL_NAME,
@@ -110,5 +110,6 @@ async def get_strategy_data(
 
     # Paginación
     df = df.iloc[params.offset : params.offset + params.limit]
+    df = safe_json_df(df)
 
     return [OptionCoberedCallSummary(**row.to_dict()) for _, row in df.iterrows()]
