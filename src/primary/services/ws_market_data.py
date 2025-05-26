@@ -12,7 +12,7 @@ from httpx import AsyncClient
 from pydantic import ValidationError
 
 from ...config import logger
-from ...utils import safe_get, safe_list_get
+from ...utils import safe_get_dict, safe_list_get_dict
 from ..handlers import format_params, get_token
 from ..schemas import (
     PrimaryCredentials,
@@ -232,7 +232,7 @@ class WSMarketDataService:
                 "notional_value": md.get("NV"),
                 "effective_value": md.get("EV"),
                 "open": md.get("OP"),
-                "close_prev": safe_get(md.get("CL"), ["price"]),
+                "close_prev": safe_get_dict(md.get("CL"), ["price"]),
                 "high": md.get("HI"),
                 "low": md.get("LO"),
                 "tv": md.get("TV"),
@@ -242,12 +242,12 @@ class WSMarketDataService:
                 "acp": md.get("ACP"),
                 # "last_price": md.get("LA", {}).get("price"),
                 # "last_size": md.get("LA", {}).get("size"),
-                "last_price": safe_get(md.get("LA"), ["price"]),
-                "last_size": safe_get(md.get("LA"), ["size"]),
-                "bid_price": safe_list_get(md.get("BI"), 0, "price"),
-                "bid_size": safe_list_get(md.get("BI"), 0, "size"),
-                "offer_price": safe_list_get(md.get("OF"), 0, "price"),
-                "offer_size": safe_list_get(md.get("OF"), 0, "size"),
+                "last_price": safe_get_dict(md.get("LA"), ["price"]),
+                "last_size": safe_get_dict(md.get("LA"), ["size"]),
+                "bid_price": safe_list_get_dict(md.get("BI"), 0, "price"),
+                "bid_size": safe_list_get_dict(md.get("BI"), 0, "size"),
+                "offer_price": safe_list_get_dict(md.get("OF"), 0, "price"),
+                "offer_size": safe_list_get_dict(md.get("OF"), 0, "size"),
             }
 
             async with self.lock:
