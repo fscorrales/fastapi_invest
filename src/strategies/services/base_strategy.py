@@ -159,10 +159,10 @@ class BaseStrategy(ABC):
 
     def get_dataframe(self) -> pd.DataFrame:
         return (
-            self.summary_stratetgy_df.copy()
-            if not self.summary_stratetgy_df.empty
+            self.summary_strategy_df.copy()
+            if not self.summary_strategy_df.empty
             else None
         )
 
     def reset_dataframe(self):
-        self.summary_stratetgy_df = pd.DataFrame(columns=self.summary_cols)
+        self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)

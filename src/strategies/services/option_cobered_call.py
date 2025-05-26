@@ -1,6 +1,10 @@
 # src/strategies/services/option_cobered_call.py
 
-__all__ = ["OptionCoberedCallService", "OptionCoberedCallDependency", "OPTION_COBERED_CALL_NAME"]
+__all__ = [
+    "OptionCoberedCallService",
+    "OptionCoberedCallDependency",
+    "OPTION_COBERED_CALL_NAME",
+]
 
 from typing import Annotated, Type
 
@@ -170,7 +174,7 @@ class OptionCoberedCallService(BaseStrategy):
                 df = df.sort_values(by="tna", ascending=False)
 
                 async with self.lock:
-                    self.summary_stratetgy_df = df.copy()
+                    self.summary_strategy_df = df.copy()
 
         except Exception as e:
             logger.error(f"[OptionCoberedCall] Error en evaluación: {e}")

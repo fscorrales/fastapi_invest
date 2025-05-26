@@ -183,7 +183,7 @@ class TimeArbitrageService(BaseStrategy):
                 df = df.sort_values(by="tna", ascending=False)
 
                 async with self.lock:
-                    self.summary_stratetgy_df = df.copy()
+                    self.summary_strategy_df = df.copy()
 
         except Exception as e:
             logger.error(f"[TimeArbitrage] Error en evaluación: {e}")
