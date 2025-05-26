@@ -31,6 +31,7 @@ class BaseAppSettings(BaseSettings):
     PRIMARY_REMARKETS_WS: str = "wss://api.remarkets.primary.com.ar"
     DB_URI: str = "mongodb://127.0.0.1:27017/invest"
     JWT_SECRET: str = "super_secret_key"
+    GOOGLE_CREDENTIALS: str | None = None
     # Otros valores opcionales...
     # HOST_URL: str = "localhost"
     # HOST_PORT: int = 8000
