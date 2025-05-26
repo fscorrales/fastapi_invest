@@ -6,6 +6,7 @@ from typing import List, Union
 
 import numpy as np
 import pandas as pd
+from typyng import Optional
 
 from ...config import logger
 from ...primary.repositories import InstrumentsDetailsRepository
@@ -16,6 +17,7 @@ from ...primary.schemas import (
     WSProductSubscription,
 )
 from ...primary.services import WSMarketDataService
+from ...utils import GoogleSheets
 from ..schemas import GastosConIVA
 
 
@@ -30,6 +32,10 @@ class BaseStrategy(ABC):
         self.instruments_details_df = pd.DataFrame()
         self.summary_cols = []
         self.tna_requiered = None
+        self._google_sheets: Optional[GoogleSheets] = None
+        self._spreadsheet_key: Optional[str] = None
+        self._sheet_name: Optional[str] = None
+        self._upload_interval: int = 60
 
     # --------------------------------------------------
     def get_tna_caucion(
@@ -166,3 +172,28 @@ class BaseStrategy(ABC):
 
     def reset_dataframe(self):
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
+
+    def configure_google_sheets(
+        self, spreadsheet_key: str, sheet_name: str, interval: int = 60
+    ):
+        self._spreadsheet_key = spreadsheet_key
+        self._sheet_name = sheet_name
+        self._upload_interval = interval
+        self._google_sheets = GoogleSheets()
+
+    def _start_upload_task(self):
+        if not self._google_sheets or not self._spreadsheet_key or not self._sheet_name:
+            return
+
+        async def upload_loop():
+            while self.is_running:
+                try:
+                    df = self.summary_df.fillna(0)
+                    self._google_sheets.to_google_sheets(
+                        df, self._spreadsheet_key, self._sheet_name
+                    )
+                except Exception as e:
+                    print(f"⚠️ Error uploading summary to Google Sheets: {e}")
+                await asyncio.sleep(self._upload_interval)
+
+        self._upload_task = asyncio.create_task(upload_loop())
