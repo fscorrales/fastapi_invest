@@ -1,6 +1,6 @@
 # src/strategies/services/time_arbitrage.py
 
-__all__ = ["TimeArbitrageService", "TimeArbitrageDependency"]
+__all__ = ["TimeArbitrageService", "TimeArbitrageDependency", "TIME_ARBITRAGE_NAME"]
 
 from typing import Annotated, Type
 
@@ -190,3 +190,4 @@ class TimeArbitrageService(BaseStrategy):
 
 
 TimeArbitrageDependency = Annotated[TimeArbitrageService, Depends()]
+TIME_ARBITRAGE_NAME = "time_arbitrage"

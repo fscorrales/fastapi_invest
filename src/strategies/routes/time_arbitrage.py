@@ -18,9 +18,10 @@ from ..schemas import TimeArbitrageFilter, TimeArbitrageSummary
 from ..services import (
     TimeArbitrageService,
     strategy_manager,
+    TIME_ARBITRAGE_NAME
 )
 
-STRATEGY_NAME = "time_arbitrage"
+STRATEGY_NAME = TIME_ARBITRAGE_NAME
 
 time_arbitrage_router = APIRouter(
     prefix="/" + STRATEGY_NAME, tags=["Strategies - Time Arbitrage"]

@@ -18,9 +18,10 @@ from ..schemas import OptionCoberedCallFilter, OptionCoberedCallSummary
 from ..services import (
     OptionCoberedCallService,
     strategy_manager,
+    OPTION_COBERED_CALL_NAME
 )
 
-STRATEGY_NAME = "option_cobered_call"
+STRATEGY_NAME = OPTION_COBERED_CALL_NAME
 
 option_cobered_call_router = APIRouter(
     prefix="/" + STRATEGY_NAME, tags=["Strategies - Option Cobered Call"]

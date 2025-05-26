@@ -1,6 +1,6 @@
 # src/strategies/services/option_cobered_call.py
 
-__all__ = ["OptionCoberedCallService", "OptionCoberedCallDependency"]
+__all__ = ["OptionCoberedCallService", "OptionCoberedCallDependency", "OPTION_COBERED_CALL_NAME"]
 
 from typing import Annotated, Type
 
@@ -177,3 +177,4 @@ class OptionCoberedCallService(BaseStrategy):
 
 
 OptionCoberedCallDependency = Annotated[OptionCoberedCallService, Depends()]
+OPTION_COBERED_CALL_NAME = "option_cobered_call"
