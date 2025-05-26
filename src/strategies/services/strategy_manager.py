@@ -30,6 +30,16 @@ class StrategyManager:
             del self.strategies[name]
 
     # -------------------------------------------------
+    async def start_all(self):
+        for strategy in self.strategies.values():
+            await strategy.start()
+            
+    # -------------------------------------------------
+    def stop_all(self):
+        for strategy in self.strategies.values():
+            strategy.stop()
+
+    # -------------------------------------------------
     def get(self, name):
         return self.strategies.get(name)
 
