@@ -70,9 +70,10 @@ class BaseRepository(Generic[ModelType]):
                 )
 
         result = await self.collection.insert_one(doc)
-        doc["_id"] = result.inserted_id  # agregamos el _id devuelto por Mongo
+        # doc["_id"] = result.inserted_id  # agregamos el _id devuelto por Mongo
 
-        return self.model(**doc)  # devolvés el modelo reconstruido con _id incluido
+        # return self.model(**doc)  # devolvés el modelo reconstruido con _id incluido
+        return result
 
     # -------------------------------------------------
     async def save_all(self, data: List[ModelType]) -> List[ModelType]:
