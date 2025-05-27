@@ -2,11 +2,10 @@ __all__ = ["BaseStrategy"]
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
-from typyng import Optional
 
 from ...config import logger
 from ...primary.repositories import InstrumentsDetailsRepository
@@ -17,7 +16,7 @@ from ...primary.schemas import (
     WSProductSubscription,
 )
 from ...primary.services import WSMarketDataService
-from ...utils import GoogleSheets
+from ...utils.google_sheets import GoogleSheets
 from ..schemas import GastosConIVA
 
 
