@@ -32,6 +32,7 @@ class BaseStrategy(ABC):
         self.instruments_details_df = pd.DataFrame()
         self.summary_cols = []
         self.tna_requiered = None
+        self._upload_task: Optional[asyncio.Task] = None
         self._google_sheets: Optional[GoogleSheets] = None
         self._spreadsheet_key: Optional[str] = None
         self._sheet_name: Optional[str] = None
@@ -77,12 +78,16 @@ class BaseStrategy(ABC):
         if self._task is None or self._task.done():
             self.is_running = True
             self._task = asyncio.create_task(self._run(credentials))
+        if self._google_sheets and self._spreadsheet_key and self._sheet_name:
+            self._upload_task = asyncio.create_task(self._upload_loop())
 
     # --------------------------------------------------
     def stop(self):
         self.is_running = False
         if self._task:
             self._task.cancel()
+        if self._upload_task:
+            self._upload_task.cancel()
 
     # --------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
@@ -181,19 +186,17 @@ class BaseStrategy(ABC):
         self._upload_interval = interval
         self._google_sheets = GoogleSheets()
 
-    def _start_upload_task(self):
-        if not self._google_sheets or not self._spreadsheet_key or not self._sheet_name:
-            return
-
-        async def upload_loop():
-            while self.is_running:
-                try:
-                    df = self.summary_df.fillna(0)
+    async def _upload_loop(self):
+        while self.is_running:
+            try:
+                df = self.summary_strategy_df.copy()
+                if not df.empty:
+                    df.fillna(0, inplace=True)
                     self._google_sheets.to_google_sheets(
                         df, self._spreadsheet_key, self._sheet_name
                     )
-                except Exception as e:
-                    print(f"⚠️ Error uploading summary to Google Sheets: {e}")
-                await asyncio.sleep(self._upload_interval)
-
-        self._upload_task = asyncio.create_task(upload_loop())
+            except Exception as e:
+                logger.error(
+                    f"[{self.__class__.__name__}] Error uploading to Google Sheets: {e}"
+                )
+            await asyncio.sleep(self._upload_interval)
