@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
@@ -15,11 +15,7 @@ from ...primary.services import (
 )
 from ...utils import apply_auto_filter
 from ..schemas import TimeArbitrageFilter, TimeArbitrageSummary
-from ..services import (
-    TimeArbitrageService,
-    strategy_manager,
-    TIME_ARBITRAGE_NAME
-)
+from ..services import TIME_ARBITRAGE_NAME, TimeArbitrageService, strategy_manager
 
 STRATEGY_NAME = TIME_ARBITRAGE_NAME
 
@@ -34,6 +30,7 @@ async def start_time_arbitrage(
     service: WSMarketDataServiceDependency,
     credentials: Annotated[PrimaryCredentials, Depends()],
     days: int = 1,
+    upload_to_google_sheets: bool = Query(False, alias="uploadToGoogleSheets"),
 ):
     if service.task and not service.task.done():
         raise HTTPException(status_code=400, detail="WebSocket stream already running.")

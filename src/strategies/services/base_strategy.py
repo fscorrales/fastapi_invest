@@ -31,11 +31,12 @@ class BaseStrategy(ABC):
         self.instruments_details_df = pd.DataFrame()
         self.summary_cols = []
         self.tna_requiered = None
-        # self._upload_task: Optional[asyncio.Task] = None
-        # self._google_sheets: Optional[GoogleSheets] = None
-        # self._spreadsheet_key: Optional[str] = None
-        # self._sheet_name: Optional[str] = None
-        # self._upload_interval: int = 60
+        self.upload_to_google_sheets = False
+        self._upload_task: Optional[asyncio.Task] = None
+        self._google_sheets: Optional[GoogleSheets] = None
+        self._spreadsheet_key: Optional[str] = None
+        self._sheet_name: Optional[str] = None
+        self._upload_interval: int = 60
 
     # --------------------------------------------------
     def get_tna_caucion(
@@ -77,6 +78,9 @@ class BaseStrategy(ABC):
         if self._task is None or self._task.done():
             self.is_running = True
             self._task = asyncio.create_task(self._run(credentials))
+        if self.upload_to_google_sheets:
+            self._google_sheets = GoogleSheets()
+            self._upload_task = asyncio.create_task(self._upload_loop())
         # if self._google_sheets and self._spreadsheet_key and self._sheet_name:
         #     self._upload_task = asyncio.create_task(self._upload_loop())
 
@@ -85,8 +89,8 @@ class BaseStrategy(ABC):
         self.is_running = False
         if self._task:
             self._task.cancel()
-        # if self._upload_task:
-        #     self._upload_task.cancel()
+        if self._upload_task:
+            self._upload_task.cancel()
 
     # --------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
@@ -177,25 +181,25 @@ class BaseStrategy(ABC):
     def reset_dataframe(self):
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
 
-    # def configure_google_sheets(
-    #     self, spreadsheet_key: str, sheet_name: str, interval: int = 60
-    # ):
-    #     self._spreadsheet_key = spreadsheet_key
-    #     self._sheet_name = sheet_name
-    #     self._upload_interval = interval
-    #     self._google_sheets = GoogleSheets()
+    def configure_google_sheets(
+        self, spreadsheet_key: str, sheet_name: str, interval: int = 60
+    ):
+        self._spreadsheet_key = spreadsheet_key
+        self._sheet_name = sheet_name
+        self._upload_interval = interval
+        self._google_sheets = GoogleSheets()
 
-    # async def _upload_loop(self):
-    #     while self.is_running:
-    #         try:
-    #             df = self.summary_strategy_df.copy()
-    #             if not df.empty:
-    #                 df.fillna(0, inplace=True)
-    #                 self._google_sheets.to_google_sheets(
-    #                     df, self._spreadsheet_key, self._sheet_name
-    #                 )
-    #         except Exception as e:
-    #             logger.error(
-    #                 f"[{self.__class__.__name__}] Error uploading to Google Sheets: {e}"
-    #             )
-    #         await asyncio.sleep(self._upload_interval)
+    async def _upload_loop(self):
+        while self.is_running:
+            try:
+                df = self.summary_strategy_df.copy()
+                if not df.empty:
+                    df.fillna(0, inplace=True)
+                    self._google_sheets.to_google_sheets(
+                        df, self._spreadsheet_key, self._sheet_name
+                    )
+            except Exception as e:
+                logger.error(
+                    f"[{self.__class__.__name__}] Error uploading to Google Sheets: {e}"
+                )
+            await asyncio.sleep(self._upload_interval)
