@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ...auth.services import OptionalAuthorizationDependency
 from ...config import logger
@@ -34,6 +34,7 @@ async def start_option_cobered_call(
     service: WSMarketDataServiceDependency,
     credentials: Annotated[PrimaryCredentials, Depends()],
     days: int = 1,
+    upload_to_google_sheets: bool = Query(False, alias="uploadToGoogleSheets"),
 ):
     if service.task and not service.task.done():
         raise HTTPException(status_code=400, detail="WebSocket stream already running.")
@@ -47,7 +48,11 @@ async def start_option_cobered_call(
     if STRATEGY_NAME in strategy_manager.list_active():
         raise HTTPException(status_code=400, detail="La estrategia ya está corriendo")
 
-    strategy = OptionCoberedCallService(market_data_service=service, days=days)
+    strategy = OptionCoberedCallService(
+        market_data_service=service,
+        days=days,
+        upload_to_google_sheets=upload_to_google_sheets,
+    )
     strategy_manager.register(STRATEGY_NAME, strategy)
     await strategy_manager.start_strategy(STRATEGY_NAME, credentials)
 

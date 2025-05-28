@@ -27,11 +27,16 @@ class OptionCoberedCallService(BaseStrategy):
         market_data_service: WSMarketDataService,
         summary_model: Type[BaseModel] = OptionCoberedCallSummary,
         days: int = 1,
+        upload_to_google_sheets: bool = False,
     ):
         super().__init__(market_data_service=market_data_service)
         self.days = days
         self.summary_cols = list(summary_model.model_fields.keys())
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
+        self._spreadsheet_key = "1ztmSxBFWo8xHYLNEJPcnHmiJf8yPohC_NKmjWar0JH4"
+        self._sheet_name = "opt_cc_new"
+        self._upload_interval = 10  # seconds
+        self.upload_to_google_sheets = upload_to_google_sheets
 
     # -------------------------------------------------
     async def evaluate(
