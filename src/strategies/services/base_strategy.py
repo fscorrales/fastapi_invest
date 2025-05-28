@@ -79,10 +79,20 @@ class BaseStrategy(ABC):
             self.is_running = True
             self._task = asyncio.create_task(self._run(credentials))
         if self.upload_to_google_sheets:
-            self._google_sheets = GoogleSheets()
-            self._upload_task = asyncio.create_task(self._upload_loop())
+            await self.start_upload()
+            # self._google_sheets = GoogleSheets()
+            # self._upload_task = asyncio.create_task(self._upload_loop())
         # if self._google_sheets and self._spreadsheet_key and self._sheet_name:
         #     self._upload_task = asyncio.create_task(self._upload_loop())
+
+    # --------------------------------------------------
+    async def start_upload(self):
+        if self._upload_task is None or self._upload_task.done():
+            self.is_running = True
+            if not self._spreadsheet_key or not self._sheet_name:
+                raise ValueError("Google Sheets configuration is required.")
+            self._google_sheets = GoogleSheets()
+            self._upload_task = asyncio.create_task(self._upload_loop())
 
     # --------------------------------------------------
     def stop(self):
@@ -171,6 +181,7 @@ class BaseStrategy(ABC):
     async def evaluate(self, df: pd.DataFrame):
         pass
 
+    # --------------------------------------------------
     def get_dataframe(self) -> pd.DataFrame:
         return (
             self.summary_strategy_df.copy()
@@ -178,9 +189,11 @@ class BaseStrategy(ABC):
             else None
         )
 
+    # --------------------------------------------------
     def reset_dataframe(self):
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
 
+    # --------------------------------------------------
     def configure_google_sheets(
         self, spreadsheet_key: str, sheet_name: str, interval: int = 60
     ):
@@ -189,12 +202,14 @@ class BaseStrategy(ABC):
         self._upload_interval = interval
         self._google_sheets = GoogleSheets()
 
+    # --------------------------------------------------
     async def _upload_loop(self):
         while self.is_running:
             try:
                 df = self.summary_strategy_df.copy()
                 if not df.empty:
-                    df.fillna(0, inplace=True)
+                    df = df.astype(object).where(pd.notnull(df), None)
+                    df = df.applymap(lambda x: x.item() if hasattr(x, "item") else x)
                     self._google_sheets.to_google_sheets(
                         df, self._spreadsheet_key, self._sheet_name
                     )

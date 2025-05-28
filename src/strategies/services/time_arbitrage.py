@@ -33,14 +33,10 @@ class TimeArbitrageService(BaseStrategy):
         self.to_settlement = to_settlement
         self.summary_cols = list(summary_model.model_fields.keys())
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
-        if upload_to_google_sheets:
-            self.upload_to_google_sheets = upload_to_google_sheets
-            # self._google_sheets = GoogleSheets()
-            self._spreadsheet_key = (
-                "1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2g3"
-            )
-            self._sheet_name = "TimeArbitrage"
-            self._upload_interval = 60
+        self._spreadsheet_key = "1ztmSxBFWo8xHYLNEJPcnHmiJf8yPohC_NKmjWar0JH4"
+        self._sheet_name = "tm_new"
+        self._upload_interval = 10  # seconds
+        self.upload_to_google_sheets = upload_to_google_sheets
 
     # -------------------------------------------------
     async def evaluate(
