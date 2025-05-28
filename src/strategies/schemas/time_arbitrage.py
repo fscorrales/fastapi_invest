@@ -12,7 +12,6 @@ class TimeArbitrageSummary(BaseModel):
     buy_sell: str
     cficode: str
     currency: str
-    ticker: str
     ticker_buy: str
     ticker_sell: str
     buy_price: float
@@ -20,6 +19,8 @@ class TimeArbitrageSummary(BaseModel):
     q_max: float
     tna: float
     p_and_l: float
+    tna_operation: float
+    tna_caucion: float
     days: int
 
 

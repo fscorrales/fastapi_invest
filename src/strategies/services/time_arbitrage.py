@@ -34,7 +34,7 @@ class TimeArbitrageService(BaseStrategy):
         self.summary_cols = list(summary_model.model_fields.keys())
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
         self._spreadsheet_key = "1ztmSxBFWo8xHYLNEJPcnHmiJf8yPohC_NKmjWar0JH4"
-        self._sheet_name = "tm_new"
+        self._sheet_name = "time_arbitrage"
         self._upload_interval = 10  # seconds
         self.upload_to_google_sheets = upload_to_google_sheets
 
@@ -132,7 +132,7 @@ class TimeArbitrageService(BaseStrategy):
 
                 # Rate
                 df["rate"] = df["adj_sell"] / df["adj_buy"] - 1
-                df["tna_operacion"] = df["rate"] / self.days * 365
+                df["tna_operation"] = df["rate"] / self.days * 365
 
                 # TNA Caución
                 tna_caucion = self.get_tna_caucion(plazo=self.days)
@@ -153,8 +153,8 @@ class TimeArbitrageService(BaseStrategy):
                 # TNA
                 df["tna"] = np.where(
                     df["buy_sell"] == self.from_settlement + " / " + self.to_settlement,
-                    df["tna_operacion"],
-                    df["tna_operacion"] + df["tna_caucion"],
+                    df["tna_operation"],
+                    df["tna_operation"] + df["tna_caucion"],
                 )
 
                 # Max Quantity
