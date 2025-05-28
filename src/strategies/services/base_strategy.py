@@ -195,11 +195,16 @@ class BaseStrategy(ABC):
 
     # --------------------------------------------------
     def configure_google_sheets(
-        self, spreadsheet_key: str, sheet_name: str, interval: int = 60
+        self, spreadsheet_key: str = None, sheet_name: str = None, interval: int = 60
     ):
-        self._spreadsheet_key = spreadsheet_key
-        self._sheet_name = sheet_name
-        self._upload_interval = interval
+        if spreadsheet_key:
+            self._spreadsheet_key = spreadsheet_key
+        if sheet_name:
+            self._sheet_name = sheet_name
+        if interval:
+            if not isinstance(interval, int) or interval <= 0:
+                raise ValueError("Upload interval must be a positive integer.")
+            self._upload_interval = interval
         self._google_sheets = GoogleSheets()
 
     # --------------------------------------------------
