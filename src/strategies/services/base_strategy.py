@@ -17,6 +17,7 @@ from ...primary.schemas import (
 )
 from ...primary.services import WSMarketDataService
 from ...utils.google_sheets import GoogleSheets
+from ...utils.safe_get import safe_json_df
 from ..schemas import GastosConIVA
 
 
@@ -213,6 +214,7 @@ class BaseStrategy(ABC):
             try:
                 df = self.summary_strategy_df.copy()
                 if not df.empty:
+                    df = safe_json_df(df)
                     df = df.astype(object).where(pd.notnull(df), None)
                     df = df.applymap(lambda x: x.item() if hasattr(x, "item") else x)
                     self._google_sheets.to_google_sheets(
