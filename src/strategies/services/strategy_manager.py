@@ -27,6 +27,8 @@ class StrategyManager:
     def stop_strategy(self, name: str):
         if name in self.strategies:
             self.strategies[name].stop()
+            if len(self.list_active()) == 1:
+                self.strategies[name].market_data_service.disconnect()
             del self.strategies[name]
 
     # -------------------------------------------------
@@ -36,8 +38,18 @@ class StrategyManager:
 
     # -------------------------------------------------
     def stop_all(self):
+        # Detenemos todas las estrategias
         for strategy in self.strategies.values():
             strategy.stop()
+
+        # Desconectamos el WebSocket (compartido por todas)
+        if self.strategies:
+            first_strategy = next(iter(self.strategies.values()))
+            if hasattr(first_strategy, "market_data_service"):
+                first_strategy.market_data_service.disconnect()
+
+        # Limpiamos el registro
+        self.strategies.clear()
 
     # -------------------------------------------------
     def get(self, name):
