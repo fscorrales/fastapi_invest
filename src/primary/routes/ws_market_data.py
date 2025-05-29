@@ -30,7 +30,7 @@ async def start_primary_stream(
     credentials: Annotated[PrimaryCredentials, Depends()],
     params: Annotated[WSMarketDataParams, Depends()],
 ):
-    if service.task and not service.task.done():
+    if service.stream_task and not service.stream_task.done():
         raise HTTPException(status_code=400, detail="WebSocket stream already running.")
 
     credentials = prepare_primary_credentials(auth, credentials)

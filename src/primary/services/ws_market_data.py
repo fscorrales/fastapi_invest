@@ -54,7 +54,7 @@ class WSMarketDataService:
     market_data_df: pd.DataFrame = field(default_factory=_init_market_data_df)
     queue = asyncio.Queue()
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-    task: Optional[asyncio.Task] = None
+    stream_task: Optional[asyncio.Task] = None
     is_running: bool = False
     """
     WebSocket Market Data Service
@@ -66,7 +66,9 @@ class WSMarketDataService:
         credentials: PrimaryCredentials,
         params: Union[WSMarketDataSubscription, WSMarketDataParams] = None,
     ):
-        self.task = asyncio.create_task(self.connect_with_retries(credentials, params))
+        self.stream_task = asyncio.create_task(
+            self.connect_with_retries(credentials, params)
+        )
         return {"message": "WebSocket conectado."}
 
     # -------------------------------------------------
@@ -283,9 +285,14 @@ class WSMarketDataService:
         logger.info("🔌 Cerrando conexión WebSocket y tareas asociadas...")
 
         # Cancelamos las tareas si existen
-        for task_name in ["producer_task", "consumer_task"]:
+        for task_name in [
+            "producer_task",
+            "consumer_task",
+            "ping_task",
+            "stream_task",
+        ]:
             task = getattr(self, task_name, None)
-            if task and not task.done():
+            if isinstance(task, asyncio.Task) and not task.done():
                 task.cancel()
                 try:
                     await task
