@@ -32,7 +32,7 @@ async def start_time_arbitrage(
     days: int = 1,
     upload_to_google_sheets: bool = Query(False, alias="uploadToGoogleSheets"),
 ):
-    if service.task and not service.task.done():
+    if service.stream_task and not service.stream_task.done():
         raise HTTPException(status_code=400, detail="WebSocket stream already running.")
 
     credentials = prepare_primary_credentials(auth, credentials)

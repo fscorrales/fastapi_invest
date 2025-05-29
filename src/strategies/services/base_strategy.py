@@ -96,12 +96,21 @@ class BaseStrategy(ABC):
             self._upload_task = asyncio.create_task(self._upload_loop())
 
     # --------------------------------------------------
-    def stop(self):
+    async def stop(self):
         self.is_running = False
         if self._task:
             self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                logger.info("🛑 Task principal cancelada")
+
         if self._upload_task:
             self._upload_task.cancel()
+            try:
+                await self._upload_task
+            except asyncio.CancelledError:
+                logger.info("🛑 Upload task cancelada")
 
     # --------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):

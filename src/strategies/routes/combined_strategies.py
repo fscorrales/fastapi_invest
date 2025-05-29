@@ -69,7 +69,7 @@ async def start_all(
 
 @combined_strategies_router.post("/stop_all")
 async def stop_all():
-    strategy_manager.stop_all()
+    await strategy_manager.stop_all()
     return {"status": "Todas las estrategias detenidas"}
 
 
