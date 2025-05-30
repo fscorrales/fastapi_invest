@@ -34,7 +34,7 @@ class OptionCoberedCallService(BaseStrategy):
         self.summary_cols = list(summary_model.model_fields.keys())
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
         self._spreadsheet_key = "1ztmSxBFWo8xHYLNEJPcnHmiJf8yPohC_NKmjWar0JH4"
-        self._sheet_name = "opt_cc_new"
+        self._sheet_name = "cobered_call"
         self._upload_interval = 10  # seconds
         self.upload_to_google_sheets = upload_to_google_sheets
 
