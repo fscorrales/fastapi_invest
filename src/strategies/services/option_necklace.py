@@ -1,9 +1,9 @@
-# src/strategies/services/option_cobered_call.py
+# src/strategies/services/option_necklace.py
 
 __all__ = [
-    "OptionCoberedCallService",
-    "OptionCoberedCallDependency",
-    "OPTION_COBERED_CALL_NAME",
+    "OptionNecklaceService",
+    "OptionNecklaceDependency",
+    "OPTION_NECKLACE_NAME",
 ]
 
 from typing import Annotated, Type
@@ -21,7 +21,7 @@ from .base_strategy import BaseStrategy
 
 
 # -------------------------------------------------
-class OptionCoberedCallService(BaseStrategy):
+class OptionNecklaceService(BaseStrategy):
     def __init__(
         self,
         market_data_service: WSMarketDataService,
@@ -34,7 +34,7 @@ class OptionCoberedCallService(BaseStrategy):
         self.summary_cols = list(summary_model.model_fields.keys())
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
         self._spreadsheet_key = "1ztmSxBFWo8xHYLNEJPcnHmiJf8yPohC_NKmjWar0JH4"
-        self._sheet_name = "cobered_call"
+        self._sheet_name = "necklace"
         self._upload_interval = 10  # seconds
         self.upload_to_google_sheets = upload_to_google_sheets
 
@@ -48,7 +48,7 @@ class OptionCoberedCallService(BaseStrategy):
         It filters the DataFrame for the specified settlements and calculates the rate, TNA, and maximum quantity.
         """
         if df.empty:
-            logger.warning("[OptionCoberedCall] DataFrame is empty")
+            logger.warning("[OptionNecklace] DataFrame is empty")
             return pd.DataFrame()
 
         try:
@@ -182,8 +182,8 @@ class OptionCoberedCallService(BaseStrategy):
                     self.summary_strategy_df = df.copy()
 
         except Exception as e:
-            logger.error(f"[OptionCoberedCall] Error en evaluación: {e}")
+            logger.error(f"[OptionNecklace] Error en evaluación: {e}")
 
 
-OptionCoberedCallDependency = Annotated[OptionCoberedCallService, Depends()]
-OPTION_COBERED_CALL_NAME = "option_cobered_call"
+OptionNecklaceDependency = Annotated[OptionNecklaceService, Depends()]
+OPTION_NECKLACE_NAME = "option_necklace_call"
