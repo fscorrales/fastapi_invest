@@ -70,7 +70,7 @@ async def get_strategy_status():
 
 @option_necklace_router.post("/stop")
 async def stop_option_necklace():
-    strategy_manager.stop_strategy(STRATEGY_NAME)
+    await strategy_manager.stop_strategy(STRATEGY_NAME)
     return {"status": "stopped", "strategy": STRATEGY_NAME}
 
 

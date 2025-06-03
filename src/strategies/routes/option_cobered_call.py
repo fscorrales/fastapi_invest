@@ -70,7 +70,7 @@ async def get_strategy_status():
 
 @option_cobered_call_router.post("/stop")
 async def stop_option_cobered_call():
-    strategy_manager.stop_strategy(STRATEGY_NAME)
+    await strategy_manager.stop_strategy(STRATEGY_NAME)
     return {"status": "stopped", "strategy": STRATEGY_NAME}
 
 

@@ -66,7 +66,7 @@ async def get_strategy_status():
 
 @time_arbitrage_router.post("/stop")
 async def stop_time_arbitrage():
-    strategy_manager.stop_strategy(STRATEGY_NAME)
+    await strategy_manager.stop_strategy(STRATEGY_NAME)
     return {"status": "stopped", "strategy": STRATEGY_NAME}
 
 
