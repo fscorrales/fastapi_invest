@@ -85,12 +85,9 @@ class OptionNecklaceService(BaseStrategy):
                 "ticker",
                 "strike",
                 "cficode",
-                "bid_price",
-                "bid_size",
-                "offer_price",
-                "offer_size",
                 "underlying",
                 "maturityDate",
+                "currency",
             ]
             df_x0 = df_x0.loc[
                 df_x0["offer_size"] > 0, filter_cols + ["offer_size", "offer_price"]
@@ -119,7 +116,7 @@ class OptionNecklaceService(BaseStrategy):
             df = pd.merge(
                 left=df_x0,
                 right=df_x1,
-                on=["underlying", "maturityDate"],
+                on=["underlying", "maturityDate", "currency"],
                 how="inner",
                 copy=False,
             )
@@ -194,7 +191,7 @@ class OptionNecklaceService(BaseStrategy):
                 df["max_loss_pct"] = df["max_loss"] / df["capital"]
                 df["tna_max_loss"] = df["max_loss_pct"] / df["days_expire"] * 365
 
-                df["protection%"] = df["strike_x0"] / df["capital"]
+                df["protection_pct"] = df["strike_x0"] / df["capital"]
 
                 # # Función para realizar el reescalado y asignar a un nuevo campo parametrizable
                 # def rescale(x):
