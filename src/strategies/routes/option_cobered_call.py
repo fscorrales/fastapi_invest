@@ -76,7 +76,7 @@ async def stop_option_cobered_call():
 
 @option_cobered_call_router.post("/reset", response_model=dict)
 async def reset_strategy_data():
-    strategy = strategy_manager.get("time_arbitrage")
+    strategy = strategy_manager.get(STRATEGY_NAME)
     if not strategy:
         raise HTTPException(status_code=404, detail="La estrategia no está activa")
 
