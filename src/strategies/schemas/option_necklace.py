@@ -23,8 +23,8 @@ class OptionNecklaceSummary(BaseModel):
     strike_x0: float
     strike_x1: float
     prima_x0: float
-    ask_size: float
-    bid_size: float
+    size_x0: float
+    size_x1: float
     prima_x1: float
     underlying_close: float
     prima_neta: float
