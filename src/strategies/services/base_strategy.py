@@ -224,9 +224,6 @@ class BaseStrategy(ABC):
                 df = self.summary_strategy_df.copy()
                 if not df.empty:
                     df = sanitize_dataframe_for_json(df)
-                    # df = df.astype(object).where(pd.notnull(df), None)
-                    # df = df.applymap(lambda x: x.item() if hasattr(x, "item") else x)
-                    logger.info(df.dtypes)
                     self._google_sheets.to_google_sheets(
                         df, self._spreadsheet_key, self._sheet_name
                     )
