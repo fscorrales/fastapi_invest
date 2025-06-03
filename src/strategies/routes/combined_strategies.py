@@ -1,6 +1,6 @@
 # src/stretegies/routes/combined_strategies.py
 
-from typing import Annotated
+from typing import Annotated, List, Tuple, Type
 
 from fastapi import APIRouter, Depends, Query
 
@@ -15,8 +15,11 @@ from ...primary.services import (
 )
 from ..services import (
     OPTION_COBERED_CALL_NAME,
+    OPTION_NECKLACE_NAME,
     TIME_ARBITRAGE_NAME,
+    BaseStrategy,
     OptionCoberedCallService,
+    OptionNecklaceService,
     TimeArbitrageService,
     strategy_manager,
 )
@@ -26,6 +29,13 @@ STRATEGY_NAME = "combined_strategies"
 combined_strategies_router = APIRouter(
     prefix="/" + STRATEGY_NAME, tags=["Strategies - Combined Strategies"]
 )
+
+# Lista de estrategias con su nombre y clase
+STRATEGIES: List[Tuple[str, Type[BaseStrategy]]] = [
+    (TIME_ARBITRAGE_NAME, TimeArbitrageService),
+    (OPTION_COBERED_CALL_NAME, OptionCoberedCallService),
+    (OPTION_NECKLACE_NAME, OptionNecklaceService),
+]
 
 
 @combined_strategies_router.post("/start_all")
@@ -42,29 +52,18 @@ async def start_all(
         f"Syncing {credentials.enviroment.value} instruments details from Primary API with url: {credentials.url}"
     )
 
-    strategy = TimeArbitrageService(
-        market_data_service=service,
-        days=days,
-        upload_to_google_sheets=upload_to_google_sheets,
-    )
-    if TIME_ARBITRAGE_NAME in strategy_manager.list_active():
-        logger.warning("La estrategia de arbitraje de tiempo ya está corriendo")
-    else:
-        logger.info("Registrando la estrategia de arbitraje de tiempo")
-    strategy_manager.register(TIME_ARBITRAGE_NAME, strategy)
-    strategy = OptionCoberedCallService(
-        market_data_service=service,
-        days=days,
-        upload_to_google_sheets=upload_to_google_sheets,
-    )
-    if OPTION_COBERED_CALL_NAME in strategy_manager.list_active():
-        logger.warning("La estrategia de opción cubierta ya está corriendo")
-    else:
-        logger.info("Registrando la estrategia de opción cubierta")
-    strategy_manager.register(OPTION_COBERED_CALL_NAME, strategy)
+    for name, StrategyClass in STRATEGIES:
+        if name in strategy_manager.list_active():
+            logger.warning(f"La estrategia '{name}' ya está corriendo")
+            continue
 
-    await strategy_manager.start_all(credentials)
-    return {"status": "Todas las estrategias iniciadas"}
+        logger.info(f"Registrando la estrategia '{name}'")
+        strategy = StrategyClass(
+            market_data_service=service,
+            days=days,
+            upload_to_google_sheets=upload_to_google_sheets,
+        )
+        strategy_manager.register(name, strategy)
 
 
 @combined_strategies_router.post("/stop_all")
