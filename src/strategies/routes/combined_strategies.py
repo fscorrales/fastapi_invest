@@ -65,6 +65,9 @@ async def start_all(
         )
         strategy_manager.register(name, strategy)
 
+    await strategy_manager.start_all(credentials)
+    return {"status": "Todas las estrategias iniciadas"}
+
 
 @combined_strategies_router.post("/stop_all")
 async def stop_all():

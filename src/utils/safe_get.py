@@ -48,12 +48,16 @@ def sanitize_dataframe_for_json(df: pd.DataFrame) -> pd.DataFrame:
     # Reemplazar NaN e infinitos por None
     # df_clean = df.replace([np.nan, np.inf, -np.inf], None)
     df_clean = df.replace([np.nan, np.inf, -np.inf, None], "")
+    df_clean = df_clean.astype(object)
 
     # Convertir a object donde haya valores nulos para asegurar compatibilidad
-    df_clean = df_clean.astype(object).where(pd.notnull(df_clean), None)
+    # df_clean = df_clean.astype(object).where(pd.notnull(df_clean), None)
 
     # Convertir np.* types (como np.int64, np.float64) a sus tipos nativos
-    df_clean = df_clean.applymap(lambda x: x.item() if hasattr(x, "item") else x)
+    df_clean = df_clean.apply(
+        lambda col: col.map(lambda x: x.item() if hasattr(x, "item") else x)
+    )
+    # df_clean = df_clean.applymap(lambda x: x.item() if hasattr(x, "item") else x)
 
     # Convertir todo a string para evitar problemas con tipos
     # df_clean = df_clean.astype(str)
