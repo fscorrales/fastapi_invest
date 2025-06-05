@@ -110,6 +110,9 @@ class WSMarketDataService:
     ):
         async with AsyncClient() as c:
             try:
+                if self.is_running:
+                    logger.info("📶 WS ya conectado. Ignorando nueva solicitud.")
+                    return
                 # Intentar obtener el token
                 connect_primary = await get_token(
                     credentials.username,
