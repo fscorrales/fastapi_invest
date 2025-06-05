@@ -4,6 +4,7 @@ __all__ = ["strategy_manager"]
 
 from typing import Dict
 
+from ...config import logger
 from .base_strategy import BaseStrategy
 
 
@@ -28,6 +29,7 @@ class StrategyManager:
         if name in self.strategies:
             await self.strategies[name].stop()
             if len(self.list_active()) == 1:
+                logger.info(f"Desconectando WebSocket desde la estrategia '{name}'")
                 await self.strategies[name].market_data_service.disconnect()
             del self.strategies[name]
 
