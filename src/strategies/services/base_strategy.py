@@ -114,65 +114,71 @@ class BaseStrategy(ABC):
 
     # --------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
-        repo = InstrumentsDetailsRepository()
-        acciones = await repo.find_by_filter(
-            filters={
-                "enviroment": credentials.enviroment,
-                "cficode": CFICode.accion.value,
-                "currency__ne": "CCL",
-            }
-        )
+        if not self.market_data_service.is_running:
+            repo = InstrumentsDetailsRepository()
+            acciones = await repo.find_by_filter(
+                filters={
+                    "enviroment": credentials.enviroment,
+                    "cficode": CFICode.accion.value,
+                    "currency__ne": "CCL",
+                }
+            )
 
-        subyacentes = await repo.find_by_filter(
-            filters={
-                "enviroment": credentials.enviroment,
-                "cficode": CFICode.accion.value,
-                "currency__ne": "CCL",
-                "ticker__in": ["GGAL"],
-                "settlement": "24hs",
-            }
-        )
+            subyacentes = await repo.find_by_filter(
+                filters={
+                    "enviroment": credentials.enviroment,
+                    "cficode": CFICode.accion.value,
+                    "currency__ne": "CCL",
+                    "ticker__in": ["GGAL"],
+                    "settlement": "24hs",
+                }
+            )
 
-        opciones = await repo.find_by_filter(
-            filters={
-                "enviroment": credentials.enviroment,
-                "cficode__in": [CFICode.call_accion.value, CFICode.put_accion.value],
-                "underlying__in": [
-                    subyacente["underlying"] for subyacente in subyacentes
+            opciones = await repo.find_by_filter(
+                filters={
+                    "enviroment": credentials.enviroment,
+                    "cficode__in": [
+                        CFICode.call_accion.value,
+                        CFICode.put_accion.value,
+                    ],
+                    "underlying__in": [
+                        subyacente["underlying"] for subyacente in subyacentes
+                    ],
+                }
+            )
+
+            cedears = await repo.find_by_filter(
+                filters={
+                    "enviroment": credentials.enviroment,
+                    "cficode": CFICode.cedear.value,
+                    "currency__ne": "CCL",
+                }
+            )
+            cauciones = await repo.find_by_filter(
+                filters={
+                    "symbol": {"$regex": "-\\s[1-7]D$", "$options": "i"},
+                    "enviroment": credentials.enviroment,
+                    "cficode": CFICode.caucion.value,
+                }
+            )
+
+            instruments_details = acciones + cedears + cauciones + opciones
+            self.instruments_details_df = pd.DataFrame(instruments_details)
+
+            params = WSMarketDataSubscription(
+                entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
+                products=[
+                    WSProductSubscription(
+                        symbol=i["symbol"], marketId=i["marketId"]
+                    ).model_dump()
+                    for i in instruments_details
                 ],
-            }
-        )
+                depth=1,
+            )
 
-        cedears = await repo.find_by_filter(
-            filters={
-                "enviroment": credentials.enviroment,
-                "cficode": CFICode.cedear.value,
-                "currency__ne": "CCL",
-            }
-        )
-        cauciones = await repo.find_by_filter(
-            filters={
-                "symbol": {"$regex": "-\\s[1-7]D$", "$options": "i"},
-                "enviroment": credentials.enviroment,
-                "cficode": CFICode.caucion.value,
-            }
-        )
-
-        instruments_details = acciones + cedears + cauciones + opciones
-        self.instruments_details_df = pd.DataFrame(instruments_details)
-
-        params = WSMarketDataSubscription(
-            entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
-            products=[
-                WSProductSubscription(
-                    symbol=i["symbol"], marketId=i["marketId"]
-                ).model_dump()
-                for i in instruments_details
-            ],
-            depth=1,
-        )
-
-        await self.market_data_service.connect(credentials, params=params)
+            await self.market_data_service.stream_market_data(
+                credentials, params=params
+            )
 
         while self.is_running:
             try:
