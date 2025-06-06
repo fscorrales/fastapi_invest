@@ -40,4 +40,4 @@ class OptionNecklaceSummary(BaseModel):
 # --------------------------------------------------
 class OptionNecklaceFilter(BaseFilterParams):
     ticker_x0: Optional[str] = None
-    ticker_x0: Optional[str] = None
+    ticker_x1: Optional[str] = None
