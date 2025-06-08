@@ -36,6 +36,7 @@ class OptionBullSpreadSummary(BaseModel):
     max_loss: float
     max_loss_pct: float
     tna_max_loss: float
+    round_var_max_profit: float
 
 
 # --------------------------------------------------
