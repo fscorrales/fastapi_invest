@@ -28,6 +28,8 @@ class OptionBullSpreadService(BaseStrategy):
         summary_model: Type[BaseModel] = OptionBullSpreadSummary,
         days: int = 1,
         upload_to_google_sheets: bool = False,
+        perc_interval: float = 0.05,
+        is_grouped: bool = True,
     ):
         super().__init__(market_data_service=market_data_service)
         self.days = days
@@ -37,6 +39,8 @@ class OptionBullSpreadService(BaseStrategy):
         self._sheet_name = "bull_spread_new"
         self._upload_interval = 10  # seconds
         self.upload_to_google_sheets = upload_to_google_sheets
+        self.perc_interval = perc_interval
+        self.is_grouped = is_grouped
 
     # -------------------------------------------------
     async def evaluate(
@@ -266,28 +270,32 @@ class OptionBullSpreadService(BaseStrategy):
                 df["tna"] = 0
                 df["tna_adj"] = 0
                 df["tna_max_diff"] = df["tna_max_profit"] + df["tna_max_loss"]
+                df["round_var_max_profit"] = (
+                    df["var_max_profit"] / self.perc_interval
+                ).round(0) * self.perc_interval
+
                 df = df[self.summary_cols]
                 df = df.loc[
                     df["var_max_profit"] <= 0.4
                 ]  # Solo aquellas bulls que requieran hasta un 40% de suba
                 df = df.sort_values(by="tna_max_profit", ascending=False)
 
+                if self.is_grouped:
+                    group_cols = [
+                        "underlying",
+                        "type",
+                        "days_expire",
+                        "round_var_max_profit",
+                    ]
+                    max_tna_df = df.groupby(group_cols).max()["tna_max_profit"]
+                    group_cols = group_cols + ["tna_max_profit"]
+                    df = df.merge(max_tna_df, on=group_cols, how="right")
+
                 async with self.lock:
                     self.summary_strategy_df = df.copy()
 
         except Exception as e:
             logger.error(f"[OptionBullSpread] Error en evaluación: {e}")
-
-    # # --------------------------------------------------
-    # def summarySpread(self, df: pd.DataFrame, perc_interval: float = 0.05):
-    #     df["round_var_max_profit"] = (df["var_max_profit"] / perc_interval).round(
-    #         0
-    #     ) * perc_interval
-    #     group_cols = ["underlying", "type", "days_expire", "round_var_max_profit"]
-    #     max_tna_df = df.groupby(group_cols).max()["tna_max_profit"]
-    #     group_cols = group_cols + ["tna_max_profit"]
-    #     df = df.merge(max_tna_df, on=group_cols, how="right")
-    #     return df
 
 
 OptionBullSpreadDependency = Annotated[OptionBullSpreadService, Depends()]
