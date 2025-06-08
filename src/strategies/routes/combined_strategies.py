@@ -14,10 +14,12 @@ from ...primary.services import (
     prepare_primary_credentials,
 )
 from ..services import (
+    OPTION_BULL_SPREAD_NAME,
     OPTION_COBERED_CALL_NAME,
     OPTION_NECKLACE_NAME,
     TIME_ARBITRAGE_NAME,
     BaseStrategy,
+    OptionBullSpreadService,
     OptionCoberedCallService,
     OptionNecklaceService,
     TimeArbitrageService,
@@ -35,6 +37,7 @@ STRATEGIES: List[Tuple[str, Type[BaseStrategy]]] = [
     (TIME_ARBITRAGE_NAME, TimeArbitrageService),
     (OPTION_COBERED_CALL_NAME, OptionCoberedCallService),
     (OPTION_NECKLACE_NAME, OptionNecklaceService),
+    (OPTION_BULL_SPREAD_NAME, OptionBullSpreadService),
 ]
 
 
