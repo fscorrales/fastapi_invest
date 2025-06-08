@@ -278,6 +278,17 @@ class OptionBullSpreadService(BaseStrategy):
         except Exception as e:
             logger.error(f"[OptionBullSpread] Error en evaluación: {e}")
 
+    # # --------------------------------------------------
+    # def summarySpread(self, df: pd.DataFrame, perc_interval: float = 0.05):
+    #     df["round_var_max_profit"] = (df["var_max_profit"] / perc_interval).round(
+    #         0
+    #     ) * perc_interval
+    #     group_cols = ["underlying", "type", "days_expire", "round_var_max_profit"]
+    #     max_tna_df = df.groupby(group_cols).max()["tna_max_profit"]
+    #     group_cols = group_cols + ["tna_max_profit"]
+    #     df = df.merge(max_tna_df, on=group_cols, how="right")
+    #     return df
+
 
 OptionBullSpreadDependency = Annotated[OptionBullSpreadService, Depends()]
 OPTION_BULL_SPREAD_NAME = "option_bull_spread"
