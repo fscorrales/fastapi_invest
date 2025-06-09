@@ -35,6 +35,8 @@ async def start_option_bull_spread(
     credentials: Annotated[PrimaryCredentials, Depends()],
     days: int = 1,
     upload_to_google_sheets: bool = Query(False, alias="uploadToGoogleSheets"),
+    perc_interval: float = 0.05,
+    is_grouped: bool = True,
 ):
     if service.stream_task and not service.stream_task.done():
         raise HTTPException(status_code=400, detail="WebSocket stream already running.")
@@ -52,6 +54,8 @@ async def start_option_bull_spread(
         market_data_service=service,
         days=days,
         upload_to_google_sheets=upload_to_google_sheets,
+        perc_interval=perc_interval,
+        is_grouped=is_grouped,
     )
     strategy_manager.register(STRATEGY_NAME, strategy)
     await strategy_manager.start_strategy(STRATEGY_NAME, credentials)
