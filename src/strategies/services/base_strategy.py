@@ -106,6 +106,7 @@ class BaseStrategy(ABC):
             except asyncio.CancelledError:
                 logger.info("🛑 Task principal cancelada")
 
+        logger.info(f"Try to stop _upload_task: {self._upload_task}")
         if self._upload_task:
             self._upload_task.cancel()
             try:
