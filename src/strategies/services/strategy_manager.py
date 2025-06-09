@@ -23,12 +23,13 @@ class StrategyManager:
         if name not in self.strategies:
             raise ValueError(f"Estrategia '{name}' no existe")
         await self.strategies[name].start(*args, **kwargs)
+        self.is_running
 
     # -------------------------------------------------
     async def stop_strategy(self, name: str):
         if name in self.strategies:
             await self.strategies[name].stop()
-            if len(self.list_active()) == 1:
+            if len(self.list_active()) == 0:
                 logger.info(f"Desconectando WebSocket desde la estrategia '{name}'")
                 await self.strategies[name].market_data_service.disconnect()
             del self.strategies[name]
