@@ -179,9 +179,9 @@ class OptionBullSpreadService(BaseStrategy):
                     | (df["type"] == CFICode.call_accion.name)
                 ]
                 df["spread"] = df["strike_x1"] - df["strike_x0"]
-                df["spread%"] = (df["prima_neta"] * -1) / df["spread"]
+                df["spread_pct"] = (df["prima_neta"] * -1) / df["spread"]
                 df = df.loc[
-                    df["spread%"] < 0.7
+                    df["spread_pct"] < 0.7
                 ]  # SE PUEDE REDUCIR EL ANÁLSIS A TODOS LOS QUE TENGAN MENOR SPREAD POR CADA base_x1
 
                 df["capital"] = np.where(
@@ -282,7 +282,7 @@ class OptionBullSpreadService(BaseStrategy):
 
                 if self.is_grouped:
                     group_cols = [
-                        "underlying",
+                        "underlying_ticker",
                         "type",
                         "days_expire",
                         "round_var_max_profit",
