@@ -97,6 +97,7 @@ class BaseStrategy(ABC):
 
     # --------------------------------------------------
     async def stop(self):
+        logger.info(f"Try to stop _task: {self._task}")
         self.is_running = False
         if self._task:
             self._task.cancel()
