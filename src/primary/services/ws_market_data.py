@@ -99,8 +99,12 @@ class WSMarketDataService:
             while self.is_running:
                 await self.ws.ping()
                 await asyncio.sleep(30)
+        except (websockets.ConnectionClosed, websockets.ConnectionClosedError):
+            logger.info("WebSocket cerrado correctamente.")
         except asyncio.CancelledError:
             logger.info("🛑 Ping task cancelado")
+        except Exception as e:
+            logger.error(f"Error en _process_messages: {e}")
 
     # -------------------------------------------------
     async def connect(
@@ -108,61 +112,63 @@ class WSMarketDataService:
         credentials: PrimaryCredentials,
         params: Union[WSMarketDataSubscription, WSMarketDataParams] = None,
     ):
-        async with AsyncClient() as c:
-            try:
-                if self.is_running:
-                    logger.info("📶 WS ya conectado. Ignorando nueva solicitud.")
-                    return
-                # Intentar obtener el token
-                connect_primary = await get_token(
-                    credentials.username,
-                    credentials.password,
-                    credentials.url,
-                    websocket_url="wss://api.veta.xoms.com.ar",
-                    httpxAsyncClient=c,
-                )
+        async with self.lock:
+            if self.is_running:
+                logger.info("📶 WS ya conectado. Ignorando nueva solicitud.")
+                return
 
-                headers = {"X-Auth-Token": connect_primary.x_auth_token}
+            async with AsyncClient() as c:
+                try:
+                    # Intentar obtener el token
+                    connect_primary = await get_token(
+                        credentials.username,
+                        credentials.password,
+                        credentials.url,
+                        websocket_url="wss://api.veta.xoms.com.ar",
+                        httpxAsyncClient=c,
+                    )
 
-                self.ws = await websockets.connect(
-                    connect_primary.websocket_url, extra_headers=headers
-                )
+                    headers = {"X-Auth-Token": connect_primary.x_auth_token}
 
-                if isinstance(params, WSMarketDataParams):
-                    params = format_params(params)
+                    self.ws = await websockets.connect(
+                        connect_primary.websocket_url, extra_headers=headers
+                    )
 
-                # Dividir en múltiples suscripciones si hay más de 1000 productos
-                await self._send_subscription_chunks(params)
+                    if isinstance(params, WSMarketDataParams):
+                        params = format_params(params)
 
-                # msg_dict = params.model_dump(mode="json", exclude_none=True)
-                # await self.ws.send(orjson.dumps(msg_dict).decode())
-                # print("📡 Suscripción enviada correctamente")
+                    # Dividir en múltiples suscripciones si hay más de 1000 productos
+                    await self._send_subscription_chunks(params)
 
-                # Guardamos las tareas para posible cancelación luego
-                self.is_running = True
-                self.ping_task = asyncio.create_task(self._send_pings())
-                self.consumer_task = asyncio.create_task(self._process_messages())
-                self.producer_task = asyncio.create_task(
-                    self._receive_messages(self.ws)
-                )
+                    # msg_dict = params.model_dump(mode="json", exclude_none=True)
+                    # await self.ws.send(orjson.dumps(msg_dict).decode())
+                    # print("📡 Suscripción enviada correctamente")
 
-                logger.info(
-                    "[WSMarketDataService] WebSocket conectado y tareas lanzadas"
-                )
+                    # Guardamos las tareas para posible cancelación luego
+                    self.is_running = True
+                    self.ping_task = asyncio.create_task(self._send_pings())
+                    self.consumer_task = asyncio.create_task(self._process_messages())
+                    self.producer_task = asyncio.create_task(
+                        self._receive_messages(self.ws)
+                    )
 
-            except ValidationError as e:
-                logger.error(f"Validation Error: {e}")
-                raise HTTPException(
-                    status_code=400, detail="Invalid response format from Primary"
-                )
-            except Exception as e:
-                logger.error(f"Error during report processing: {e}")
-                raise HTTPException(
-                    status_code=401,
-                    detail="Invalid credentials or unable to authenticate",
-                )
+                    logger.info(
+                        "[WSMarketDataService] WebSocket conectado y tareas lanzadas"
+                    )
 
-            return {"message": "WebSocket conectado."}
+                except ValidationError as e:
+                    logger.error(f"Validation Error: {e}")
+                    raise HTTPException(
+                        status_code=400, detail="Invalid response format from Primary"
+                    )
+                except Exception as e:
+                    logger.error(f"Error during report processing: {e}")
+                    raise HTTPException(
+                        status_code=401,
+                        detail="Invalid credentials or unable to authenticate",
+                    )
+
+                return {"message": "WebSocket conectado."}
 
     # -------------------------------------------------
     async def connect_with_retries(self, credentials, params, retries=3):
@@ -170,6 +176,10 @@ class WSMarketDataService:
             try:
                 await self.connect(credentials, params)
                 return
+            except (websockets.ConnectionClosed, websockets.ConnectionClosedError):
+                logger.info("WebSocket cerrado correctamente.")
+            except asyncio.CancelledError:
+                logger.info("🛑 Stream Task cancelado")
             except Exception as e:
                 logger.error(f"🔁 Falló intento {attempt + 1}: {e}")
                 await asyncio.sleep(5)
@@ -198,6 +208,8 @@ class WSMarketDataService:
                     logger.warning("⏳ Timeout esperando mensajes. Reintentando...")
                     continue  # ⬅️ importante para seguir escuchando
 
+        except (websockets.ConnectionClosed, websockets.ConnectionClosedError):
+            logger.info("WebSocket cerrado correctamente.")
         except asyncio.CancelledError:
             logger.info("🛑 _receive_messages fue cancelado")
             raise
@@ -215,9 +227,13 @@ class WSMarketDataService:
                     print(f"⚠️ Error procesando mensaje: {e}")
                 finally:
                     self.queue.task_done()
+        except (websockets.ConnectionClosed, websockets.ConnectionClosedError):
+            logger.info("WebSocket cerrado correctamente.")
         except asyncio.CancelledError:
             logger.info("🛑 _process_messages fue cancelado")
             raise
+        except Exception as e:
+            logger.error(f"Error en _process_messages: {e}")
 
     # -------------------------------------------------
     async def _handle_message(self, message: str):
@@ -278,6 +294,11 @@ class WSMarketDataService:
                     # )
                     # self.market_data_df = pd.concat([self.market_data_df, new_row])
 
+        except (websockets.ConnectionClosed, websockets.ConnectionClosedError):
+            logger.info("WebSocket cerrado correctamente.")
+        except asyncio.CancelledError:
+            logger.info("_handle_message fue cancelado")
+            raise
         except Exception as e:
             print(f"⚠️ Mensaje inválido: {md}")
             print(f"Error procesando mensaje: {e}")
