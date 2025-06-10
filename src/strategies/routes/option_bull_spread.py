@@ -14,7 +14,7 @@ from ...primary.services import (
     prepare_primary_credentials,
 )
 from ...utils import apply_auto_filter, safe_json_df
-from ..schemas import OptionBullSpreadFilter, OptionBullSpreadSummary
+from ..schemas import OptionSpreadFilter, OptionSpreadSummary
 from ..services import (
     OPTION_BULL_SPREAD_NAME,
     OptionBullSpreadService,
@@ -88,11 +88,9 @@ async def reset_strategy_data():
     return {"message": "DataFrame reseteado correctamente."}
 
 
-@option_bull_spread_router.get(
-    "/dataframe", response_model=list[OptionBullSpreadSummary]
-)
+@option_bull_spread_router.get("/dataframe", response_model=list[OptionSpreadSummary])
 async def get_strategy_data(
-    params: Annotated[OptionBullSpreadFilter, Depends()],
+    params: Annotated[OptionSpreadFilter, Depends()],
 ):
     strategy = strategy_manager.get(STRATEGY_NAME)
     if not strategy:
@@ -121,4 +119,4 @@ async def get_strategy_data(
     df = df.iloc[params.offset : params.offset + params.limit]
     df = safe_json_df(df)
 
-    return [OptionBullSpreadSummary(**row.to_dict()) for _, row in df.iterrows()]
+    return [OptionSpreadSummary(**row.to_dict()) for _, row in df.iterrows()]

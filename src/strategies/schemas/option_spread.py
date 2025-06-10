@@ -1,4 +1,4 @@
-__all__ = ["OptionBullSpreadSummary", "OptionBullSpreadFilter"]
+__all__ = ["OptionSpreadSummary", "OptionSpreadFilter"]
 
 from typing import Optional
 
@@ -8,7 +8,7 @@ from ...utils import BaseFilterParams
 
 
 # --------------------------------------------------
-class OptionBullSpreadSummary(BaseModel):
+class OptionSpreadSummary(BaseModel):
     underlying_ticker: str
     type: str
     days_expire: int
@@ -40,6 +40,6 @@ class OptionBullSpreadSummary(BaseModel):
 
 
 # --------------------------------------------------
-class OptionBullSpreadFilter(BaseFilterParams):
+class OptionSpreadFilter(BaseFilterParams):
     ticker_x0: Optional[str] = None
     ticker_x1: Optional[str] = None

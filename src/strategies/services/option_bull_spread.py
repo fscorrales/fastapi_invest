@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from ...config import logger
 from ...primary.schemas import CFICode
 from ...primary.services import WSMarketDataService
-from ..schemas import GastosConIVA, OptionBullSpreadSummary
+from ..schemas import GastosConIVA, OptionSpreadSummary
 from .base_strategy import BaseStrategy
 
 
@@ -25,7 +25,7 @@ class OptionBullSpreadService(BaseStrategy):
     def __init__(
         self,
         market_data_service: WSMarketDataService,
-        summary_model: Type[BaseModel] = OptionBullSpreadSummary,
+        summary_model: Type[BaseModel] = OptionSpreadSummary,
         days: int = 1,
         upload_to_google_sheets: bool = False,
         perc_interval: float = 0.05,
