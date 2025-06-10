@@ -97,7 +97,6 @@ class BaseStrategy(ABC):
 
     # --------------------------------------------------
     async def stop(self):
-        logger.info(f"Try to stop _task: {self._task}")
         self.is_running = False
         if self._task:
             self._task.cancel()
@@ -105,14 +104,17 @@ class BaseStrategy(ABC):
                 await self._task
             except asyncio.CancelledError:
                 logger.info("🛑 Task principal cancelada")
+            finally:
+                logger.info("🛑 Task principal finalizada o cancelada")
 
-        logger.info(f"Try to stop _upload_task: {self._upload_task}")
         if self._upload_task:
             self._upload_task.cancel()
             try:
                 await self._upload_task
             except asyncio.CancelledError:
                 logger.info("🛑 Upload task cancelada")
+            finally:
+                logger.info("🛑 Upload finalizada o cancelada")
 
     # --------------------------------------------------
     async def _run(self, credentials: PrimaryCredentials):
