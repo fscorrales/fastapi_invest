@@ -5,8 +5,10 @@ from fastapi import APIRouter
 from .combined_strategies import combined_strategies_router
 from .option_bear_spread import option_bear_spread_router
 from .option_bull_spread import option_bull_spread_router
+from .option_call_ratio_backspread import option_call_ratio_backspread_router
 from .option_cobered_call import option_cobered_call_router
 from .option_necklace import option_necklace_router
+from .option_put_ratio_backspread import option_put_ratio_backspread_router
 from .time_arbitrage import time_arbitrage_router
 
 strategies_router = APIRouter(prefix="/strategies")
@@ -17,3 +19,5 @@ strategies_router.include_router(option_cobered_call_router)
 strategies_router.include_router(option_necklace_router)
 strategies_router.include_router(option_bull_spread_router)
 strategies_router.include_router(option_bear_spread_router)
+strategies_router.include_router(option_call_ratio_backspread_router)
+strategies_router.include_router(option_put_ratio_backspread_router)
