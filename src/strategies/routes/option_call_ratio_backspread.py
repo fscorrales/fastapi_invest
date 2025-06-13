@@ -69,7 +69,7 @@ async def get_strategy_status():
 
 
 @option_call_ratio_backspread_router.post("/stop")
-async def stop_option_call_backspread():
+async def stop_option_call_ratio_backspread():
     await strategy_manager.stop_strategy(STRATEGY_NAME)
     return {"status": "stopped", "strategy": STRATEGY_NAME}
 
