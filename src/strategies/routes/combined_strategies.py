@@ -16,14 +16,18 @@ from ...primary.services import (
 from ..services import (
     OPTION_BEAR_SPREAD_NAME,
     OPTION_BULL_SPREAD_NAME,
+    OPTION_CALL_RATIO_BACKSPREAD_NAME,
     OPTION_COBERED_CALL_NAME,
     OPTION_NECKLACE_NAME,
+    OPTION_PUT_RATIO_BACKSPREAD_NAME,
     TIME_ARBITRAGE_NAME,
     BaseStrategy,
     OptionBearSpreadService,
     OptionBullSpreadService,
+    OptionCallRatioBackspreadService,
     OptionCoberedCallService,
     OptionNecklaceService,
+    OptionPutRatioBackspreadService,
     TimeArbitrageService,
     strategy_manager,
 )
@@ -41,6 +45,8 @@ STRATEGIES: List[Tuple[str, Type[BaseStrategy]]] = [
     (OPTION_NECKLACE_NAME, OptionNecklaceService),
     (OPTION_BULL_SPREAD_NAME, OptionBullSpreadService),
     (OPTION_BEAR_SPREAD_NAME, OptionBearSpreadService),
+    (OPTION_CALL_RATIO_BACKSPREAD_NAME, OptionCallRatioBackspreadService),
+    (OPTION_PUT_RATIO_BACKSPREAD_NAME, OptionPutRatioBackspreadService),
 ]
 
 
