@@ -2,6 +2,8 @@ __all__ = ["BaseStrategy"]
 
 import asyncio
 from abc import ABC, abstractmethod
+from collections import defaultdict
+from datetime import datetime
 from typing import List, Optional, Union
 
 import numpy as np
@@ -117,7 +119,11 @@ class BaseStrategy(ABC):
                 logger.info("🛑 Upload finalizada o cancelada")
 
     # --------------------------------------------------
-    async def _run(self, credentials: PrimaryCredentials):
+    async def _run(
+        self,
+        credentials: PrimaryCredentials,
+        options_underlying: Union[List[str], str] = ["GGAL"],
+    ):
         if not self.market_data_service.is_running:
             repo = InstrumentsDetailsRepository()
             acciones = await repo.find_by_filter(
@@ -128,17 +134,20 @@ class BaseStrategy(ABC):
                 }
             )
 
+            if isinstance(options_underlying, str):
+                options_underlying = [options_underlying]
             subyacentes = await repo.find_by_filter(
                 filters={
                     "enviroment": credentials.enviroment,
                     "cficode": CFICode.accion.value,
                     "currency__ne": "CCL",
-                    "ticker__in": ["GGAL"],
+                    "ticker__in": options_underlying,
                     "settlement": "24hs",
                 }
             )
 
-            opciones = await repo.find_by_filter(
+            # 1. Obtener todas las opciones primero
+            all_opciones = await repo.find_by_filter(
                 filters={
                     "enviroment": credentials.enviroment,
                     "cficode__in": [
@@ -150,6 +159,25 @@ class BaseStrategy(ABC):
                     ],
                 }
             )
+
+            # 2. Agrupar maturityDate por mes/año
+            maturity_groups = defaultdict(list)
+            for opt in all_opciones:
+                try:
+                    maturity = datetime.strptime(str(opt["maturityDate"]), "%Y%m%d")
+                    key = maturity.strftime("%Y-%m")  # e.g., "2025-06"
+                    maturity_groups[key].append(opt)
+                except Exception as e:
+                    logger.warning(f"Fecha inválida: {opt.get('maturityDate')} - {e}")
+
+            # 3. Obtener los dos meses más próximos
+            sorted_keys = sorted(maturity_groups.keys())
+            selected_keys = sorted_keys[:2]  # primeros dos vencimientos
+
+            # 4. Filtrar opciones
+            opciones = []
+            for key in selected_keys:
+                opciones.extend(maturity_groups[key])
 
             cedears = await repo.find_by_filter(
                 filters={
