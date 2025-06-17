@@ -23,6 +23,7 @@ class TimeArbitrageService(BaseStrategy):
         market_data_service: WSMarketDataService,
         days: int = 1,
         upload_to_google_sheets: bool = False,
+        upload_interval: int = 10,
         from_settlement: str = "CI",
         to_settlement: str = "24hs",
         summary_model: Type[BaseModel] = TimeArbitrageSummary,
@@ -35,7 +36,7 @@ class TimeArbitrageService(BaseStrategy):
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
         self._spreadsheet_key = "1ztmSxBFWo8xHYLNEJPcnHmiJf8yPohC_NKmjWar0JH4"
         self._sheet_name = "time_arbitrage"
-        self._upload_interval = 10  # seconds
+        self._upload_interval = upload_interval
         self.upload_to_google_sheets = upload_to_google_sheets
 
     # -------------------------------------------------

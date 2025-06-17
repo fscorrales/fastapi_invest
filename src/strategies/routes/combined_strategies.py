@@ -74,6 +74,7 @@ async def start_all(
             market_data_service=service,
             days=days,
             upload_to_google_sheets=upload_to_google_sheets,
+            upload_interval=30,
         )
         strategy_manager.register(name, strategy)
 

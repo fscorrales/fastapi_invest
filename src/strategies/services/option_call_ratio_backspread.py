@@ -29,14 +29,15 @@ class OptionCallRatioBackspreadService(BaseStrategy):
         summary_model: Type[BaseModel] = OptionRatioBackspreadSummary,
         days: int = 1,
         upload_to_google_sheets: bool = False,
+        upload_interval: int = 10,
     ):
         super().__init__(market_data_service=market_data_service)
         self.days = days
         self.summary_cols = list(summary_model.model_fields.keys())
         self.summary_strategy_df = pd.DataFrame(columns=self.summary_cols)
         self._spreadsheet_key = "1ztmSxBFWo8xHYLNEJPcnHmiJf8yPohC_NKmjWar0JH4"
-        self._sheet_name = "ri_call_new"
-        self._upload_interval = 10  # seconds
+        self._sheet_name = "ri_call"
+        self._upload_interval = upload_interval
         self.upload_to_google_sheets = upload_to_google_sheets
 
     # -------------------------------------------------
