@@ -74,11 +74,7 @@ class OptionCoberedCallService(BaseStrategy):
             # Filter in two dfs
             df_opt = df.loc[(df["cficode"].isin([CFICode.call_accion.value]))]
             df_sub = df.loc[
-                (
-                    (df["cficode"] == CFICode.accion.value)
-                    & (df["ticker"].isin(["GGAL", "COME", "YPFD"]))
-                    & (df["settlement"] == "24hs")
-                )
+                ((df["cficode"] == CFICode.accion.value) & (df["settlement"] == "24hs"))
             ]
             df_sub = df_sub.loc[:, ["ticker", "underlying", "last_price"]]
             df_sub = df_sub.rename(
