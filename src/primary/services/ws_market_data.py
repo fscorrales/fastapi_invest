@@ -30,8 +30,8 @@ def _init_market_data_df():
         "bid_size": "float64",
         "offer_price": "float64",
         "offer_size": "float64",
-        "notional_value": "float64",
-        "effective_value": "float64",
+        "nominal_volume": "float64",
+        "effective_volume": "float64",
         "open": "float64",
         "close_prev": "float64",
         "high": "float64",
@@ -250,8 +250,8 @@ class WSMarketDataService:
             # Armamos el registro
             record = {
                 "timestamp": timestamp,
-                "notional_value": md.get("NV"),
-                "effective_value": md.get("EV"),
+                "nominal_volume": md.get("NV"),
+                "effective_volume": md.get("EV"),
                 "open": md.get("OP"),
                 "close_prev": safe_get_dict(md.get("CL"), ["price"]),
                 "high": md.get("HI"),
