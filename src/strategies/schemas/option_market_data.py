@@ -22,9 +22,9 @@ class OptionMarketDataSummary(BaseModel):
     chg_pct: Optional[float] = None
     volume: Optional[float] = None
     nom_volumne: Optional[float] = None
-    underlying_ticker: str
     days_expire: int
     strike: float
+    underlying_ticker: str
     underlying_close: float
 
 
