@@ -53,6 +53,16 @@ class OptionMarketDataService(BaseStrategy):
             return pd.DataFrame()
 
         try:
+            # Rename dictionary keys to match DataFrame columns
+            rename_dict = {
+                "bid_price": "bid",
+                "last_price": "last",
+                "offer_price": "ask",
+                "offer_size": "ask_size",
+                "effective_volume": "volume",
+                "nominal_volume": "nom_volumne",
+                "close_prev": "close",
+            }
             # Add cficode and currency to WSMarketData DF and then filter with them
             df = df.merge(
                 self.instruments_details_df.loc[
@@ -79,17 +89,7 @@ class OptionMarketDataService(BaseStrategy):
                     )
                 )
             ]
-            df_opt = df_opt.rename(
-                columns={
-                    "bid_price": "bid",
-                    "last_price": "last",
-                    "offer_price": "ask",
-                    "offer_size": "ask_size",
-                    "effective_volume": "volume",
-                    "nominal_volume": "nom_volumne",
-                    "close_prev": "close",
-                }
-            )
+            df_opt = df_opt.rename(columns=rename_dict)
             df_sub = df.loc[
                 ((df["cficode"] == CFICode.accion.value) & (df["settlement"] == "24hs"))
             ]
@@ -102,7 +102,7 @@ class OptionMarketDataService(BaseStrategy):
             )
 
             # Merge both DataFrames
-            df = pd.merge(
+            df_opt = pd.merge(
                 left=df_opt,
                 right=df_sub,
                 how="left",
@@ -110,7 +110,34 @@ class OptionMarketDataService(BaseStrategy):
                 copy=False,
             )
 
-            df = df.loc[df["bid_size"] > 0]
+            # Add underlying_ticker data and concatenate with df_opt
+            df_sub = df.loc[
+                (
+                    (df["cficode"] == CFICode.accion.value)
+                    & (df["ticker"].isin(df_opt["underlying_ticker"].unique()))
+                )
+            ]
+            df_sub = df_sub.rename(columns=rename_dict)
+            df_sub["underlying_close"] = df_sub["last"]
+            df_sub["ticker"] = np.where(
+                df_sub["settlement"] == "CI",
+                df_sub["ticker"] + " - CI",
+                df_sub["ticker"],
+            )
+            df_sub["underlying_ticker"] = df_sub["ticker"]
+
+            # Add caucion data and concatenate with df_opt
+            df_caucion = df.loc[
+                (df["symbol"] == "MERV - XMEV - PESOS - " + str(self.days) + "D")
+            ]
+            df_caucion = df_caucion.rename(columns=rename_dict)
+            df_caucion["underlying_close"] = df_caucion["last"]
+            df_caucion["ticker"] = df_caucion["ticker"] + " - " + str(self.days) + "D"
+            df_caucion["underlying_ticker"] = df_caucion["ticker"]
+
+            df = pd.concat([df_sub, df_caucion, df_opt])
+
+            df = df.loc[(df["bid_size"] > 0) | (df["ask_size"] > 0)]
 
             if not df.empty:
                 # Add Expire
@@ -119,7 +146,9 @@ class OptionMarketDataService(BaseStrategy):
                         "maturityDate": "expire",
                     }
                 )
-                df["expire"] = df["expire"].astype(int)
+                df["expire"] = (
+                    df["expire"].fillna(0).replace([np.inf, -np.inf], 0).astype(int)
+                )
                 df["expire"] = pd.to_datetime(
                     # df["expire"],
                     # format="%Y-%m-%d %H:%M:%S.%f",
@@ -130,7 +159,7 @@ class OptionMarketDataService(BaseStrategy):
                 )
                 # df_opt["month_expire"] = df_opt["expire"].dt.strftime("%m/%Y")
                 df["days_expire"] = (df["expire"] - pd.Timestamp.now()).dt.days
-                df["days_expire"] = df["days_expire"].astype(int) + 5
+                df["days_expire"] = df["days_expire"].fillna(-5).astype(int) + 5
                 df["chg_pct"] = df["close"] / df["last"] - 1
 
                 df = df[self.summary_cols]
