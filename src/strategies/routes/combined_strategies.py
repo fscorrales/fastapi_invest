@@ -18,6 +18,7 @@ from ..services import (
     OPTION_BULL_SPREAD_NAME,
     OPTION_CALL_RATIO_BACKSPREAD_NAME,
     OPTION_COBERED_CALL_NAME,
+    OPTION_MARKET_DATA_NAME,
     OPTION_NECKLACE_NAME,
     OPTION_PUT_RATIO_BACKSPREAD_NAME,
     TIME_ARBITRAGE_NAME,
@@ -26,6 +27,7 @@ from ..services import (
     OptionBullSpreadService,
     OptionCallRatioBackspreadService,
     OptionCoberedCallService,
+    OptionMarketDataService,
     OptionNecklaceService,
     OptionPutRatioBackspreadService,
     TimeArbitrageService,
@@ -41,6 +43,7 @@ combined_strategies_router = APIRouter(
 # Lista de estrategias con su nombre y clase
 STRATEGIES: List[Tuple[str, Type[BaseStrategy]]] = [
     (TIME_ARBITRAGE_NAME, TimeArbitrageService),
+    (OPTION_MARKET_DATA_NAME, OptionMarketDataService),
     (OPTION_COBERED_CALL_NAME, OptionCoberedCallService),
     (OPTION_NECKLACE_NAME, OptionNecklaceService),
     (OPTION_BULL_SPREAD_NAME, OptionBullSpreadService),
