@@ -14,9 +14,8 @@ from fastapi import Depends
 from pydantic import BaseModel
 
 from ...config import logger
-from ...primary.schemas import CFICode
 from ...primary.services import WSMarketDataService
-from ..schemas import GastosConIVA, OptionLongWingsSummary
+from ..schemas import OptionLongWingsSummary
 from ..services import (
     OPTION_BEAR_SPREAD_NAME,
     OPTION_BULL_SPREAD_NAME,
