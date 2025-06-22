@@ -7,6 +7,7 @@ from .option_bear_spread import option_bear_spread_router
 from .option_bull_spread import option_bull_spread_router
 from .option_call_ratio_backspread import option_call_ratio_backspread_router
 from .option_cobered_call import option_cobered_call_router
+from .option_long_wings import option_long_wings_router
 from .option_market_data import option_market_data_router
 from .option_necklace import option_necklace_router
 from .option_put_ratio_backspread import option_put_ratio_backspread_router
@@ -23,3 +24,4 @@ strategies_router.include_router(option_bull_spread_router)
 strategies_router.include_router(option_bear_spread_router)
 strategies_router.include_router(option_call_ratio_backspread_router)
 strategies_router.include_router(option_put_ratio_backspread_router)
+strategies_router.include_router(option_long_wings_router)
