@@ -10,25 +10,36 @@ from ...utils import BaseFilterParams
 # --------------------------------------------------
 class OptionLongWingsSummary(BaseModel):
     underlying_ticker: str
+    type: str
     days_expire: int
-    ticker: str
-    tna_total: float
     min_invest: float
-    protection_pct: float
-    tna: float
-    tna_extra: float
-    var_tna_extra: float
-    pe: float
-    var_pe: float
-    ve_pct: float
-    bid_size: float
-    bid_price: float
-    last_price: Optional[float] = None
-    strike: float
+    max_profit: float
+    var_max_profit: float
+    max_loss: float
+    spread_pe_inf_sup: float
+    q_bull: float
+    q_bear: float
+    ticker_x0: str
+    ticker_x1: str
+    ticker_x2: str
+    ticker_x3: str
+    prima_x0: float
+    prima_x1: float
+    prima_x2: float
+    prima_x3: float
     underlying_close: float
-    vi: float
-    ve: float
-    tna_caucion: float
+    prima_neta: float
+    pe_max_profit: float
+    pe_inf: float
+    pe_sup: float
+    var_pe_inf: float
+    var_pe_sup: float
+    var_max_loss_inf: float
+    var_max_loss_sup: float
+    strike_x0: float
+    strike_x1: float
+    strike_x2: float
+    strike_x3: float
 
 
 # --------------------------------------------------
