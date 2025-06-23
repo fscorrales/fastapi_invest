@@ -124,93 +124,90 @@ class BaseStrategy(ABC):
         credentials: PrimaryCredentials,
         options_underlying: Union[List[str], str] = ["GGAL"],
     ):
-        if not self.market_data_service.is_running:
-            repo = InstrumentsDetailsRepository()
-            acciones = await repo.find_by_filter(
-                filters={
-                    "enviroment": credentials.enviroment,
-                    "cficode": CFICode.accion.value,
-                    "currency__ne": "CCL",
-                }
-            )
+        repo = InstrumentsDetailsRepository()
+        acciones = await repo.find_by_filter(
+            filters={
+                "enviroment": credentials.enviroment,
+                "cficode": CFICode.accion.value,
+                "currency__ne": "CCL",
+            }
+        )
 
-            if isinstance(options_underlying, str):
-                options_underlying = [options_underlying]
-            subyacentes = await repo.find_by_filter(
-                filters={
-                    "enviroment": credentials.enviroment,
-                    "cficode": CFICode.accion.value,
-                    "currency__ne": "CCL",
-                    "ticker__in": options_underlying,
-                    "settlement": "24hs",
-                }
-            )
+        if isinstance(options_underlying, str):
+            options_underlying = [options_underlying]
+        subyacentes = await repo.find_by_filter(
+            filters={
+                "enviroment": credentials.enviroment,
+                "cficode": CFICode.accion.value,
+                "currency__ne": "CCL",
+                "ticker__in": options_underlying,
+                "settlement": "24hs",
+            }
+        )
 
-            # 1. Obtener todas las opciones primero
-            all_opciones = await repo.find_by_filter(
-                filters={
-                    "enviroment": credentials.enviroment,
-                    "cficode__in": [
-                        CFICode.call_accion.value,
-                        CFICode.put_accion.value,
-                    ],
-                    "underlying__in": [
-                        subyacente["underlying"] for subyacente in subyacentes
-                    ],
-                }
-            )
-
-            # 2. Agrupar maturityDate por mes/año
-            maturity_groups = defaultdict(list)
-            for opt in all_opciones:
-                try:
-                    maturity = datetime.strptime(str(opt["maturityDate"]), "%Y%m%d")
-                    key = maturity.strftime("%Y-%m")  # e.g., "2025-06"
-                    maturity_groups[key].append(opt)
-                except Exception as e:
-                    logger.warning(f"Fecha inválida: {opt.get('maturityDate')} - {e}")
-
-            # 3. Obtener los dos meses más próximos
-            sorted_keys = sorted(maturity_groups.keys())
-            selected_keys = sorted_keys[:2]  # primeros dos vencimientos
-
-            # 4. Filtrar opciones
-            opciones = []
-            for key in selected_keys:
-                opciones.extend(maturity_groups[key])
-
-            cedears = await repo.find_by_filter(
-                filters={
-                    "enviroment": credentials.enviroment,
-                    "cficode": CFICode.cedear.value,
-                    "currency__ne": "CCL",
-                }
-            )
-            cauciones = await repo.find_by_filter(
-                filters={
-                    "symbol": {"$regex": "-\\s[1-7]D$", "$options": "i"},
-                    "enviroment": credentials.enviroment,
-                    "cficode": CFICode.caucion.value,
-                }
-            )
-
-            instruments_details = acciones + cedears + cauciones + opciones
-            self.instruments_details_df = pd.DataFrame(instruments_details)
-
-            params = WSMarketDataSubscription(
-                entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
-                products=[
-                    WSProductSubscription(
-                        symbol=i["symbol"], marketId=i["marketId"]
-                    ).model_dump()
-                    for i in instruments_details
+        # 1. Obtener todas las opciones primero
+        all_opciones = await repo.find_by_filter(
+            filters={
+                "enviroment": credentials.enviroment,
+                "cficode__in": [
+                    CFICode.call_accion.value,
+                    CFICode.put_accion.value,
                 ],
-                depth=1,
-            )
+                "underlying__in": [
+                    subyacente["underlying"] for subyacente in subyacentes
+                ],
+            }
+        )
 
-            await self.market_data_service.stream_market_data(
-                credentials, params=params
-            )
+        # 2. Agrupar maturityDate por mes/año
+        maturity_groups = defaultdict(list)
+        for opt in all_opciones:
+            try:
+                maturity = datetime.strptime(str(opt["maturityDate"]), "%Y%m%d")
+                key = maturity.strftime("%Y-%m")  # e.g., "2025-06"
+                maturity_groups[key].append(opt)
+            except Exception as e:
+                logger.warning(f"Fecha inválida: {opt.get('maturityDate')} - {e}")
+
+        # 3. Obtener los dos meses más próximos
+        sorted_keys = sorted(maturity_groups.keys())
+        selected_keys = sorted_keys[:2]  # primeros dos vencimientos
+
+        # 4. Filtrar opciones
+        opciones = []
+        for key in selected_keys:
+            opciones.extend(maturity_groups[key])
+
+        cedears = await repo.find_by_filter(
+            filters={
+                "enviroment": credentials.enviroment,
+                "cficode": CFICode.cedear.value,
+                "currency__ne": "CCL",
+            }
+        )
+        cauciones = await repo.find_by_filter(
+            filters={
+                "symbol": {"$regex": "-\\s[1-7]D$", "$options": "i"},
+                "enviroment": credentials.enviroment,
+                "cficode": CFICode.caucion.value,
+            }
+        )
+
+        instruments_details = acciones + cedears + cauciones + opciones
+        self.instruments_details_df = pd.DataFrame(instruments_details)
+
+        params = WSMarketDataSubscription(
+            entries=["LA", "BI", "OF", "NV", "EV", "OP", "CL", "HI", "LO"],
+            products=[
+                WSProductSubscription(
+                    symbol=i["symbol"], marketId=i["marketId"]
+                ).model_dump()
+                for i in instruments_details
+            ],
+            depth=1,
+        )
+
+        await self.market_data_service.stream_market_data(credentials, params=params)
 
         while self.is_running:
             try:
