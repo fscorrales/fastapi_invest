@@ -16,19 +16,17 @@ from pydantic import BaseModel
 from ...config import logger
 from ...primary.services import WSMarketDataService
 from ..schemas import OptionLongWingsSummary
-from ..services import (
-    OPTION_BEAR_SPREAD_NAME,
-    OPTION_BULL_SPREAD_NAME,
-    strategy_manager,
-)
 from .base_strategy import BaseStrategy
+from .option_bear_spread import OPTION_BEAR_SPREAD_NAME
+from .option_bull_spread import OPTION_BULL_SPREAD_NAME
+from .strategy_manager import strategies_manager
 
 
 # -------------------------------------------------
 class OptionLongWingsService(BaseStrategy):
     def __init__(
         self,
-        market_data_service: WSMarketDataService = None,
+        market_data_service: WSMarketDataService,
         summary_model: Type[BaseModel] = OptionLongWingsSummary,
         days: int = 1,
         upload_to_google_sheets: bool = False,
@@ -61,8 +59,8 @@ class OptionLongWingsService(BaseStrategy):
             return pd.DataFrame()
 
         try:
-            bull = strategy_manager.get(OPTION_BULL_SPREAD_NAME)
-            bear = strategy_manager.get(OPTION_BEAR_SPREAD_NAME)
+            bull = strategies_manager.get(OPTION_BULL_SPREAD_NAME)
+            bear = strategies_manager.get(OPTION_BEAR_SPREAD_NAME)
 
             if not bull or not bear:
                 logger.warning(
@@ -223,13 +221,6 @@ class OptionLongWingsService(BaseStrategy):
                 ]
 
                 df = df[self.summary_cols]
-
-                # TNA o TNA TOTAL, qué debo usar?
-                if self.tna_requiered is None:
-                    df = df.loc[df["tna_total"] > df["tna_caucion"]]
-                else:
-                    df = df.loc[df["tna_total"] > self.tna_requiered]
-                df = df.sort_values(by="tna", ascending=False)
 
                 async with self.lock:
                     self.summary_strategy_df = df.copy()

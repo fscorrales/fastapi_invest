@@ -18,6 +18,7 @@ from ..services import (
     OPTION_BULL_SPREAD_NAME,
     OPTION_CALL_RATIO_BACKSPREAD_NAME,
     OPTION_COBERED_CALL_NAME,
+    OPTION_LONG_WINGS_NAME,
     OPTION_MARKET_DATA_NAME,
     OPTION_NECKLACE_NAME,
     OPTION_PUT_RATIO_BACKSPREAD_NAME,
@@ -27,11 +28,12 @@ from ..services import (
     OptionBullSpreadService,
     OptionCallRatioBackspreadService,
     OptionCoberedCallService,
+    OptionLongWingsService,
     OptionMarketDataService,
     OptionNecklaceService,
     OptionPutRatioBackspreadService,
     TimeArbitrageService,
-    strategy_manager,
+    strategies_manager,
 )
 
 STRATEGY_NAME = "combined_strategies"
@@ -50,6 +52,7 @@ STRATEGIES: List[Tuple[str, Type[BaseStrategy]]] = [
     (OPTION_BEAR_SPREAD_NAME, OptionBearSpreadService),
     (OPTION_CALL_RATIO_BACKSPREAD_NAME, OptionCallRatioBackspreadService),
     (OPTION_PUT_RATIO_BACKSPREAD_NAME, OptionPutRatioBackspreadService),
+    (OPTION_LONG_WINGS_NAME, OptionLongWingsService),
 ]
 
 
@@ -68,7 +71,7 @@ async def start_all(
     )
 
     for name, StrategyClass in STRATEGIES:
-        if name in strategy_manager.list_active():
+        if name in strategies_manager.list_active():
             logger.warning(f"La estrategia '{name}' ya está corriendo")
             continue
 
@@ -79,18 +82,18 @@ async def start_all(
             upload_to_google_sheets=upload_to_google_sheets,
             upload_interval=30,
         )
-        strategy_manager.register(name, strategy)
+        strategies_manager.register(name, strategy)
 
-    await strategy_manager.start_all(credentials)
+    await strategies_manager.start_all(credentials)
     return {"status": "Todas las estrategias iniciadas"}
 
 
 @combined_strategies_router.post("/stop_all")
 async def stop_all():
-    await strategy_manager.stop_all()
+    await strategies_manager.stop_all()
     return {"status": "Todas las estrategias detenidas"}
 
 
 @combined_strategies_router.get("/status")
 def list_running():
-    return {"running": strategy_manager.list_active()}
+    return {"running": strategies_manager.list_active()}

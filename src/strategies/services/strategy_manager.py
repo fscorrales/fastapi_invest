@@ -1,6 +1,6 @@
 # src/strategies/services/strategy_manager.py
 
-__all__ = ["strategy_manager"]
+__all__ = ["strategies_manager"]
 
 from typing import Dict
 
@@ -72,4 +72,4 @@ class StrategyManager:
         return self.summary_strategy_df.copy()
 
 
-strategy_manager = StrategyManager()
+strategies_manager = StrategyManager()

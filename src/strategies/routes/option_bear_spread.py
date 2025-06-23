@@ -18,7 +18,7 @@ from ..schemas import OptionSpreadFilter, OptionSpreadSummary
 from ..services import (
     OPTION_BEAR_SPREAD_NAME,
     OptionBearSpreadService,
-    strategy_manager,
+    strategies_manager,
 )
 
 STRATEGY_NAME = OPTION_BEAR_SPREAD_NAME
@@ -47,7 +47,7 @@ async def start_option_bear_spread(
         f"Syncing {credentials.enviroment.value} instruments details from Primary API with url: {credentials.url}"
     )
 
-    if STRATEGY_NAME in strategy_manager.list_active():
+    if STRATEGY_NAME in strategies_manager.list_active():
         raise HTTPException(status_code=400, detail="La estrategia ya está corriendo")
 
     strategy = OptionBearSpreadService(
@@ -57,15 +57,15 @@ async def start_option_bear_spread(
         perc_interval=perc_interval,
         is_grouped=is_grouped,
     )
-    strategy_manager.register(STRATEGY_NAME, strategy)
-    await strategy_manager.start_strategy(STRATEGY_NAME, credentials)
+    strategies_manager.register(STRATEGY_NAME, strategy)
+    await strategies_manager.start_strategy(STRATEGY_NAME, credentials)
 
     return {"message": f"Estrategia '{STRATEGY_NAME}' iniciada"}
 
 
 @option_bear_spread_router.get("/status", response_model=dict)
 async def get_strategy_status():
-    is_running = STRATEGY_NAME in strategy_manager.list_active()
+    is_running = STRATEGY_NAME in strategies_manager.list_active()
     return {
         "strategy": STRATEGY_NAME,
         "status": "running" if is_running else "stopped",
@@ -74,13 +74,13 @@ async def get_strategy_status():
 
 @option_bear_spread_router.post("/stop")
 async def stop_option_bear_spread():
-    await strategy_manager.stop_strategy(STRATEGY_NAME)
+    await strategies_manager.stop_strategy(STRATEGY_NAME)
     return {"status": "stopped", "strategy": STRATEGY_NAME}
 
 
 @option_bear_spread_router.post("/reset", response_model=dict)
 async def reset_strategy_data():
-    strategy = strategy_manager.get(STRATEGY_NAME)
+    strategy = strategies_manager.get(STRATEGY_NAME)
     if not strategy:
         raise HTTPException(status_code=404, detail="La estrategia no está activa")
 
@@ -92,7 +92,7 @@ async def reset_strategy_data():
 async def get_strategy_data(
     params: Annotated[OptionSpreadFilter, Depends()],
 ):
-    strategy = strategy_manager.get(STRATEGY_NAME)
+    strategy = strategies_manager.get(STRATEGY_NAME)
     if not strategy:
         raise HTTPException(status_code=404, detail="La estrategia no está activa")
 
