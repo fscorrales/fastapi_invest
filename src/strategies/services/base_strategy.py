@@ -267,3 +267,55 @@ class BaseStrategy(ABC):
                     f"[{self.__class__.__name__}] Error uploading to Google Sheets: {e}"
                 )
             await asyncio.sleep(self._upload_interval)
+
+    # --------------------------------------------------
+    def _add_metrics(
+        self,
+        df: pd.DataFrame,
+        cost_col: str = "min_invest",
+        gain_col: str = "max_gain",
+        loss_col: Optional[str] = "max_loss",
+        days_col: str = "days_expire",
+    ) -> pd.DataFrame:
+        """
+        Enriquecemos el summary con métricas de riesgo / retorno.
+        Se asume que el DF contiene:
+            - cost          (o min_invest)
+            - max_gain      (o ve)
+            - max_loss      (o vi)  -> si no existe, inferir o asignar 0
+            - days_expire   o days  -> horizonte en días
+        """
+        with pd.option_context("future.no_silent_downcasting", True):
+            df = df.copy()
+
+            if loss_col is None:
+                df[loss_col] = 0  # Si no hay pérdida, asignar 0
+
+            # Retorno bruto esperado (%)
+            df["reward_pct"] = df[gain_col] / df[cost_col]
+
+            # Riesgo relativo (%)
+            df["risk_pct"] = (
+                df[loss_col].abs() / df[cost_col]
+            )  # abs() por si viene negativa
+
+            # “Reward / Risk” > 1 es deseable
+            df["reward_risk_ratio"] = df["reward_pct"] / df["risk_pct"].replace(
+                0, np.nan
+            ).infer_objects(copy=False)
+
+            # Horizon en días (evitá ÷0)
+            df["horizon"] = df[days_col].replace(0, np.nan).infer_objects(copy=False)
+
+            # Tasa anualizada usando la ganancia máx.
+            df["tna_adj"] = df["reward_pct"] / df["horizon"] * 365
+
+            # Retorno anual ajustado por riesgo
+            df["risk_adj_tna"] = df["tna_adj"] / df["risk_pct"].replace(
+                0, np.nan
+            ).infer_objects(copy=False)
+
+            # Limpieza final — opcional
+            # df = df.replace([np.inf, -np.inf], np.nan)
+
+            return df
