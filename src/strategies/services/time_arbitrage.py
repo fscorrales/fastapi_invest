@@ -175,14 +175,22 @@ class TimeArbitrageService(BaseStrategy):
                     (df["adj_sell"] - df["adj_buy"])
                     + (df["adj_sell"] * df["tna_caucion"] / 365 * self.days),
                 )
-                df["p_and_l"] = np.where(
-                    df["cficode"] != CFICode.accion.name,
-                    df["p_and_l"] / 100,
-                    df["p_and_l"],
-                )
-                df["p_and_l"] = df["p_and_l"] * df["q_max"]
+                # df["p_and_l"] = np.where(
+                #     df["cficode"] != CFICode.accion.name,
+                #     df["p_and_l"] / 100,
+                #     df["p_and_l"],
+                # )
+                # df["p_and_l"] = df["p_and_l"] * df["q_max"]
 
                 df["days"] = self.days
+
+                df = self._add_metrics(
+                    df,
+                    cost_col="adj_buy",
+                    gain_col="p_and_l",
+                    loss_col=None,
+                    days_col="days",
+                )
 
                 df = df[self.summary_cols]
                 df = df.loc[df["tna"] > 0]

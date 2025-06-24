@@ -142,7 +142,7 @@ class OptionCoberedCallService(BaseStrategy):
                 df["tna_total"] = df["tna"] + df["tna_extra"]
                 df["protection_pct"] = df["adj_prima"] / df["adj_close"]
 
-                df["min_invest"] = df["adj_close"] * 100
+                df["min_invest"] = (df["adj_close"] - df["adj_prima"]) * 100
                 df["vi"] = np.where(
                     df["class"] == "ITM", (df["adj_close"] - df["adj_strike"]), 0
                 )
@@ -166,6 +166,20 @@ class OptionCoberedCallService(BaseStrategy):
                     return vals[0] if len(vals) > 0 else 0
 
                 df["tna_caucion"] = df["currency"].apply(get_tna_caucion_by_currency)
+
+                df["max_gain"] = (df["adj_strike"] - df["pe"]) * 100
+                df["max_loss"] = (
+                    df["min_invest"] / 2
+                )  # suponiendo que el subyacente baja a la mitad
+
+                df = self._add_metrics(
+                    df,
+                    cost_col="min_invest",
+                    gain_col="max_gain",
+                    loss_col="max_loss",
+                    days_col="days_expire",
+                )
+
                 df = df[self.summary_cols]
 
                 # TNA o TNA TOTAL, qué debo usar?
