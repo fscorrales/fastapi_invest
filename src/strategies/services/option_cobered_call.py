@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 from fastapi import Depends
 from pydantic import BaseModel
-from scipy.stats import norm
 
 from ...config import logger
 from ...primary.schemas import CFICode
