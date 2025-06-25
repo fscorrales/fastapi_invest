@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from fastapi import Depends
 from pydantic import BaseModel
+from scipy.stats import norm
 
 from ...config import logger
 from ...primary.schemas import CFICode
@@ -38,6 +39,38 @@ class OptionCoberedCallService(BaseStrategy):
         self._sheet_name = "cobered_call"
         self._upload_interval = upload_interval
         self.upload_to_google_sheets = upload_to_google_sheets
+
+    # -------------------------------------------------
+    def add_quality_metrics(
+        self, df: pd.DataFrame, sigma: float = 0.40, mu: float = 0.00
+    ):
+        """
+        Agrega métricas de calidad a un DataFrame de opciones.
+        Calcula la probabilidad de cobrar el extra, TNA ajustada por probabilidad,
+        y TNA ajustada por riesgo.
+        SIGMA = volatilidad anual supuesta; cambiala o usa implícita
+        MU = drift neutro
+        """
+
+        # 1. Probabilidad realista de cobrar el extra ---------------------------
+        # - Versión rigurosa (más lenta) -
+        # tau = df["days_expire"] / 365
+        # ln_req = np.log1p(df["var_tna_extra"])
+        # d = (ln_req - (mu - 0.5 * sigma**2) * tau) / (sigma * np.sqrt(tau))
+        # df["p_upside"] = norm.cdf(d)  # método “riguroso”
+        #  - Versión heurística (más simple y rápida) -
+        k = 12
+        df["p_upside"] = np.exp(-k * df["var_tna_extra"] / df["days_expire"])
+
+        # 2. TNA ajustada por probabilidad
+        df["tna_adj"] = df["tna"] + df["tna_extra"] * df["p_upside"]
+
+        # 3. Ajuste por riesgo (protección)
+        df["risk_pct"] = 0.5 - df["protection_pct"]  # supongo que no baja más del 50%
+        df["risk_adj_tna"] = df["tna_adj"] / df["risk_pct"].replace(0, np.nan)
+
+        # 4. Orden final
+        return df.sort_values("risk_adj_tna", ascending=False)
 
     # -------------------------------------------------
     async def evaluate(
@@ -167,18 +200,22 @@ class OptionCoberedCallService(BaseStrategy):
 
                 df["tna_caucion"] = df["currency"].apply(get_tna_caucion_by_currency)
 
-                df["max_gain"] = (df["adj_strike"] - df["pe"]) * 100
-                df["max_loss"] = (
-                    df["min_invest"] / 2
-                )  # suponiendo que el subyacente baja a la mitad
+                # df["max_gain"] = (
+                #     (df["adj_close"] - df["pe"])
+                #     + (df["adj_strike"] - df["adj_close"]) * 0.1
+                # ) * 100
+                # df["max_loss"] = df["min_invest"] * (
+                #     0.5 - df["protection_pct"]
+                # )  # no es la mejor forma de calcularlo, pero es lo que se me ocurre
 
-                df = self._add_metrics(
-                    df,
-                    cost_col="min_invest",
-                    gain_col="max_gain",
-                    loss_col="max_loss",
-                    days_col="days_expire",
-                )
+                # df = self._add_metrics(
+                #     df,
+                #     cost_col="min_invest",
+                #     gain_col="max_gain",
+                #     loss_col="max_loss",
+                #     days_col="days_expire",
+                # )
+                df = self.add_quality_metrics(df)
 
                 df = df[self.summary_cols]
 
