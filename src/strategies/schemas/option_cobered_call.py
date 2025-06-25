@@ -31,7 +31,7 @@ class OptionCoberedCallSummary(BaseModel):
     tna_caucion: float
     reward_pct: float
     risk_pct: float
-    reward_risk_ratio: float
+    # reward_risk_ratio: float
     tna_adj: float
     risk_adj_tna: float
 
