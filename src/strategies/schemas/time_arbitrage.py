@@ -22,11 +22,11 @@ class TimeArbitrageSummary(BaseModel):
     tna_operation: float
     tna_caucion: float
     days: int
-    reward_pct: float
-    risk_pct: float
-    reward_risk_ratio: float
+    # reward_pct: float
+    # risk_pct: float
+    # reward_risk_ratio: float
     tna_adj: float
-    risk_adj_tna: float
+    # risk_adj_tna: float
 
 
 # --------------------------------------------------
