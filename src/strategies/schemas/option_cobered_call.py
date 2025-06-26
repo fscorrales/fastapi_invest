@@ -29,11 +29,13 @@ class OptionCoberedCallSummary(BaseModel):
     vi: float
     ve: float
     tna_caucion: float
-    reward_pct: float
-    risk_pct: float
+    # reward_pct: float
     # reward_risk_ratio: float
     tna_adj: float
+    risk_pct: float
     risk_adj_tna: float
+    score: float
+    perfil: str
 
 
 # --------------------------------------------------

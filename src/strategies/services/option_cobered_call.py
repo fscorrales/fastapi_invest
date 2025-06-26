@@ -51,25 +51,62 @@ class OptionCoberedCallService(BaseStrategy):
         MU = drift neutro
         """
 
+        # --- 0. Sanitizar columnas numéricas ---------------------------
+        cols_float = [
+            "var_tna_extra",
+            "days_expire",
+            "tna",
+            "tna_extra",
+            "protection_pct",
+        ]
+
+        for col in cols_float:
+            # Fuerza a float → errores se convierten en NaN
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        # Evitá divisiones por 0 o NaN
+        df = df[df["days_expire"] > 0].copy()
+        df[cols_float] = df[cols_float].fillna(0.0)
+
         # 1. Probabilidad realista de cobrar el extra ---------------------------
         # - Versión rigurosa (más lenta) -
         # tau = df["days_expire"] / 365
         # ln_req = np.log1p(df["var_tna_extra"])
         # d = (ln_req - (mu - 0.5 * sigma**2) * tau) / (sigma * np.sqrt(tau))
         # df["p_upside"] = norm.cdf(d)  # método “riguroso”
-        #  - Versión heurística (más simple y rápida) -
-        k = 12
-        df["p_upside"] = np.exp(-k * df["var_tna_extra"] / df["days_expire"])
+
+        # 1. Probabilidad realista de cobrar el extra (heurística)
+        scaling_factor = 12  # lo podés setear entre 5 y 20 dependiendo de qué tan conservador seas con el upside.
+        df["p_upside"] = np.exp(
+            -df["var_tna_extra"] * (365 / df["days_expire"]) * scaling_factor
+        )
 
         # 2. TNA ajustada por probabilidad
         df["tna_adj"] = df["tna"] + df["tna_extra"] * df["p_upside"]
 
         # 3. Ajuste por riesgo (protección)
-        df["risk_pct"] = 0.5 - df["protection_pct"]  # supongo que no baja más del 50%
+        df["risk_pct"] = 0.5 - df["protection_pct"]  # margen: caída máxima asumida: 50%
+        df.loc[df["risk_pct"] <= 0, "risk_pct"] = np.nan  # evita 0 o negativos
         df["risk_adj_tna"] = df["tna_adj"] / df["risk_pct"].replace(0, np.nan)
 
-        # 4. Orden final
-        return df.sort_values("risk_adj_tna", ascending=False)
+        # 4. Score ponderado: beneficio ajustado por protección y varianza
+        df["score"] = (
+            df["tna_adj"] * (df["protection_pct"] + 0.05) / (1 + df["var_tna_extra"])
+        )
+
+        # 5. Clasificación por perfil de probabilidad
+        df["perfil"] = np.select(
+            [
+                df["p_upside"] < 0.2,
+                df["p_upside"] < 0.5,
+                df["p_upside"] < 0.8,
+            ],
+            ["Baja probabilidad", "Media probabilidad", "Alta probabilidad"],
+            default="Muy alta probabilidad",
+        )
+
+        # 6. Orden final sugerido
+        return df.sort_values("score", ascending=False)
 
     # -------------------------------------------------
     async def evaluate(
@@ -214,16 +251,16 @@ class OptionCoberedCallService(BaseStrategy):
                 #     loss_col="max_loss",
                 #     days_col="days_expire",
                 # )
-                df = self.add_quality_metrics(df)
-
-                df = df[self.summary_cols]
 
                 # TNA o TNA TOTAL, qué debo usar?
                 if self.tna_requiered is None:
                     df = df.loc[df["tna_total"] > df["tna_caucion"]]
                 else:
                     df = df.loc[df["tna_total"] > self.tna_requiered]
-                df = df.sort_values(by="tna", ascending=False)
+
+                df = self.add_quality_metrics(df)
+                df = df[self.summary_cols]
+                # df = df.sort_values(by="tna", ascending=False)
 
                 async with self.lock:
                     self.summary_strategy_df = df.copy()
