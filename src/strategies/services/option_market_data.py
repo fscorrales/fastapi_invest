@@ -6,6 +6,7 @@ __all__ = [
     "OPTION_MARKET_DATA_NAME",
 ]
 
+from datetime import date
 from typing import Annotated, Type
 
 import numpy as np
@@ -16,7 +17,8 @@ from pydantic import BaseModel
 from ...config import logger
 from ...primary.schemas import CFICode
 from ...primary.services import WSMarketDataService
-from ..schemas import GastosConIVA, OptionMarketDataSummary
+from ...utils.convert import convert_str_to_date_only_safe
+from ..schemas import OptionMarketDataSummary
 from .base_strategy import BaseStrategy
 
 
@@ -149,17 +151,47 @@ class OptionMarketDataService(BaseStrategy):
                 df["expire"] = (
                     df["expire"].fillna(0).replace([np.inf, -np.inf], 0).astype(int)
                 )
-                df["expire"] = pd.to_datetime(
-                    # df["expire"],
-                    # format="%Y-%m-%d %H:%M:%S.%f",
-                    # errors="coerce",
-                    df["expire"],
-                    format="%Y%m%d",
-                    errors="coerce",
+                # Convert expire to date with NaT problem when trying to upload to Google Sheets
+                # df["expire"] = pd.to_datetime(
+                #     df["expire"],
+                #     format="%Y%m%d",
+                #     errors="coerce",
+                # )
+                # month_expire: 'mm/yyyy'
+                # df["month_expire"] = df["expire"].dt.strftime("%m/%Y")
+                # days_expire: días hasta vencimiento
+                # df["days_expire"] = (df["expire"] - pd.Timestamp.now()).dt.days
+                # df["days_expire"] = (
+                #     df["days_expire"].fillna(-5).astype(int) + 5
+                # )  # Por qué le sumo 5 a todo?
+
+                # Convert expire to date only in safe way without NaT problem
+                df["expire"] = convert_str_to_date_only_safe(df["expire"], fmt="%Y%m%d")
+                # month_expire: 'mm/yyyy'
+                df["month_expire"] = df["expire"].apply(
+                    lambda d: d.strftime("%m/%Y") if isinstance(d, date) else None
                 )
-                # df_opt["month_expire"] = df_opt["expire"].dt.strftime("%m/%Y")
-                df["days_expire"] = (df["expire"] - pd.Timestamp.now()).dt.days
-                df["days_expire"] = df["days_expire"].fillna(-5).astype(int) + 5
+                # days_expire: días hasta vencimiento
+                today = date.today()
+                df["days_expire"] = df["expire"].apply(
+                    lambda d: (d - today).days if isinstance(d, date) else 0
+                )
+
+                # Convert date to str because Google Sheets does not support date type
+                # df["expire"] = df["expire"].apply(
+                #     lambda d: d.strftime("%Y/%m/%d") if isinstance(d, date) else ""
+                # )  # Formato YYYY-MM-DD de EEUU
+                df["expire"] = df["expire"].apply(
+                    lambda d: d.strftime("%d/%m/%Y") if isinstance(d, date) else ""
+                )  # Formato DD/MM/AAAA de Argentina
+
+                df.rename(
+                    columns={
+                        "cficode": "type",
+                    },
+                    inplace=True,
+                )
+
                 df["chg_pct"] = df["close"] / df["last"] - 1
 
                 df = df[self.summary_cols]

@@ -1,5 +1,6 @@
 __all__ = ["OptionMarketDataSummary", "OptionMarketDataFilter"]
 
+from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel
@@ -22,10 +23,13 @@ class OptionMarketDataSummary(BaseModel):
     chg_pct: Optional[float] = None
     volume: Optional[float] = None
     nom_volumne: Optional[float] = None
-    days_expire: int
-    strike: float
-    underlying_ticker: str
-    underlying_close: float
+    type: Optional[str] = None
+    expire: Optional[date] = None
+    month_expire: Optional[str] = None
+    days_expire: Optional[int] = None
+    strike: Optional[float] = None
+    underlying_ticker: Optional[str] = None
+    underlying_close: Optional[float] = None
 
 
 # --------------------------------------------------
