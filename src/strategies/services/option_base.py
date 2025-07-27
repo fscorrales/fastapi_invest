@@ -308,9 +308,12 @@ class OptionBaseService:
     # -------------------------------------------------
     async def export_all_from_db(
         self,
+        options_underlying: Union[List[str], str] = ["GGAL"],
         upload_to_google_sheets: bool = False,
     ) -> StreamingResponse:
-        instrumets_df = await self.get_options_instruments_from_db()
+        instrumets_df = await self.get_options_instruments_from_db(
+            options_underlying=options_underlying
+        )
         options_list_df = await self.generate_options_list(instrumets_df.copy())
         cross_join_spread_df = await self.generate_options_cross_join_spread(
             options_list_df.copy()
