@@ -3,6 +3,7 @@ __all__ = ["strategies_router"]
 from fastapi import APIRouter
 
 from .combined_strategies import combined_strategies_router
+from .option_base import option_base_router
 from .option_bear_spread import option_bear_spread_router
 from .option_bull_spread import option_bull_spread_router
 from .option_call_ratio_backspread import option_call_ratio_backspread_router
@@ -15,6 +16,7 @@ from .time_arbitrage import time_arbitrage_router
 
 strategies_router = APIRouter(prefix="/strategies")
 
+strategies_router.include_router(option_base_router)
 strategies_router.include_router(combined_strategies_router)
 strategies_router.include_router(option_market_data_router)
 strategies_router.include_router(time_arbitrage_router)

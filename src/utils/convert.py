@@ -3,8 +3,10 @@ __all__ = [
     "parse_date",
     "convert_str_column_to_datetime_safe",
     "convert_str_to_date_only_safe",
+    "stringify_complex_fields",
 ]
 
+import json
 from datetime import date, datetime
 from typing import Optional
 
@@ -39,3 +41,14 @@ def convert_str_to_date_only_safe(col: pd.Series, fmt: str = None) -> pd.Series:
     return pd.to_datetime(col, errors="coerce", format=fmt).apply(
         lambda x: x.date() if pd.notnull(x) else None
     )
+
+
+# --------------------------------------------------
+def stringify_complex_fields(df):
+    for col in df.columns:
+        df[col] = df[col].apply(
+            lambda x: json.dumps(x, ensure_ascii=False)
+            if isinstance(x, (dict, list))
+            else x
+        )
+    return df
